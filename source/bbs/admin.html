@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="EUC-JP" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+                      "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ja">
+
+<head>
+<link rel='stylesheet' type='text/css' href='./bbs.css' />
+<title>管理モード - マルチスレッド掲示板</title>
+<!--微乳-->
+</head>
+
+<body>
+
+<h1 id='title'>ダブルスレッド掲示板</h1>
+<h2 id='admin-mode'>管理モード</h2>
+
+<div class='admin-info'><!--冒頭説明-->
+<p>管理者以外の人はここを使うことができません。</p>
+<p>管理コマンドは1行に1コマンド書くことができます。</p>
+<p>テスト。</p>
+</div>
+
+<div class='link'><a href='./bbs.html'>スレッド一覧</a>　<a href='webmaster@sarinaga.com'>管理者宛メール</a>　<a href='#admin-howtouse'>管理コマンド解説</a>　<a href='#admin-example'>管理コマンド例</a>　</div>
+
+<!--=======================================================================-->
+
+<div class='admin-command'>
+
+<h2 id="admin-command">管理コマンド入力</h2>
+
+<form method='post' action='./admin.cgi' class='post'>
+<table><tbody>
+
+<tr class="admin-id">
+<th>管理者ID</th>
+<td><input type='text' name='user' size='40' value='' /></td>
+</tr>
+
+<tr class="admin-pass">
+<th>パスワード</th>
+<td><input type='password' name='password' size='20' value='' /></td>
+</tr>
+
+<tr class="admin-command">
+<th>コマンド</th>
+<td><textarea cols='60' rows='10' name='command'></textarea></td>
+</tr>
+
+<tr class="command">
+<td></td>
+<td>
+<input type='submit' value='送信' />
+<input type='reset' value='クリア' />
+</td>
+</tr>
+
+</tbody></table>
+</form>
+
+</div>
+
+<div class='link'><a href='././bbs.html'>スレッド一覧</a>　<a href='webmaster@sarinaga.com'>管理者宛メール</a>　<a href='#admin-example'>管理コマンド例</a>　</div>
+
+<!--=======================================================================-->
+
+<div class="admin-howtouse">
+
+<h2 id='admin-howtouse'>管理コマンド解説</h2>
+
+<dl class="admin-howtouse">
+  <dt class='command'>dat:(スレッド番号；複数)</dt>
+  <dd class='command-exp'>
+    <p>スレッドを強制的に終了し、保存状態にする。</p>
+  </dd>
+
+  <dt class='command'>undat:(スレッド番号；複数)</dt>
+  <dd class='command-exp'>
+    <p>保存状態になっているスレッドを復活させる。html化したスレッドは復活できない。</p>
+  </dd>
+
+  <dt class='command'>html:(スレッド番号；複数)</dt>
+  <dd class='command-exp'>
+    <p>保存状態になっているスレッドをhtmlにする。現在生きているスレッドはhtml化できない。一度datコマンドを使って保存状態にしてからhtmlコマンドを使う。</p>
+  </dd>
+
+  <dt class='command'>threadlist</dt>
+  <dd class='command-exp'>
+    <p>生きているスレッドと保存状態のスレッドの一覧を表示する。</p>
+  </dd>
+
+　<dt class='command'>del:(スレッド番号；単数):(削除する発言；複数)</dt>
+  <dd class='command-exp'>
+    <p>発言を削除します。すでに削除されている発言に対しては何もしません。</p>
+  </dd>
+
+　<dt class='command'>undel:(スレッド番号；単数):(削除する発言；複数)</dt>
+  <dd class='command-exp'>
+    <p>削除された発言を復活させます。発言されていない発言に対しては何もしません。</p>
+  </dd>
+
+</dl>
+
+</div>
+
+<div class='link'><a href='././bbs.html'>スレッド一覧</a>　<a href='webmaster@sarinaga.com'>管理者宛メール</a></div>
+
+
+<!--=======================================================================-->
+
+<div class='admin-example'>
+
+<h2 id='admin-example'>管理コマンド例</h2>
+
+<dl class="admin-howtouse">
+  <dt class='command'>dat:1-5,8</dt>
+  <dd class='command-exp'>
+    <p>1番から5番と8番のスレッドを強制的に終了し、保存状態にする。</p>
+  </dd>
+
+
+　<dt class='command'>del:5:102-105</dt>
+  <dd class='command-exp'>
+    <p>5番スレッドの発言102〜105番の発言を削除する。</p>
+  </dd>
+
+</dl>
+
+<p>まだ準備中です。</p>
+
+</div>
+
+<div class='link'><a href='././bbs.html'>スレッド一覧</a>　<a href='webmaster@sarinaga.com'>管理者宛メール</a></div>
+<div class="version" xml:lang="en">Double Thread BBS version 0.70 - programed by <a href='http://www.sarinaga.com/'>SAYURIN-SENSEI</a></div>
+
+</body>
+
+</html>
+
+

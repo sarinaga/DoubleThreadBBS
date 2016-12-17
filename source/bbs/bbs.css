@@ -1,0 +1,623 @@
+/*
+                         ダブルスレッド掲示板 - 基本CSS
+
+                                                     2002.11.16 さゆりん先生
+
+*/
+
+
+
+/**************************************************************************
+                                   基本設定
+***************************************************************************/
+body{
+}
+
+h1{
+}
+
+h2{
+	font-size : 130%;
+	text-align : left;
+}
+
+h3{
+	font-size : 120%;
+}
+
+p{                            /* 通常文章 */
+	text-indent : 0.8em;
+	margin : 0.2em 0.5em;
+	padding : 0.1em;
+}
+
+
+p.caution{                    /* 注意文 */
+	color : black;
+	background-color : yellow;
+}
+
+
+p.warning{                    /* 警告文 */
+	color : white;
+	background-color : red;
+}
+
+form{
+}
+
+img{
+	border : 0 none;
+}
+
+
+/**************************************************************************
+                                   共通部分
+***************************************************************************/
+
+h1#title{                     /* 掲示板システム名表示 */
+
+	/* スタイル */
+	font-size : 80%;
+
+	/* 配置 */
+	text-align : right;
+
+	/* 色指定 */
+	color : red;
+
+	/* 境界値 */
+	padding : 0;
+	margin : 0;
+
+
+}
+
+h2#subtitle{                  /* サブタイトル */
+	/* フォント */
+	font-size : 150%;
+
+	/* 色指定 */
+	color : black;
+	background-color : white;
+	
+	/* 境界値 */
+	padding : 0 0.2em 0.2em;
+	margin : 0 0.1em 0.2em;
+}
+
+h2#error{
+	/* フォント */
+	font-size : 150%;
+
+	/* 色指定 */
+	color : black;
+	background-color : white;
+	
+	/* 境界値 */
+	padding : 0 0.2em 0.2em;
+	margin : 0 0.1em 0.2em;
+
+}
+
+
+div.post{                     /* 全体 - 新規スレッド作成、発言投稿、修正 */
+
+	/* 色指定 */
+	color : black;
+	background-color : white;
+
+	/* 境界値 */
+	padding : 0.2em;
+	margin : 0.2em 0.5em;
+
+}
+
+
+h3#post{                      /* 見出し - 新規スレッド作成、発言投稿、修正 */
+
+	/* 境界値 */
+	padding : 0.2em;
+	margin : 0.2em 0.1em;
+
+}
+
+form.post{                    /* フォーム - 新規スレッド作成、発言投稿、修正 */
+
+	/* 色指定 */
+
+	/* 境界値 */
+	padding : 0.5em 0.7em;
+	margin : 0.3em 0.5em;
+
+}
+
+
+table.post{                   /* フォーム - 新規スレッド作成、発言投稿、修正 */
+
+	/* 色指定 */
+
+}
+
+
+div.howto{
+
+}
+
+h3.howto{
+	border : 1px black solid;
+}
+
+
+
+
+
+
+
+/**************************************************************************
+                             スレッド一覧表示
+***************************************************************************/
+
+
+/* とくにありません */
+
+
+/*-------------------------------------------------------------------------
+                         スレッド一覧表示 - 板案内
+---------------------------------------------------------------------------*/
+div.info{
+	/* 境界値 */
+	padding : 0.2em;
+	margin : 0.2em;
+}
+
+
+h2#info{
+	/* 境界値 */
+	padding : 0.2em;
+	margin : 0.2em 0.1em;
+}
+
+
+/*-------------------------------------------------------------------------
+                       スレッド一覧表示 - スレッド一覧
+---------------------------------------------------------------------------*/
+
+div.thread{                   /* 一覧表示全体 */
+
+	/* 境界値 */
+	padding : 0.2em;
+	margin : 0.2em;
+
+}
+
+
+h3#thread{                    /* 見出し */
+
+	/* 境界値 */
+	padding : 0.2em;
+	margin : 0.2em 0.1em;
+}
+
+
+div.thread-list{              /* スレッド一覧表 */
+	padding : 0.5em 0.7em;
+	margin : 0.3em 0.5em;
+}
+
+table.thread-list{            /* スレッド一覧表 - 表 */
+	margin : 0;
+	padding : 0;
+}
+
+td.thread{
+	width : 21em;
+
+}
+
+td.date{
+	font-size : 75%;
+	width : 13.5em;
+}
+
+td.all{
+	font-size : 80%;
+	width : 5.5em;
+}
+
+td.titleonly{
+	font-size : 80%;
+	width : 5.5em;
+}
+
+
+/*-------------------------------------------------------------------------
+                       スレッド一覧表示 - 新規スレッド作成
+---------------------------------------------------------------------------*/
+div.create-thread{            /* 新規スレッド作成全体 */
+
+	/* 境界値 */
+	padding : 0.2em;
+	margin : 0.2em;
+
+}
+
+
+h3#create-thread{             /* 見出し */
+	/* 境界値 */
+	padding : 0.2em;
+	margin : 0.2em 0.1em;
+}
+
+
+/* フォーム部分は共通です。「共通部分」を参照すること。 */
+
+
+
+/**************************************************************************
+                        表示切り替え、発言、題名表示
+***************************************************************************/
+/*-------------------------------------------------------------------------
+                               表示切り替え
+---------------------------------------------------------------------------*/
+table.change-mode{
+	margin-left : 1.2em;
+}
+
+h3#change-mode{              /* 見出し */
+	/* 境界値 */
+	padding : 0.2em;
+	margin : 0.2em 0.1em;
+}
+
+/*-------------------------------------------------------------------------
+                                 題名表示
+---------------------------------------------------------------------------*/
+div.subject{                  /* 題名表示 - 全体 */
+
+	/* 色指定 */
+	color : black;
+
+	/* 境界値 */
+	padding : 0.2em;
+	margin : 0.2em;
+}
+
+
+h3#subject{                   /* 見出し */
+
+	/* 境界値 */
+	padding : 0.2em;
+	margin : 0.2em 0.1em;
+}
+
+
+div.tree{                     /* コメントツリー表示 */
+
+	/* 色指定 */
+
+	/* 境界値 */
+	padding : 0.5em 0.7em;
+	margin : 0.3em 0.5em;
+
+}
+
+
+div.list{
+
+	/* 境界値 */
+	padding : 0.5em 0.7em;
+	margin : 0.3em 0.5em;
+
+}
+
+table.list{                   /* リスト（通常）表示 */
+
+	/* 境界値 */
+	margin : 0;
+
+}
+
+td.num{                       /* 発言番号 */
+	width : 1.5em;
+	padding : 0.1em 0.2em;
+}
+
+td.title{                     /* 発言タイトル */
+	width : 15em;
+	padding : 0.1em 0.5em 0.1em 0.1em;
+}
+
+td.name{                      /* 投稿者名前 */
+	width : 16em;
+	font-size : 80%;
+	padding : 0.1em;
+}
+
+
+td.response{                  /* レス先番号 */
+	width : 10em;
+	font-size : 75%;
+	padding : 0.1em 1.25em 0.1em 0.75em;
+}
+
+
+td.id{                        /* ID表示 */
+	width : 4em;
+	font-size : 80%;
+	padding : 0.1em 0.75em 0.1em 0.1em;
+}
+
+
+td.ip-addr{                   /* IPアドレス表示 */
+	font-size : 75%;
+	padding : 0.1em;
+}
+
+
+/*-------------------------------------------------------------------------
+                                発言表示
+---------------------------------------------------------------------------*/
+
+div.message{                  /* 発言表示 - 全体 */
+
+	/* 色指定 */
+	color : black;
+
+	/* 境界値 */
+	padding : 0.2em;
+	margin : 0.2em;
+
+}
+
+
+h3#message{                   /* 見出し */
+
+	/* 境界値 */
+	padding : 0.2em;
+	margin : 0.2em 0.1em;
+
+}
+
+
+dl.message{                   /* 発言ブロック */
+
+	/* 色指定 */
+
+	/* 境界値 */
+	margin : 0.3em 0.5em 0.2em;
+	padding : 0.5em 0.7em 0.2em;
+
+}
+
+
+dt.header{                    /* 発言ブロック - 情報 */
+
+	/* スタイル */
+	font-size : 95%;
+
+	/* 色指定 */
+
+	/* 境界値 */
+	margin  : 0.3em 0em;
+	padding : 0;
+
+}
+
+
+dd.body{                      /* 発言ブロック - 本文 */
+
+	/* 境界値 */
+	margin  : 0.8em 0.2em 1em;
+	padding : 0;
+
+
+}
+
+
+dd.tomato{                      /* 発言ブロック - IPアドレス情報 */
+
+	/* スタイル */
+	font-size : 80%;
+
+	/* 色指定 */
+	color : white;
+	background-color : red;
+
+	/* 境界値 */
+	margin  : 0.75em 0.5em;
+	padding : 0.25em;
+
+}
+
+dd.info{                      /* 発言ブロック - システム情報 */
+
+	/* スタイル */
+	font-size : 80%;
+
+	/* 色指定 */
+	color : black;
+	background-color : yellow;
+
+	/* 境界値 */
+	margin  : 0.75em 0.5em 1.5em;
+	padding : 0.25em;
+
+}
+
+q{ quotes: none; }
+q:before { content: no-open-quote }
+q:after { content: no-close-quote }
+
+q.quote-gt{                   /* 発言引用部分 - '>' */
+	color : green;
+}
+
+
+q.quote-pipe{                 /* 発言引用部分 - '|' */
+	color : red;
+}
+
+q.quote-percent{              /* 発言引用部分 - '%' */
+	color : purple;
+}
+
+q.quote-sharp{                /* 発言引用部分 - '#' */
+	color : blue;
+}
+
+
+
+/**************************************************************************
+                                 管理者モード
+***************************************************************************/
+div.admin-info{
+	/* 色指定 */
+	color : black;
+
+	/* 境界値 */
+	padding : 0.2em;
+	margin : 0.2em;
+}
+h2#adminmode{
+	padding : 0.2em;
+	margin : 0.2em 0.1em;
+}
+
+
+
+div.admin-command{
+	/* 色指定 */
+	color : black;
+
+	/* 境界値 */
+	padding : 0.2em;
+	margin : 0.2em;
+}
+h2#admin-command{
+	padding : 0.2em;
+	margin : 0.2em 0.1em;
+}
+
+
+div.admin-howtouse{
+	/* 色指定 */
+	color : black;
+
+	/* 境界値 */
+	padding : 0.2em;
+	margin : 0.2em;
+
+}
+
+h2#admin-howtouse{
+	padding : 0.2em;
+	margin : 0.2em 0.1em;
+}
+
+dl.admin-howtouse{
+	/* 境界値 */
+	padding : 0.2em;
+	margin : 0.5em;
+
+}
+
+dt.command{
+	font-style : monospace;
+	margin : 0.2em 0.2em 0.2em 0em;
+
+}
+
+dd.command-exp{
+	font-style : monospace;
+	margin : 0.2em 0.2em 1em 0em;
+}
+
+
+
+div.admin-example{
+	/* 色指定 */
+	color : black;
+
+	/* 境界値 */
+	padding : 0.2em;
+	margin : 0.2em;
+}
+
+
+/**************************************************************************
+                               ナビゲーション
+***************************************************************************/
+
+div.link{                     /* リンクバー */
+
+	/* スタイル */
+	font-size : 75%;
+
+	/* 色指定 */
+	color : black;
+	background-color : #CCFFCC;
+
+	/* 境界値 */
+	padding : 0.2em;
+	margin : 1em;
+
+}
+
+
+div.version{                  /* バージョン情報など */
+
+	/* 配置 */
+	text-align : center;
+
+	/* スタイル */
+	font-size : 80%;
+
+	/* 境界値 */
+	padding : 0.2em;
+	margin : 2em 1em 1em;
+}
+
+
+div.error{                    /* エラーメッセージ */
+
+	/* 境界値 */
+	padding : 0.1em;
+	margin : 0.1em 0.1em;
+}
+
+
+
+
+
+a:link{
+	color : blue;
+}
+
+a:visit{
+	color : blue;
+}
+
+a:hover{
+	color : blue;
+	background-color : yellow;
+}
+
+
+a:active{
+	color : red;
+	backqround-color :yellow;
+}
+
+span.trip{
+	font-size : 90%;
+	color : red;
+}
+
+span.ctrl{
+	font-size : 95%;
+}
+
+
+
+

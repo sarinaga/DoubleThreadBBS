@@ -1,0 +1,13 @@
+[Sun Nov 14 11:01:06 2004] read.cgi: Name "html::NO_REVISE" used only once: possible typo at read.cgi line 155.
+[Sun Nov 14 11:01:06 2004] read.cgi: Name "html::COMPLETE" used only once: possible typo at read.cgi line 156.
+[Sun Nov 14 11:01:06 2004] read.cgi: Name "html::POST" used only once: possible typo at read.cgi line 550.
+[Sun Nov 14 11:01:06 2004] read.cgi: Name "html::REVISE" used only once: possible typo at read.cgi line 606.
+[Sun Nov 14 11:01:06 2004] read.cgi: Name "html::PASS_REINPUT" used only once: possible typo at read.cgi line 605.
+[Sun Nov 14 11:01:06 2004] read.cgi: Name "writecgi::REVISE" used only once: possible typo at read.cgi line 606.
+[Sun Nov 14 11:01:06 2004] read.cgi: Name "writecgi::POST" used only once: possible typo at read.cgi line 550.
+[Sun Nov 14 11:01:06 2004] read.cgi: Name "file::READ_SCRIPT" used only once: possible typo at read.cgi line 663.
+[Sun Nov 14 11:01:06 2004] read.cgi: Name "file::EXT_GZIP" used only once: possible typo at read.cgi line 687.
+[Sun Nov 14 11:01:06 2004] read.cgi: Use of uninitialized value at read.cgi line 163.
+[Sun Nov 14 11:01:06 2004] read.cgi: Use of uninitialized value at read.cgi line 166.
+[Sun Nov 14 11:01:06 2004] read.cgi: Use of uninitialized value at read.cgi line 169.
+-read.cgi-
