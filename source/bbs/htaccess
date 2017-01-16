@@ -1,7 +1,7 @@
 #
-# ���֥륹��åɷǼ����� .htaccess ����
+# ダブルスレッド掲示板用 .htaccess 設定
 #
-#                                                 2004.10.15 ����������
+#                                                 2004.10.15 さゆりん先生
 #
 #Options +ExecCGI -Indexes
 #AddHandler cgi-script .cgi
@@ -10,17 +10,17 @@ DirectoryIndex index.html
 AddType "text/javascript; charset=euc-jp" js
 AddType "text/html; charset=euc-jp" html
 
-# �����������¤δ�������
+# アクセス制限の基本設定
 Order allow,deny 
 Allow from all
 
-# �ץ�������������ä���
+# プログラムと設定を隠蔽する
 <Files ~ "\.(pl|info|conf)$">
   deny from all
 </Files>
 
-# �ǥХå����򤹤�Ȥ��Ϥ����򥳥��Ȥ�̵���ˤ����
-# error.log���������䤹���ʤ�ޤ�
+# デバッグ報告をするときはここをコメントで無効にすると
+# error.logが取得しやすくなります
 <Files "*.log">
   deny from all
 </Files>
@@ -33,9 +33,9 @@ Allow from all
 </Files>
 
 
-# �ʲ���������������
+# 以下、アクセス制限
 
-#���ܿͰʳ�����߶ػ�
+#日本人以外書込み禁止
 <Limit POST>
 order deny,allow
 deny from all
