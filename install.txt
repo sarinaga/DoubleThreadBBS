@@ -1,35 +1,35 @@
 
-                            �_�u���X���b�h�f���� �C���X�g�[�����@
+                            ダブルスレッド掲示板 インストール方法
 
-                                                        2016/12/17 ����Ȃ�
+                                                        2016/12/17 さりなが
 
 
-�O�����
-   �EUNIX��œ��삷��Apache��CGI�v���O���������s�ł����.
-   �ECGI�v���O������Apache��suEXEC�ɂ��A���Ȃ��Ɠ������[�U�[�����œ��삷��
-     ����.
+前提条件
+   ・UNIX上で動作するApacheがCGIプログラムを実行できる環境.
+   ・CGIプログラムはApacheのsuEXECにより、あなたと同じユーザー権限で動作する
+     こと.
    
-�C���X�g�[�����@
-   1. �\�[�X�t�@�C���̃R�s�[
-       �Ewwwroot�z���̓K���ȏꏊ��source/bbs�̓��e���R�s�[���܂�.
+インストール方法
+   1. ソースファイルのコピー
+       ・wwwroot配下の適当な場所にsource/bbsの内容をコピーします.
          (e.g. wwwroot/bbs)
 
-   2. �T�[�o�[����ݒ��
-      �E�K�v�ɉ�����httpd.conf, .htaccess��ҏW���܂�
-          [Windows�ŕҏW���Ă���s����A�t�@�C������htaccess�ɂ��Ă��܂�.]
-          [���̃v���O�����͂Ђǂ��Â��̂ŕ����R�[�h��EUC-JP�ɂȂ��Ă��܂�.
-           �ς��Ȃ��ł�������]
+   2. サーバー動作設定を
+      ・必要に応じてhttpd.conf, .htaccessを編集します
+          [Windowsで編集している都合上、ファイル名をhtaccessにしています.]
+          [このプログラムはひどく古いので文字コードがEUC-JPになっています.
+           変えないでください]
    
-   3. �t�@�C���������ȉ��̂悤�ɐݒ肵�Ă�������,
+   3. ファイル権限を以下のように設定してください,
           .htaccess       644
-          *.cgi           700   (httpd�����s�ł��錠��)
+          *.cgi           700   (httpdが実行できる権限)
           *.html          644
           *.css           644
-          bbs.conf        600   (httpd���ǂݏ����ł��錠��)
-          *.pl            600   (httpd���ǂݏ����ł��錠��)
+          bbs.conf        600   (httpdが読み書きできる権限)
+          *.pl            600   (httpdが読み書きできる権限)
           *.info          644
           permisson.txt   600
 
-  4. ���̂��Ƃ̎菇�͌��݋L�q���ł�.
+  4. このあとの手順は現在記述中です.
 
 

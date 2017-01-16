@@ -1,231 +1,231 @@
 
-                          �ޥ������åɷǼ��� ���󥹥ȡ�����ˡ
+                          マルチスレッド掲示板 インストール方法
 
-                                                      2004/10/18 ���������� 
+                                                      2004/10/18 さゆりん先生 
 
-��ɬ�פʴĶ�
+☆必要な環境
 
-��Perl5.004�ʾ夬���󥹥ȡ��뤵�줿UNIX�ޤ���Windows
-��Apache 1.??�ʹ� [UNIX�Ǥ�SuExec�����Ѥ��뤳�Ȥ�����]
+・Perl5.004以上がインストールされたUNIXまたはWindows
+・Apache 1.??以降 [UNIXではSuExecを利用することが前提]
 
-ư���ǧ��Windows2000(or XP) & Perl5.8.1 & Apache2.0��FreeBSD??? & Apache????
-(�����饤�󥿡��ͥåȤε쥵���С�)�ǹԤäƤ��ޤ���
-
-
-�����Ѥ���⥸�塼��
-
-�ʲ��Υ⥸�塼��Υ��󥹥ȡ��뤬ɬ�פǤ���
-
-  ��Digest-MD5: http://search.cpan.org/~gaas/Digest-MD5-2.33/
-  ��Digest-SHA1: http://search.cpan.org/~gaas/Digest-SHA1-2.10/
-  ��Crypt-PasswdMD5: http://search.cpan.org/~luismunoz/Crypt-PasswdMD5-1.3/
-  ��CGI: http://search.cpan.org/~lds/CGI.pm-3.05/
+動作確認はWindows2000(or XP) & Perl5.8.1 & Apache2.0とFreeBSD??? & Apache????
+(さくらインターネットの旧サーバー)で行っています。
 
 
-�ä��ưʲ��Υ⥸�塼��򥤥󥹥ȡ��뤷�Ƥ����Ȥ��褤�Ǥ��礦��
+☆利用するモジュール
 
-  ��Encode: http://search.cpan.org/~dankogai/Encode-2.03/
-  ��Time::HiRes: http://search.cpan.org/~jhi/Time-HiRes-1.65/
+以下のモジュールのインストールが必要です。
 
-Encode�⥸�塼��˴ؤ��Ƥϡ��ʤ������Ѥ���Jcode.pl��
-���Ѥ���Τǥ��󥹥ȡ��뤹��ɬ�פϤ���ޤ���
-
-Time::HiRes�⥸�塼��ϥ��󥹥ȡ��뤹��ȥե�������å�������
-�ѥե����ޥ󥹸��夬���ԤǤ��ޤ���
-
-�����Ƥ��Υ����ƥ�Ǥ�Crypt-PasswdMD5�Τߤ򥤥󥹥ȡ��뤹���
-�����Ǥ��礦��
-
-ɮ�ԤδĶ�(�����饤�󥿡��ͥåȵ쥵���С�Perl5.004)�Ǥ�Crypt-PasswdMD5,
-Digest-SHA1, Digest-MD5�Υ��󥹥ȡ��뤬ɬ�פǤ�����
-
-�⥸�塼��Υ��󥹥ȡ�����ˡ�ϥ饯���ܤʤɤ򻲾Ȥ��Ƥ���������
-Windows�����ƥ�ؤΥ��󥹥ȡ���Ϥ���ʤ��Υץ�����ߥ󥰤������Ȣ
-()�ˤ�Ǻܤ��Ƥ���ΤǤ����Ȥ���������
+  ・Digest-MD5: http://search.cpan.org/~gaas/Digest-MD5-2.33/
+  ・Digest-SHA1: http://search.cpan.org/~gaas/Digest-SHA1-2.10/
+  ・Crypt-PasswdMD5: http://search.cpan.org/~luismunoz/Crypt-PasswdMD5-1.3/
+  ・CGI: http://search.cpan.org/~lds/CGI.pm-3.05/
 
 
+加えて以下のモジュールをインストールしておくとよりよいでしょう。
 
-���Ǽ���������ˡ
+  ・Encode: http://search.cpan.org/~dankogai/Encode-2.03/
+  ・Time::HiRes: http://search.cpan.org/~jhi/Time-HiRes-1.65/
 
-���ּ��ϰʲ��Τ褦�˹Ԥ��ޤ���
+Encodeモジュールに関しては、ない場合は変わりにJcode.plを
+利用するのでインストールする必要はありません。
 
-   0. �ե���������֡�ž��
-   1. ".htaccess"       ������ (�����Ƥ��ξ��������ɬ�פʤ�)
-   2. "bbs.conf"        ������
-   3. "threadlist.info" ������
-   4. "bbs.css"         ������ (�ä�ɬ�פ�������Τ�)
-   5. "admin.info"      ������ (�ä�ɬ�פ�������Τ�)
-   6. *.cgi�ե������1���ܽ񤭴���
-   7. �ե�����ѡ��ߥå���������
-   8. (init.html����)���������
-   9. �����ԥѥ���ɤ��ѹ�
+Time::HiResモジュールはインストールするとファイルロック処理の
+パフォーマンス向上が期待できます。
 
-�ʲ������줾��ˤĤ��Ʋ��⤷�Ƥ����ޤ���
+たいていのシステムではCrypt-PasswdMD5のみをインストールすれば
+いいでしょう。
+
+筆者の環境(さくらインターネット旧サーバーPerl5.004)ではCrypt-PasswdMD5,
+Digest-SHA1, Digest-MD5のインストールが必要でした。
+
+モジュールのインストール方法はラクダ本などを参照してください。
+Windowsシステムへのインストールはさりながのプログラミングおもちゃ箱
+()にも掲載しているのでご参照ください。
 
 
-0. �ե���������֡�ž��
 
-�ޤ���tarball��Ÿ������Ȱʲ��Τ褦�ʥե����뤬��������ޤ���
-�����Υե������CGI��ư�����ǥ��쥯�ȥ�˰�ư���ޤ���
-�ƥե���������򵭽Ҥ��ޤ����Τǻ��ͤˤ��Ƥ���������
+☆掲示板設置方法
 
-  .htaccess   apache������ե�����.
+設置手順は以下のように行います。
 
-  admin.cgi   �����Ե�ǽ���󶡤���CGI�ץ������.
-  read.cgi    �Ǽ���ɽ����ǽ���󶡤���CGI�ץ������.
-  write.cgi   ��ƽ�����ǽ���󶡤���CGI�ץ������.
+   0. ファイルの設置・転送
+   1. ".htaccess"       の設定 (たいていの場合は設定の必要なし)
+   2. "bbs.conf"        の設定
+   3. "threadlist.info" の設定
+   4. "bbs.css"         の設定 (特に必要がある場合のみ)
+   5. "admin.info"      の設定 (特に必要がある場合のみ)
+   6. *.cgiファイルの1行目書き換え
+   7. ファイルパーミッションの設定
+   8. (init.htmlから)初期化処理
+   9. 管理者パスワードの変更
 
-  file.pl     ��˥ե����������ϴ�Ϣ�ν�����Ԥ�Perl������ץ�.
-  write.pl    �����ѿ���¸��.
-  html.pl     ���HTML���ϴ�Ϣ�ν�����Ԥ�Perl������ץ�.
-  std.pl      ����Ū�ʽ�����Ԥ�Perl������ץ�.
-  jcode.pl    ʸ���������Ѵ���Ԥ�Perl������ץ�. Encode.pm�����ѤǤ��ʤ��Ȥ�
-              ��������Ѥ����.
+以下、それぞれについて解説していきます。
 
-  bbs.conf        �ޥ������åɷǼ��Ĥ�����ե�����.
-  admin.info      admin.html�θ��Ȥʤ�ե�����.
-  threadlist.info index.html�θ��Ȥʤ�ե�����.
 
-  bbs.html    �ޥ������åɷǼ��Ĥ�������ˡ���񤫤줿HTML�ե�����.
-  bbs.css     �ޥ������åɷǼ��ĤΥ������륷����(CSS).
-  bbs.js      �ޥ������åɷǼ��Ĥ����Ѥ���Javascript.
-  init.html   �ޥ������åɷǼ��Ĥ�ǽ�����Ѥ���Ȥ������Υե����뤫��
-              �����������ƤӽФ�.
+0. ファイルの設置・転送
 
-  admin.html  (Ÿ�������ʳ��Ǥ����ƤϤ���ޤ���) �����ԥ�˥塼��HTML.
-  index.html  (Ÿ�������ʳ��Ǥ����ƤϤ���ޤ���) �Ǽ��ĤΥȥåץڡ���.
+まず、tarballを展開すると以下のようなファイルが作成されます。
+これらのファイルをCGIを動作させるディレクトリに移動します。
+各ファイルの役割を記述しましたので参考にしてください。
 
-  icon_mail.gif Email����
-  icon_web.gif  Webpage����
+  .htaccess   apacheの設定ファイル.
 
-  readme.txt  ���Υե�����:-).
+  admin.cgi   管理者機能を提供するCGIプログラム.
+  read.cgi    掲示板表示機能を提供するCGIプログラム.
+  write.cgi   投稿処理機能を提供するCGIプログラム.
+
+  file.pl     主にファイル入出力関連の処理を行うPerlスクリプト.
+  write.pl    共通変数保存用.
+  html.pl     主にHTML出力関連の処理を行うPerlスクリプト.
+  std.pl      汎用的な処理を行うPerlスクリプト.
+  jcode.pl    文字コード変換を行うPerlスクリプト. Encode.pmが利用できないとき
+              代わりに利用される.
+
+  bbs.conf        マルチスレッド掲示板の設定ファイル.
+  admin.info      admin.htmlの元となるファイル.
+  threadlist.info index.htmlの元となるファイル.
+
+  bbs.html    マルチスレッド掲示板の利用方法が書かれたHTMLファイル.
+  bbs.css     マルチスレッド掲示板のスタイルシート(CSS).
+  bbs.js      マルチスレッド掲示板が利用するJavascript.
+  init.html   マルチスレッド掲示板を最初に利用するとき、このファイルから
+              初期化処理を呼び出す.
+
+  admin.html  (展開した段階では内容はありません) 管理者メニューのHTML.
+  index.html  (展開した段階では内容はありません) 掲示板のトップページ.
+
+  icon_mail.gif Email画像
+  icon_web.gif  Webpage画像
+
+  readme.txt  このファイル:-).
   faq.txt     FAQ:-).
 
 
-1. ".htaccess" ������
+1. ".htaccess" の設定
 
-���鷺���Τ줿apache������������ե�����Ǥ���
-����ξ���tarball��Ÿ�������ޤޤ����ƤǤ�����פǤ���
-Ÿ�����줿 .htaccess �ǹԤäƤ�������ϰʲ��ΤȤ���Ǥ���
+言わずと知れたapacheの制御用設定ファイルです。
+大抵の場合はtarballを展開したままの内容でで大丈夫です。
+展開された .htaccess で行っている設定は以下のとおりです。
 
-  ��CGI�μ¹Ԥ���Ĥ���.
-  ���ǥ��쥯�ȥꥤ��ǥå�����ɽ�����ʤ�.
-  ���ե�����̾�����ꤵ��ʤ��ä��Ȥ���index.html��ɽ������.
+  ・CGIの実行を許可する.
+  ・ディレクトリインデックスを表示しない.
+  ・ファイル名が指定されなかったときはindex.htmlを表示する.
 
-  ��HTML�ե��������������http�ꥯ�����ȥإå���Accept��application/xml
-    �ޤ���application/xhtml+xml������Ȥ��Ϥ����Content-Type�Ȥ����֤�.
-    �����Ǥʤ��Ȥ���Content-Type��text/html; charset=euc-jp���֤�.
+  ・HTMLファイルの送信時、httpリクエストヘッダのAcceptにapplication/xml
+    またはapplication/xhtml+xmlがあるときはそれをContent-Typeとして返す.
+    そうでないときはContent-Typeにtext/html; charset=euc-jpを返す.
 
-  ��JavaScript�ե������Content-Type��text/html; charset=euc-jp���֤�.
-  ����ĥ�Ҥ� .pl .info .conf �Ǥ���ե�����Υ���������ػߤ���.
-  ����ĥ�Ҥ� .log �Ǥ���ե�����Υ���������ػߤ���.
-  ��bbs.html �� admin.html �Υ������륭��å����̵���ˤ���.
+  ・JavaScriptファイルのContent-Typeをtext/html; charset=euc-jpで返す.
+  ・拡張子が .pl .info .conf であるファイルのアクセスを禁止する.
+  ・拡張子が .log であるファイルのアクセスを禁止する.
+  ・bbs.html と admin.html のローカルキャッシュを無効にする.
 
-ɬ�פ�����С����Ȥ��δĶ��˹�碌���ѹ����ޤ���
-�����������¤ʤɤ�����Ȥ��⤳������Ԥ��ޤ���
-
-
-2. "bbs.conf" ������
-
-���Υե�����ǷǼ��Ĥδ���Ū�������Ԥ��ޤ���
-������ˡ�����Ƥ�bbs.conf�˾ܤ����񤫤�Ƥ���ΤǤ���򻲾Ȥ��Ƥ���������
+必要があれば、お使いの環境に合わせて変更します。
+アクセス制限などがあるときもここから行います。
 
 
-3. "threadlist.info" ������
+2. "bbs.conf" の設定
 
-�Ǽ��ĤΥȥåץڡ����Ǥ��� bbs.html ������ʸ�ΤȤ����򺹤��ؤ��뤳�Ȥ�
-�Ǥ��ޤ��������� threadlist.info �˽񤫤�Ƥ���Τǡ�������򻲾Ȥ���
-����������
-
-
-4. "bbs.css" ������ (�ä�ɬ�פ�������Τ�)
-
-�Ǽ��ĤΥǥ����󤬵�������ʤ��Ȥ��ϡ�����CSS�ե������񤭴�����
-�ǥ�������ѹ����뤳�Ȥ��Ǥ��ޤ���
-
-CGI�ץ�����ब�ɤ��ǤɤΤ褦��id class°������Ϥ��Ƥ��뤫�ˤĤ��Ƥ�,
-�ºݤ˽��Ϥ����XHTML����Ϥ��Ƥ��������Ȥ��������褦������ޤ���^^;��
+このファイルで掲示板の基本的な設定を行います。
+記述方法や内容はbbs.confに詳しく書かれているのでそれを参照してください。
 
 
-5. "admin.info" ������ (�ä�ɬ�פ�������Τ�)
+3. "threadlist.info" の設定
 
-admin.html�Υǥ�������ѹ����뤳�Ȥ��Ǥ��ޤ���������Ū�˽񤭴����Ƥ�
-�����ޤ���$?????? ����ʬ���ѿ�Ÿ������ޤ��Τǡ��񤭴�����Ȥ���
-������ʬ�˻پ㤬�ʤ��褦�˽񤭴����뤳�Ȥ�ɬ�פˤʤ�ޤ���
-
-
-6. *.cgi�ե������1���ܽ񤭴���
-
-1���ܤ� #!/usr/bin/perl ��Perl�ؤΥѥ��˽񤭴����ޤ�.
-�ɤΤ褦�˽񤭴����뤫�ϥ����ƥ�����Ԥˤ��䤤��碌����������
+掲示板のトップページである bbs.html の説明文のところを差し替えることが
+できます。説明は threadlist.info に書かれているので、そちらを参照して
+ください。
 
 
-7. �ե�����ѡ��ߥå���������
+4. "bbs.css" の設定 (特に必要がある場合のみ)
 
-�ƥե�����Υѡ��ߥå����ϰʲ��Τ褦�����ꤷ�Ƥ���������
-����å���(/)�ʹߤ�SuEXEC�����Ѥ��ʤ��Ȥ���ʪ�Ǥ���
+掲示板のデザインが気に入らないときは、このCSSファイルを書き換えて
+デザインを変更することができます。
 
-   .htaccess    644/644   (httpd���ɤ�븢��)
-   *.cgi        700/777   (��ʬ���¹ԤǤ��븢��/httpd���¹ԤǤ��븢��)
-   *.html       644/644   (httpd���ɤ�븢��)
-   *.css        644/644   (httpd���ɤ�븢��)
-   bbs.conf     600/644   (��ʬ���ɤ�븢��/httpd���ɤ�븢��)
-   *.pl         600/644   (��ʬ���ɤ�븢��/httpd���ɤ�븢��)
-   *.info       600/644   (��ʬ���ɤ�븢��/httpd���ɤ�븢��)
-
-�����˳������ʤ��ե�����Υ����������˴ؤ��Ƥ�Ŭ���Ǥ��ޤ��ޤ���
-(�ޤ���readme.txt�Ȥ��Ǥ�����...)
-
-���ʤߤˡ�SuExec�����Ѥ��ʤ����� www��nobody���ե������ͭ����
-���Ĥ��ȤˤʤäƤ��ޤ��褯����ޤ��󡣤ޤ���bbs.conf��������
-�ɤ�뤳�Ȥˤ�ʤäƤ��ޤ��ޤ���
+CGIプログラムがどこでどのようなid class属性を出力しているかについては,
+実際に出力されるXHTMLを解析してくださいとしか言いようがありません^^;。
 
 
-8. (init.html����)���������
+5. "admin.info" の設定 (特に必要がある場合のみ)
 
-Web�֥饦������init.html�򳫤��ޤ����������ޤ��ȡ��������¥����å�������
-ɽ������ޤ��Τǡ��Ƽ�������������Ԥä����Ȥ��ǧ���Ƥ���ֽ���������
-�ܥ���򲡲����Ƥ���������
-
-���꤬��������С�����˽�λ�����ݤΥ�å�������ɽ������ޤ���
-���Ԥ����Ȥ��ϥ��顼��å�������ɽ������ޤ�������ξ�������ߥ�
-�Ǥ��ΤǤ⤦����1.����6.�ޤǤ������ľ���ƤߤƤ���������
-
-����Ǥ�ư���ʤ��ä��Ȥ���......���ݡ��ȥ���Ǽ��䤷�Ƥ���������
+admin.htmlのデザインを変更することができますが、基本的に書き換えては
+いけません。$?????? の部分が変数展開されますので、書き換えるときは
+その部分に支障がないように書き換えることが必要になります。
 
 
-9. �����ԥѥ���ɤ��ѹ�
+6. *.cgiファイルの1行目書き換え
 
-�ѥ���ɥե������ bbs.conf �ǻ��ꤷ�� SECRET_LOG�ǥ��쥯�ȥ��۲��� passwd
-�Ȥ����ե�����̾�Ǻ�������ޤ�. ����桼��/�ѥ���ɤϡ�admin/admin�פˤʤä�
-����Τǡ����Τޤޤ����Τ�ʤ��軰�Ԥ˷Ǽ��Ĥδ����⡼�ɤ������Ԥ��Ƥ��ޤ�
-�ޤ����ѥ���ɤ��ѹ����Ƥ���������
-
-�ѹ���ˡ��2�Ĥ���ޤ���
-
-  ��htpasswd���ޥ�ɤ����Ѥ��� (passwd�ե������htpasswd�����Ǥ�)
-  �������⡼�ɤ�password���ޥ�ɤ����Ѥ���
-
-���줾�� man htpasswd �� admin.html �������򻲹ͤˤ��Ƥ���������
-
-�ʤ��������桼���򿷤����ɲä���ˤϡ�htpasswd���ޥ�ɤǥ桼����
-�ɲä��ʤ��ƤϤʤ�ޤ���
+1行目の #!/usr/bin/perl をPerlへのパスに書き換えます.
+どのように書き換えるかはシステム管理者にお問い合わせください。
 
 
+7. ファイルパーミッションの設定
 
-�����ָ�κ��
+各ファイルのパーミッションは以下のように設定してください。
+スラッシュ(/)以降はSuEXECを利用しないときの物です。
 
-���ϤȤ⤢�졢bbs.html�򳫤��������ư�����Ȥ��ǧ���Ƥ���������
-���顼��ȯ�������Ȥ��ϡ�error.log��perl�Υ��顼��å����������Ϥ����Τ�
-����򻲹ͤˤ��ޤ���httpd - apache�Υ����ե�����⻲�ͤˤʤ�Ǥ��礦��
+   .htaccess    644/644   (httpdが読める権限)
+   *.cgi        700/777   (自分が実行できる権限/httpdが実行できる権限)
+   *.html       644/644   (httpdが読める権限)
+   *.css        644/644   (httpdが読める権限)
+   bbs.conf     600/644   (自分が読める権限/httpdが読める権限)
+   *.pl         600/644   (自分が読める権限/httpdが読める権限)
+   *.info       600/644   (自分が読める権限/httpdが読める権限)
 
-�����ư�����Ȥ��ǧ�����顢bbs.conf�ʤɤ���Ĵ���ʤɤ�Ŭ���Ԥ���
-�����Ǥ��礦��
+ここに該当しないファイルのアクセス権に関しては適当でかまいません。
+(まあ、readme.txtとかですから...)
+
+ちなみに、SuExecを利用しない場合は wwwやnobodyがファイル所有権を
+持つことになってしまいよくありません。また、bbs.confが外から
+読めることにもなってしまいます。
+
+
+8. (init.htmlから)初期化処理
+
+Webブラウザからinit.htmlを開きます。そうしますと、初期化を促すメッセージが
+表示されますので、各種設定を正しく行ったことを確認してから「初期化する」
+ボタンを押下してください。
+
+設定が正しければ、正常に終了した旨のメッセージが表示されます。
+失敗したときはエラーメッセージが表示されます。大抵の場合は設定ミス
+ですのでもう一度1.から6.までの設定を見直してみてください。
+
+それでも動かなかったときは......サポートスレで質問してください。
+
+
+9. 管理者パスワードの変更
+
+パスワードファイルは bbs.conf で指定した SECRET_LOGディレクトリ配下に passwd
+というファイル名で作成されます. 初期ユーザ/パスワードは「admin/admin」になって
+いるので、そのままだと知らない第三者に掲示板の管理モードから操作が行えてしまい
+ます。パスワードを変更してください。
+
+変更方法は2つあります。
+
+  ・htpasswdコマンドを利用する (passwdファイルはhtpasswd形式です)
+  ・管理モードのpasswordコマンドを利用する
+
+それぞれ man htpasswd と admin.html の説明を参考にしてください。
+
+なお、管理ユーザを新たに追加するには、htpasswdコマンドでユーザを
+追加しなくてはなりません。
 
 
 
-���Ǹ��
+☆設置後の作業
 
-�ޤ����Υ�����ץȤϦ¤Ǥ��뤿�ᡢ�ޥ˥奢�롦�ץ������Ȥ�˴ְ㤤����
-����Ȼפ��ޤ��������ΤȤ��ϡ��ƼϤʤ����ݡ���BBS�����˽񤭹���Ǥ���������
+何はともあれ、bbs.htmlを開き、正常に動くことを確認してください。
+エラーが発生したときは、error.logにperlのエラーメッセージが出力されるので
+それを参考にします。httpd - apacheのログファイルも参考になるでしょう。
+
+正常に動くことを確認したら、bbs.confなどの微調整などを適時行えば
+いいでしょう。
+
+
+
+☆最後に
+
+まだこのスクリプトはβであるため、マニュアル・プログラムともに間違い等が
+あると思われましす。そのときは、容赦なくサポートBBSの方に書き込んでください。
 
