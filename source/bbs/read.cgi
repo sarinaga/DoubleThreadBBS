@@ -2,9 +2,9 @@
 #!C:/Perl/bin/perl -w
 #
 #
-# ¥Ş¥ë¥Á¥¹¥ì¥Ã¥É·Ç¼¨ÈÄ - È¯¸ÀÉ½¼¨¥¹¥¯¥ê¥×¥È read.cgi
+# ãƒãƒ«ãƒã‚¹ãƒ¬ãƒƒãƒ‰æ²ç¤ºæ¿ - ç™ºè¨€è¡¨ç¤ºã‚¹ã‚¯ãƒªãƒ—ãƒˆ read.cgi
 #
-#                                          2002.10.23 ¤µ¤æ¤ê¤óÀèÀ¸
+#                                          2002.10.23 ã•ã‚†ã‚Šã‚“å…ˆç”Ÿ
 #
 use strict;
 use lib '/home/sarinaga/perllib/';
@@ -23,102 +23,102 @@ BEGIN{
 	}
 }
 unless($ENV{'HTTP_HOST'}){
-	print "¤³¤Î¥×¥í¥°¥é¥à¤ÏCGIÍÑ¤Ç¤¹. ¥³¥Ş¥ó¥É¥é¥¤¥ó¤«¤é¤Î¼Â¹Ô¤Ï¤Ç¤­¤Ş¤»¤ó. \n";
+	print "ã“ã®ãƒ—ãƒ­ã‚°ãƒ©ãƒ ã¯CGIç”¨ã§ã™. ã‚³ãƒãƒ³ãƒ‰ãƒ©ã‚¤ãƒ³ã‹ã‚‰ã®å®Ÿè¡Œã¯ã§ãã¾ã›ã‚“. \n";
 	exit;
 }
 
-# Æ°ºî´Ä¶­ÆÉ¤ß¼è¤ê
+# å‹•ä½œç’°å¢ƒèª­ã¿å–ã‚Š
 use vars qw(%CONF);
 error_fail_conf() unless(file::config_read(\%CONF));
 
-# CGI¥¯¥é¥¹ÍøÍÑ
+# CGIã‚¯ãƒ©ã‚¹åˆ©ç”¨
 my $cgi = new CGI;
 
-# ¥ê¥¯¥¨¥¹¥È¤ÏGET¤Ç¤Ê¤±¤ì¤Ğ¤Ê¤é¤Ê¤¤
+# ãƒªã‚¯ã‚¨ã‚¹ãƒˆã¯GETã§ãªã‘ã‚Œã°ãªã‚‰ãªã„
 bad_request()  if ($ENV{'REQUEST_METHOD'} ne 'GET');
 
-# ¥Ñ¥é¥á¡¼¥¿¤¬Àµµ¬¤Ç¤Ê¤¤¾ì¹ç¤Ï½¤Àµ¤·¤ÆLocation¤ÇÈô¤Ğ¤¹
+# ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ãŒæ­£è¦ã§ãªã„å ´åˆã¯ä¿®æ­£ã—ã¦Locationã§é£›ã°ã™
 my $reg_query = regularization($ENV{'QUERY_STRING'}, \$cgi);
 location($reg_query) if ($ENV{'QUERY_STRING'} ne $reg_query);
 
 
 #
-# ¥Ñ¥é¥á¡¼¥¿¤òÆÉ¤ß¼è¤ê¡¢¥Ç¡¼¥¿Àö¾ô¤¹¤ë¡ÊÁ°½èÍı¡Ë
+# ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ã‚’èª­ã¿å–ã‚Šã€ãƒ‡ãƒ¼ã‚¿æ´—æµ„ã™ã‚‹ï¼ˆå‰å‡¦ç†ï¼‰
 #
 #
-# ¼õ¤±ÉÕ¤±¤ëCGI¥Õ¥©¡¼¥à¤Î¼ïÎà¤ÈÆâÍÆ¤Ï°Ê²¼¤ÎÄÌ¤ê
+# å—ã‘ä»˜ã‘ã‚‹CGIãƒ•ã‚©ãƒ¼ãƒ ã®ç¨®é¡ã¨å†…å®¹ã¯ä»¥ä¸‹ã®é€šã‚Š
 #
-# no       = ¥¹¥ì¥Ã¥ÉÈÖ¹æ
+# no       = ã‚¹ãƒ¬ãƒƒãƒ‰ç•ªå·
 #
-# st       = ÆÉ¤ß¼è¤ê³«»Ï¡Ê¾ÊÎ¬»ş¤Ï0¡Ë
-# en       = ÆÉ¤ß¼è¤ê½ªÎ»¡Ê¾ÊÎ¬»ş¤ÏºÇ¸å¤Ş¤Ç¡Ë
-# at       = Ã±ÂÎÈ¯¸ÀÉ½¼¨
-# ls       = ºÇ¿·¤ÎÈ¯¸À*¸ÄÉ½¼¨
+# st       = èª­ã¿å–ã‚Šé–‹å§‹ï¼ˆçœç•¥æ™‚ã¯0ï¼‰
+# en       = èª­ã¿å–ã‚Šçµ‚äº†ï¼ˆçœç•¥æ™‚ã¯æœ€å¾Œã¾ã§ï¼‰
+# at       = å˜ä½“ç™ºè¨€è¡¨ç¤º
+# ls       = æœ€æ–°ã®ç™ºè¨€*å€‹è¡¨ç¤º
 #
-# mes      = È¯¸ÀËÜÊ¸¤òÉ½¼¨¤¹¤ë¤«¤·¤Ê¤¤¤«¡Ê¾ÊÎ¬»ş¤Ï1¡Ë
-# sub      = È¯¸À¥¿¥¤¥È¥ë°ìÍ÷¤òÉ½¼¨¤¹¤ë¤«¤·¤Ê¤¤¤«¡Ê¾ÊÎ¬»ş¤Ï0¡Ë
+# mes      = ç™ºè¨€æœ¬æ–‡ã‚’è¡¨ç¤ºã™ã‚‹ã‹ã—ãªã„ã‹ï¼ˆçœç•¥æ™‚ã¯1ï¼‰
+# sub      = ç™ºè¨€ã‚¿ã‚¤ãƒˆãƒ«ä¸€è¦§ã‚’è¡¨ç¤ºã™ã‚‹ã‹ã—ãªã„ã‹ï¼ˆçœç•¥æ™‚ã¯0ï¼‰
 #
-# tree     = ¥Ä¥ê¡¼¡¦¥¹¥ì¥Ã¥ÉÉ½¼¨Êı¼°¤ÎÈ¯¸ÀÉ½¼¨
+# tree     = ãƒ„ãƒªãƒ¼ãƒ»ã‚¹ãƒ¬ãƒƒãƒ‰è¡¨ç¤ºæ–¹å¼ã®ç™ºè¨€è¡¨ç¤º
 #
-# res      = È¯¸À¥ì¥¹Åê¹Æ¥Õ¥©¡¼¥àÉ½¼¨
-# del      = È¯¸Àºï½ü³ÎÇ§¥Õ¥©¡¼¥àÉ½¼¨
-# rev      = È¯¸À½¤Àµ³ÎÇ§¥Õ¥©¡¼¥àÉ½¼¨
+# res      = ç™ºè¨€ãƒ¬ã‚¹æŠ•ç¨¿ãƒ•ã‚©ãƒ¼ãƒ è¡¨ç¤º
+# del      = ç™ºè¨€å‰Šé™¤ç¢ºèªãƒ•ã‚©ãƒ¼ãƒ è¡¨ç¤º
+# rev      = ç™ºè¨€ä¿®æ­£ç¢ºèªãƒ•ã‚©ãƒ¼ãƒ è¡¨ç¤º
 #
 my $no  = $cgi->param('no');
-error_illigal_call() unless($no =~m/^(\d+)$/);  # Àö¾ô
+error_illigal_call() unless($no =~m/^(\d+)$/);  # æ´—æµ„
 $no = $1;
 
 
-# Æ°ºî´Ä¶­ÆÉ¤ß¼è¤ê¡ÊÁ°È¾¡§¥í¥°¤òÆÉ¤ß¼è¤é¤Ê¤¯¤Æ¤âÈ½ÃÇ¤Ç¤­¤ëÉôÊ¬¡Ë
+# å‹•ä½œç’°å¢ƒèª­ã¿å–ã‚Šï¼ˆå‰åŠï¼šãƒ­ã‚°ã‚’èª­ã¿å–ã‚‰ãªãã¦ã‚‚åˆ¤æ–­ã§ãã‚‹éƒ¨åˆ†ï¼‰
 my %param;
 $param{'no'}   = $no;
 $param{'mode'} = 0;
 
-# ¥Ç¡¼¥¿¤¬Ì·½â¤·¤Æ¤¤¤Ê¤¤¤«¥Á¥§¥Ã¥¯¤¹¤ë(at, res, rev)
-my $double_flag = 0;   # ½ÅÊ£ÆşÎÏ¤µ¤ì¤Æ¤¤¤Ê¤¤¤«¤É¤¦¤«¤ò³ÎÇ§¤¹¤ë¥Õ¥é¥°¡Ê·ë¹½¤¢¤È¤Ş¤Ç»È¤¦¤Î¤ÇÃí°Õ¡Ë
+# ãƒ‡ãƒ¼ã‚¿ãŒçŸ›ç›¾ã—ã¦ã„ãªã„ã‹ãƒã‚§ãƒƒã‚¯ã™ã‚‹(at, res, rev)
+my $double_flag = 0;   # é‡è¤‡å…¥åŠ›ã•ã‚Œã¦ã„ãªã„ã‹ã©ã†ã‹ã‚’ç¢ºèªã™ã‚‹ãƒ•ãƒ©ã‚°ï¼ˆçµæ§‹ã‚ã¨ã¾ã§ä½¿ã†ã®ã§æ³¨æ„ï¼‰
 foreach my $key('at', 'res', 'rev'){
 	my $num = $cgi->param($key);
 	if (defined($num)){
 
-		error_illigal_call() unless($num=~m/^\d+$/); # ¿ô»ú¤¬Æş¤Ã¤Æ¤¤¤Ê¤±¤ì¤ĞÉÔÀµÆşÎÏ
-		error_illigal_call() if($double_flag);       # ½ÅÊ£¤·¤Æ¤¤¤¿¾ì¹çÉÔÀµ
+		error_illigal_call() unless($num=~m/^\d+$/); # æ•°å­—ãŒå…¥ã£ã¦ã„ãªã‘ã‚Œã°ä¸æ­£å…¥åŠ›
+		error_illigal_call() if($double_flag);       # é‡è¤‡ã—ã¦ã„ãŸå ´åˆä¸æ­£
 
 		$double_flag    = 1;
 		$param{'st'}    = $num;
 		$param{'en'}    = $num;
 
 		if($key eq 'at'){
-			$param{'mode'} |= $html::ATONE;  # Ã±ÂÎÈ¯¸ÀÉ½¼¨
+			$param{'mode'} |= $html::ATONE;  # å˜ä½“ç™ºè¨€è¡¨ç¤º
 
 		}elsif($key eq 'res'){
-			$param{'mode'} |= $html::RES;    # ¥ì¥¹ÉÕ¤±É½¼¨
+			$param{'mode'} |= $html::RES;    # ãƒ¬ã‚¹ä»˜ã‘è¡¨ç¤º
 
 		}elsif($key eq 'rev'){
-			$param{'mode'} |= $html::REV;    # È¯¸À½¤ÀµÉ½¼¨
+			$param{'mode'} |= $html::REV;    # ç™ºè¨€ä¿®æ­£è¡¨ç¤º
 		}
 	}
 }
 
-# ¥Ñ¥é¥á¡¼¥¿¡¼¤¬½ÅÊ£¤·¤Æ¤¤¤¿¤éÉÔÀµ(st, en, at, res, rev)
+# ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ãƒ¼ãŒé‡è¤‡ã—ã¦ã„ãŸã‚‰ä¸æ­£(st, en, at, res, rev)
 my $st = $cgi->param('st');
 my $en = $cgi->param('en');
 my $ls = $cgi->param('ls');
 error_illigal_call() if((defined($st) or defined($en) or defined($ls)) and $double_flag);
 
-# ÃÍ¤¬¿ôÃÍ¤Ç¤Ê¤±¤ì¤Ğ¥¨¥é¡¼(st, en, at)
+# å€¤ãŒæ•°å€¤ã§ãªã‘ã‚Œã°ã‚¨ãƒ©ãƒ¼(st, en, at)
 error_illigal_call() if (defined($st) and $st!~m/^\d+$/);
 error_illigal_call() if (defined($en) and $en!~m/^\d+$/);
 error_illigal_call() if (defined($ls) and $ls!~m/^\d+$/);
 
-# ¿¿µ¶ÃÍÊÑ´¹(tree, mes, sub)
+# çœŸå½å€¤å¤‰æ›(tree, mes, sub)
 $param{'mode'} |= $html::TREE    if (std::trans_bool($cgi->param('tree'), 0));
 $param{'mode'} |= $html::MESSAGE if (std::trans_bool($cgi->param('mes'), 1));
 $param{'mode'} |= $html::TITLE   if (std::trans_bool($cgi->param('sub'), 0));
 
-# È¯¸À¤È¥¿¥¤¥È¥ë¤òÎ¾ÊıÉ½¼¨¤·¤Ê¤¤¤È¤¤¤¦¤³¤È¤Ï¤Ê¤¤
+# ç™ºè¨€ã¨ã‚¿ã‚¤ãƒˆãƒ«ã‚’ä¸¡æ–¹è¡¨ç¤ºã—ãªã„ã¨ã„ã†ã“ã¨ã¯ãªã„
 error_complex() if ( $param{'mode'} & $html::TREE & $html::MESSAGE == 0);
 
-# ¥Ñ¥é¥á¡¼¥¿¡¼Ì·½â¤·¤Æ¤¤¤¿¤éÉÔÀµ(at, res, rev, tree, mes, sub)
+# ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ãƒ¼çŸ›ç›¾ã—ã¦ã„ãŸã‚‰ä¸æ­£(at, res, rev, tree, mes, sub)
 if ($param{'mode'} & $html::ATONE or 
     $param{'mode'} & $html::RES   or 
     $param{'mode'} & $html::REV      ){
@@ -129,11 +129,11 @@ if ($param{'mode'} & $html::ATONE or
 
 
 
-# ¥í¥°¤òÆÉ¤ß¼è¤ë
+# ãƒ­ã‚°ã‚’èª­ã¿å–ã‚‹
 my @log;
-error_fail_read($no) unless(file::read_log($no, \@log, 1, 0, 0));  # ¤¹¤Ù¤Æ¤Î¾ğÊó¤ò¡¢¥í¥Ã¥¯¤ò¤«¤±¤Ê¤¤¤Ç¡¢gz°µ½Ì¤µ¤ì¤Æ¤¤¤¿¾ì¹ç¤ÏÆÉ¤Ş¤Ê¤¤
+error_fail_read($no) unless(file::read_log($no, \@log, 1, 0, 0));  # ã™ã¹ã¦ã®æƒ…å ±ã‚’ã€ãƒ­ãƒƒã‚¯ã‚’ã‹ã‘ãªã„ã§ã€gzåœ§ç¸®ã•ã‚Œã¦ã„ãŸå ´åˆã¯èª­ã¾ãªã„
 
-# Æ°ºî´Ä¶­ÆÉ¤ß¼è¤ê¡Ê¸åÈ¾¡§¥í¥°¤òÆÉ¤ß¼è¤é¤Ê¤¤¤Èµ­½Ò¤Ç¤­¤Ê¤¤¾ì¹ç¡Ë
+# å‹•ä½œç’°å¢ƒèª­ã¿å–ã‚Šï¼ˆå¾ŒåŠï¼šãƒ­ã‚°ã‚’èª­ã¿å–ã‚‰ãªã„ã¨è¨˜è¿°ã§ããªã„å ´åˆï¼‰
 unless($double_flag){
 
 	if(defined($st)){  $param{'st'} = $st;  }
@@ -153,12 +153,12 @@ unless($double_flag){
 $param{'st'} = 0     if($param{'st'} < 0);
 $param{'en'} = $#log if($#log < $param{'en'});
 
-$param{'mode'} |= $html::NO_REVISE if ($log[0]{'SIZE'} >= $CONF{'FILE_LIMIT'});   # ÍÆÎÌÄ¶²á
-$param{'mode'} |= $html::COMPLETE  if ($log[0]{'POST'} >= $CONF{'THREAD_LIMIT'}); # È¯¸À¿ôÄ¶²á
+$param{'mode'} |= $html::NO_REVISE if ($log[0]{'SIZE'} >= $CONF{'FILE_LIMIT'});   # å®¹é‡è¶…é
+$param{'mode'} |= $html::COMPLETE  if ($log[0]{'POST'} >= $CONF{'THREAD_LIMIT'}); # ç™ºè¨€æ•°è¶…é
 
 
 #
-# HTMLÉ½¼¨
+# HTMLè¡¨ç¤º
 #
 html::http_response_header();
 if($cgi->param('at') ne ''){
@@ -175,12 +175,12 @@ if($cgi->param('at') ne ''){
 }
 
 #
-# ¥ê¥ó¥¯¥Ğ¡¼É½¼¨
+# ãƒªãƒ³ã‚¯ãƒãƒ¼è¡¨ç¤º
 #
 html::link_3set_close(*STDOUT, $no);
 html::hr(*STDOUT);
 
-# ¥Õ¥Ã¥¿É½¼¨
+# ãƒ•ãƒƒã‚¿è¡¨ç¤º
 html::footer(*STDOUT);
 
 exit;
@@ -189,39 +189,39 @@ exit;
 
 
 ##########################################################################
-#                               Ã±ÂÎÈ¯¸ÀÉ½¼¨                             #
+#                               å˜ä½“ç™ºè¨€è¡¨ç¤º                             #
 ##########################################################################
 sub at{
-	my $log   = shift;  # ¡Ê»²¾È¡Ë¥í¥°
-	my $param = shift;  # ¡Ê»²¾È¡ËÈ¯¸ÀÉ½¼¨ÍÑ
+	my $log   = shift;  # ï¼ˆå‚ç…§ï¼‰ãƒ­ã‚°
+	my $param = shift;  # ï¼ˆå‚ç…§ï¼‰ç™ºè¨€è¡¨ç¤ºç”¨
 
 	my $no    = $$log[0]{'THREAD_NO'};
 	my $title = $$log[0]{'THREAD_TITLE'};
 	my $at    = $$param{'st'};
 
-	# ¥Ø¥Ã¥À
-	html::header(*STDOUT, "$$log[0]{'THREAD_TITLE'} - Ã±È¯¸ÀÉ½¼¨");
+	# ãƒ˜ãƒƒãƒ€
+	html::header(*STDOUT, "$$log[0]{'THREAD_TITLE'} - å˜ç™ºè¨€è¡¨ç¤º");
 
-	# ËÁÆ¬ÀâÌÀÊ¸
+	# å†’é ­èª¬æ˜æ–‡
 	print "<h2 id='subtitle'>$$log[0]{'THREAD_TITLE'}</h2>\n\n";
 	notice($$log[0]{'SIZE'}, $log[0]{'POST'});
 	html::hr(*STDOUT);
 
-	# È¯¸ÀÉôÊ¬
+	# ç™ºè¨€éƒ¨åˆ†
 	print "<div class='message'>";
-	print "<h3 id='message'>È¯¸ÀÉ½¼¨</h3>\n\n";
+	print "<h3 id='message'>ç™ºè¨€è¡¨ç¤º</h3>\n\n";
 	html::multi(*STDOUT, $log, $param);
 	print "</div>\n\n";
 
-	# ¥ê¥ó¥¯¥Ğ¡¼
+	# ãƒªãƒ³ã‚¯ãƒãƒ¼
 	html::link_3set_close(*STDOUT, $no);
 	html::hr(*STDOUT);
 
-	# ´ØÏ¢¥Ä¥ê¡¼
+	# é–¢é€£ãƒ„ãƒªãƒ¼
 	print "<div class='subject'>\n\n";
-	print "<h3 id='tree'>´ØÏ¢¥Ä¥ê¡¼É½¼¨</h3>\n\n";
+	print "<h3 id='tree'>é–¢é€£ãƒ„ãƒªãƒ¼è¡¨ç¤º</h3>\n\n";
 
-	my $flag_have_response=0;  # ´ØÏ¢¥Ä¥ê¡¼¤¬¤¢¤Ã¤¿¾ì¹ç¤Ï¤³¤ÎÃÍ¤Ï¿¿
+	my $flag_have_response=0;  # é–¢é€£ãƒ„ãƒªãƒ¼ãŒã‚ã£ãŸå ´åˆã¯ã“ã®å€¤ã¯çœŸ
 	for(my $i=$at+1;$i<@$log;$i++){
 		$flag_have_response=1 if (defined($$log[$i]{'RES'}) and $$log[$i]{'RES'}==$at);
 	}
@@ -230,57 +230,57 @@ sub at{
 	if ($flag_have_response){
 		html::tree(*STDOUT, $log, $param);
 	}else{
-		print "<p>¤³¤ÎÈ¯¸À¤Ë´ØÏ¢¤¹¤ëÈ¯¸À¤Ï¤¢¤ê¤Ş¤»¤ó¡£</p>\n\n";
+		print "<p>ã“ã®ç™ºè¨€ã«é–¢é€£ã™ã‚‹ç™ºè¨€ã¯ã‚ã‚Šã¾ã›ã‚“ã€‚</p>\n\n";
 	}
 	print "</div>\n\n";
 
 }
 
 ##########################################################################
-#                           ¥ì¥¹È¯¸À¥Õ¥©¡¼¥àÉ½¼¨                         #
+#                           ãƒ¬ã‚¹ç™ºè¨€ãƒ•ã‚©ãƒ¼ãƒ è¡¨ç¤º                         #
 ##########################################################################
 sub res{
-	my $log   = shift;  # ¡Ê»²¾È¡Ë¥í¥°
-	my $param = shift;  # ¡Ê»²¾È¡ËÈ¯¸ÀÉ½¼¨ÍÑ
+	my $log   = shift;  # ï¼ˆå‚ç…§ï¼‰ãƒ­ã‚°
+	my $param = shift;  # ï¼ˆå‚ç…§ï¼‰ç™ºè¨€è¡¨ç¤ºç”¨
 
 	my $target = $$param{'st'};
 	my $thread = $$log[0]{'THREAD_TITLE'};
 
-	html::header(*STDOUT, "$thread - ¥ì¥¹È¯¸À¥Õ¥©¡¼¥à");
+	html::header(*STDOUT, "$thread - ãƒ¬ã‚¹ç™ºè¨€ãƒ•ã‚©ãƒ¼ãƒ ");
 	print "<h2 id='subtitle'>$thread</h2>\n\n";
 	html::hr(*STDOUT);
 
-	# ÀâÌÀ
+	# èª¬æ˜
 	print << "HTML";
 <div class='howto'>
 
-<h3 id='howto'>¥ì¥¹Åê¹Æ</h3>
+<h3 id='howto'>ãƒ¬ã‚¹æŠ•ç¨¿</h3>
 
-<p>¥¹¥ì¥Ã¥ÉÌ¾¡Ö$thread¡×(¥¹¥ì¥Ã¥ÉÈÖ¹æ$no)¤ÎÈ¯¸À$targetÈÖ¤Ø¤Î¥ì¥¹Åê¹Æ¥Õ¥©¡¼¥à¤òÉ½¼¨¤·¤Æ¤¤¤Ş¤¹(¢ª<a href='./bbs.html'>¾Ü¤·¤¤ÀâÌÀ</a>)¡£</p>
+<p>ã‚¹ãƒ¬ãƒƒãƒ‰åã€Œ$threadã€(ã‚¹ãƒ¬ãƒƒãƒ‰ç•ªå·$no)ã®ç™ºè¨€$targetç•ªã¸ã®ãƒ¬ã‚¹æŠ•ç¨¿ãƒ•ã‚©ãƒ¼ãƒ ã‚’è¡¨ç¤ºã—ã¦ã„ã¾ã™(â†’<a href='./bbs.html'>è©³ã—ã„èª¬æ˜</a>)ã€‚</p>
 
 </div>
 
 HTML
 
 
-	# ¥ê¥ó¥¯¥Ğ¡¼
+	# ãƒªãƒ³ã‚¯ãƒãƒ¼
 	html::link_3set(*STDOUT, $no);
-	print "<a href='#post'>¥ì¥¹Åê¹Æ</a>¡¡";
+	print "<a href='#post'>ãƒ¬ã‚¹æŠ•ç¨¿</a>ã€€";
 	html::link_adminmail(*STDOUT);
 	print "</div>\n\n";
 	html::hr(*STDOUT);
 
-	# È¯¸ÀÉ½¼¨
+	# ç™ºè¨€è¡¨ç¤º
 	print "<div class='message'>\n\n";
-	print "<h3 id='message'>È¯¸ÀÉ½¼¨</h3>\n\n";
+	print "<h3 id='message'>ç™ºè¨€è¡¨ç¤º</h3>\n\n";
 	html::multi(*STDOUT, $log, $param);
 	print "</div>\n\n";
 
-	# ¥ê¥ó¥¯¥Ğ¡¼
+	# ãƒªãƒ³ã‚¯ãƒãƒ¼
 	html::link_3set_close(*STDOUT, $no);
 	html::hr(*STDOUT);
 
-	# ¥ì¥¹È¯¸À¥Õ¥©¡¼¥à
+	# ãƒ¬ã‚¹ç™ºè¨€ãƒ•ã‚©ãƒ¼ãƒ 
 	form_new($log, $target);
 
 }
@@ -288,31 +288,31 @@ HTML
 
 
 ##########################################################################
-#                           È¯¸À½¤Àµ¥Õ¥©¡¼¥àÉ½¼¨                         #
+#                           ç™ºè¨€ä¿®æ­£ãƒ•ã‚©ãƒ¼ãƒ è¡¨ç¤º                         #
 ##########################################################################
 sub rev{
-	my $log   = shift;  # ¡Ê»²¾È¡Ë¥í¥°
-	my $param = shift;  # ¡Ê»²¾È¡ËÈ¯¸ÀÉ½¼¨ÍÑ
+	my $log   = shift;  # ï¼ˆå‚ç…§ï¼‰ãƒ­ã‚°
+	my $param = shift;  # ï¼ˆå‚ç…§ï¼‰ç™ºè¨€è¡¨ç¤ºç”¨
 
 	my $no     = $$log[0]{'THREAD_NO'};
 	my $thread = $$log[0]{'THREAD_TITLE'};
 	my $target = $$param{'st'};
 
-	# ¥Ø¥Ã¥À¡ÁÀâÌÀÊ¸
-	html::header(*STDOUT, "$thread - ½¤Àµ¡¢ºï½üÍÑ¥Õ¥©¡¼¥à");
+	# ãƒ˜ãƒƒãƒ€ï½èª¬æ˜æ–‡
+	html::header(*STDOUT, "$thread - ä¿®æ­£ã€å‰Šé™¤ç”¨ãƒ•ã‚©ãƒ¼ãƒ ");
 
 	print "<h2 id='subtitle'>$thread</h2>\n\n";
 	html::hr(*STDOUT);
 	print << "HTML";
 <div class='howto'>
 
-<h3 id='howto'>È¯¸À¤Îºï½ü¡¢½¤Àµ</h3>
+<h3 id='howto'>ç™ºè¨€ã®å‰Šé™¤ã€ä¿®æ­£</h3>
 
-<p>¤³¤Î¥Õ¥©¡¼¥à¤«¤é<em class="thread">¥¹¥ì¥Ã¥ÉÌ¾¡Ö$thread¡×(¥¹¥ì¥Ã¥ÉÈÖ¹æ$noÈÖ)¤Î$targetÈÖÈ¯¸À</em>¤Î½¤Àµ¡¢ºï½ü¤¬¤Ç¤­¤Ş¤¹¡£È¯¸À½¤Àµ¡¢ºï½ü¤ò¹Ô¤¦¤Ë¤ÏÅê¹Æ»ş¤Ë»ØÄê¤·¤¿¥Ñ¥¹¥ï¡¼¥É¤¬É¬Í×¤Ç¤¹¡£</p>
+<p>ã“ã®ãƒ•ã‚©ãƒ¼ãƒ ã‹ã‚‰<em class="thread">ã‚¹ãƒ¬ãƒƒãƒ‰åã€Œ$threadã€(ã‚¹ãƒ¬ãƒƒãƒ‰ç•ªå·$noç•ª)ã®$targetç•ªç™ºè¨€</em>ã®ä¿®æ­£ã€å‰Šé™¤ãŒã§ãã¾ã™ã€‚ç™ºè¨€ä¿®æ­£ã€å‰Šé™¤ã‚’è¡Œã†ã«ã¯æŠ•ç¨¿æ™‚ã«æŒ‡å®šã—ãŸãƒ‘ã‚¹ãƒ¯ãƒ¼ãƒ‰ãŒå¿…è¦ã§ã™ã€‚</p>
 
-<p>¥Ñ¥¹¥ï¡¼¥É¤òËº¤ì¤Æ¤·¤Ş¤Ã¤¿È¯¸À¤Îºï½ü¡¢Ãæ½ıÈ¯¸À¤Îºï½ü¡¢¾Ã¤·¤Æ¤·¤Ş¤Ã¤¿È¯¸À¤òÉü³è¤µ¤»¤¿¤¤¾ì¹ç¤Ê¤É¤Ï<a href="mailto:$CONF{'ADMIN_MAIL'}">´ÉÍı¼Ô</a>¤Ë¤´Ï¢Íí¤¯¤À¤µ¤¤¡£</p>
+<p>ãƒ‘ã‚¹ãƒ¯ãƒ¼ãƒ‰ã‚’å¿˜ã‚Œã¦ã—ã¾ã£ãŸç™ºè¨€ã®å‰Šé™¤ã€ä¸­å‚·ç™ºè¨€ã®å‰Šé™¤ã€æ¶ˆã—ã¦ã—ã¾ã£ãŸç™ºè¨€ã‚’å¾©æ´»ã•ã›ãŸã„å ´åˆãªã©ã¯<a href="mailto:$CONF{'ADMIN_MAIL'}">ç®¡ç†è€…</a>ã«ã”é€£çµ¡ãã ã•ã„ã€‚</p>
 
-<p>´ÉÍı¼Ô¤Ï¿Í¤ÎÈ¯¸À¤ò¾¡¼ê¤Ë½¤Àµ¤¹¤ë¤³¤È¤Ï¤Ç¤­¤Ş¤»¤ó¡£¤·¤¿¤¬¤Ã¤Æ¥Ñ¥¹¥ï¡¼¥É¤òËº¤ì¤ë¤È¤½¤ÎÅê¹Æ¤ÏÃ¯¤Ë¤â½¤Àµ¤Ç¤­¤Ê¤¯¤Ê¤ê¤Ş¤¹(´ÉÍı¼Ô¤¬¾Ã¤¹¤³¤È¤Ï¤Ç¤­¤Ş¤¹)¡£</p>
+<p>ç®¡ç†è€…ã¯äººã®ç™ºè¨€ã‚’å‹æ‰‹ã«ä¿®æ­£ã™ã‚‹ã“ã¨ã¯ã§ãã¾ã›ã‚“ã€‚ã—ãŸãŒã£ã¦ãƒ‘ã‚¹ãƒ¯ãƒ¼ãƒ‰ã‚’å¿˜ã‚Œã‚‹ã¨ãã®æŠ•ç¨¿ã¯èª°ã«ã‚‚ä¿®æ­£ã§ããªããªã‚Šã¾ã™(ç®¡ç†è€…ãŒæ¶ˆã™ã“ã¨ã¯ã§ãã¾ã™)ã€‚</p>
 
 </div>
 
@@ -320,76 +320,76 @@ HTML
 
 	html::hr(*STDOUT);
 
-	# ¥ê¥ó¥¯¥Ğ¡¼
+	# ãƒªãƒ³ã‚¯ãƒãƒ¼
 	html::link_3set(*STDOUT, $no);
-	print '<a href="#revise">È¯¸À½¤Àµ</a>¡¡';
-	print '<a href="#delete">È¯¸Àºï½ü</a>¡¡';
+	print '<a href="#revise">ç™ºè¨€ä¿®æ­£</a>ã€€';
+	print '<a href="#delete">ç™ºè¨€å‰Šé™¤</a>ã€€';
 	html::link_adminmail(*STDOUT);
 	print "</div>\n\n";
 	html::hr(*STDOUT);
 
-	# È¯¸ÀÉ½¼¨
+	# ç™ºè¨€è¡¨ç¤º
 	print "<div class='message'>\n\n";
-	print "<h3 id='message'>È¯¸ÀÉ½¼¨</h3>\n\n";
+	print "<h3 id='message'>ç™ºè¨€è¡¨ç¤º</h3>\n\n";
 	html::multi(*STDOUT, $log, $param);
 	print "</div>\n\n";
 	html::hr(*STDOUT);
 
-	# ¥ê¥ó¥¯¥Ğ¡¼
+	# ãƒªãƒ³ã‚¯ãƒãƒ¼
 	html::link_3set(*STDOUT, $no);
-	print "<a href='#delete'>È¯¸Àºï½ü</a>¡¡";
+	print "<a href='#delete'>ç™ºè¨€å‰Šé™¤</a>ã€€";
 	html::link_adminmail(*STDOUT);
 	print "</div>\n\n";
 	html::hr(*STDOUT);
 
-	# È¯¸À½¤Àµ¥Õ¥©¡¼¥à
+	# ç™ºè¨€ä¿®æ­£ãƒ•ã‚©ãƒ¼ãƒ 
 	form_rev($log, $target);
 	html::hr(*STDOUT);
 
-	# ¥ê¥ó¥¯¥Ğ¡¼
+	# ãƒªãƒ³ã‚¯ãƒãƒ¼
 	html::link_3set_close(*STDOUT, $no);
 	html::hr(*STDOUT);
 
-	# ºï½üÍÑ¥Õ¥©¡¼¥à
+	# å‰Šé™¤ç”¨ãƒ•ã‚©ãƒ¼ãƒ 
 	form_del($log, $target);
 	html::hr(*STDOUT);
 
 }
 
 ##########################################################################
-#                                 È¯¸ÀÉ½¼¨                               #
+#                                 ç™ºè¨€è¡¨ç¤º                               #
 ##########################################################################
 sub mes{
-	my $log   = shift;  # ¡Ê»²¾È¡Ë¥í¥°
-	my $param = shift;  # ¡Ê»²¾È¡ËÈ¯¸ÀÉ½¼¨ÍÑ
+	my $log   = shift;  # ï¼ˆå‚ç…§ï¼‰ãƒ­ã‚°
+	my $param = shift;  # ï¼ˆå‚ç…§ï¼‰ç™ºè¨€è¡¨ç¤ºç”¨
 
 	my $no     = $$log[0]{'THREAD_NO'};
 	my $thread = $$log[0]{'THREAD_TITLE'};
 	my $mode   = $$param{'mode'};
 
-	# ËÁÆ¬ÉôÊ¬
+	# å†’é ­éƒ¨åˆ†
 	my $head;
 	if (($mode & $html::TITLE) != 0){
 		if (($mode & $html::MESSAGE) != 0){
-			$head = 'ÂêÌ¾È¯¸ÀÉ½¼¨';
+			$head = 'é¡Œåç™ºè¨€è¡¨ç¤º';
 		}else{
-			$head = 'ÂêÌ¾É½¼¨';
+			$head = 'é¡Œåè¡¨ç¤º';
 		}
 	}else{
-		$head = 'È¯¸ÀÉ½¼¨';
+		$head = 'ç™ºè¨€è¡¨ç¤º';
 	}
 	html::header(*STDOUT, "$thread - $head");
 
-	# ¥¹¥ì¥Ã¥ÉÌ¾É½¼¨
+	# ã‚¹ãƒ¬ãƒƒãƒ‰åè¡¨ç¤º
 	print "<h2 id='subtitle'>$$log[0]{'THREAD_TITLE'}</h2>\n\n";
 
-	# È¯¸ÀÆÉ¤ß¹ş¤ß¥Õ¥©¡¼¥àÉ½¼¨
+	# ç™ºè¨€èª­ã¿è¾¼ã¿ãƒ•ã‚©ãƒ¼ãƒ è¡¨ç¤º
 	html::form_read(*STDOUT, $no, $#log);
 
-	# È¯¸ÀÍÆÎÌ·Ù¹ğÉ½¼¨
+	# ç™ºè¨€å®¹é‡è­¦å‘Šè¡¨ç¤º
 	notice($$log[0]{'SIZE'}, $$log[0]{'POST'});
 
-	# 0ÈÖÈ¯¸ÀÉ½¼¨
+	# 0ç•ªç™ºè¨€è¡¨ç¤º
 	if ($$param{'st'} > 0 and ($$param{'mode'} & $html::TITLE) != 0){
 		my %sub_param;
 		$sub_param{'st'} = 0;
@@ -399,19 +399,19 @@ sub mes{
 		html::multi(*STDOUT, $log, \%sub_param);
 	}
 
-	# ¥ê¥ó¥¯¥Ğ¡¼
+	# ãƒªãƒ³ã‚¯ãƒãƒ¼
 	print '<div class="link">';
 	html::link_top(*STDOUT);
-	print '<a href="#message">È¯¸ÀÉ½¼¨</a>¡¡' if(($mode & $html::TITLE) != 0 and ($mode & $html::MESSAGE) != 0);
-	print '<a href="#newpost">¿·µ¬Åê¹Æ</a>¡¡';
+	print '<a href="#message">ç™ºè¨€è¡¨ç¤º</a>ã€€' if(($mode & $html::TITLE) != 0 and ($mode & $html::MESSAGE) != 0);
+	print '<a href="#newpost">æ–°è¦æŠ•ç¨¿</a>ã€€';
 	html::link_adminmail(*STDOUT);
 	print "</div>\n\n";
 	html::hr(*STDOUT);
 
-	# ÂêÌ¾É½¼¨
+	# é¡Œåè¡¨ç¤º
 	if (($mode & $html::TITLE) != 0){
 		print "<div class='subject'>\n\n";
-		print "<h3 id='subject'>ÂêÌ¾É½¼¨</h3>\n\n";
+		print "<h3 id='subject'>é¡Œåè¡¨ç¤º</h3>\n\n";
 		if (($mode & $html::TREE) != 0){
 			html::tree(*STDOUT, $log, $param)
 		}else{
@@ -420,19 +420,19 @@ sub mes{
 		print "</div>\n\n";
 	}
 
-	# ¥ê¥ó¥¯¥Ğ¡¼
+	# ãƒªãƒ³ã‚¯ãƒãƒ¼
 	if(($mode & $html::MESSAGE) != 0 and ($mode & $html::TITLE) != 0){
 		html::link_3set(*STDOUT, $no);
-		print "<a href='#newpost'>¿·µ¬Åê¹Æ</a>¡¡";
+		print "<a href='#newpost'>æ–°è¦æŠ•ç¨¿</a>ã€€";
 		html::link_adminmail(*STDOUT);
 		print "</div>\n\n";
 		html::hr(*STDOUT);
 	}
 
-	# È¯¸ÀÉ½¼¨
+	# ç™ºè¨€è¡¨ç¤º
 	if (($mode & $html::MESSAGE) != 0){
 		print "<div class='message'>\n\n";
-		print "<h3 id='message'>È¯¸ÀÉ½¼¨</h3>\n\n";
+		print "<h3 id='message'>ç™ºè¨€è¡¨ç¤º</h3>\n\n";
 		if (($mode & $html::TREE) != 0){
 			html::comment(*STDOUT, $log, $param);
 		}else{
@@ -441,41 +441,41 @@ sub mes{
 		print "</div>\n\n";
 	}
 
-	# ¥ê¥ó¥¯¥Ğ¡¼
+	# ãƒªãƒ³ã‚¯ãƒãƒ¼
 	html::link_3set_close(*STDOUT, $no);
 	html::hr(*STDOUT);
 
-	# ¿·µ¬Åê¹Æ
+	# æ–°è¦æŠ•ç¨¿
 	form_new($log);
 	html::hr(*STDOUT);
 
 }
 
 #
-# È¯¸À¿ôÄ¶²á·Ù¹ğÉ½¼¨
+# ç™ºè¨€æ•°è¶…éè­¦å‘Šè¡¨ç¤º
 #
 sub notice{
-	my $amount = shift;  # ¥¹¥ì¥Ã¥É¤ÎÂç¤­¤µ
-	my $post = shift;    # Åê¹Æ¿ô
+	my $amount = shift;  # ã‚¹ãƒ¬ãƒƒãƒ‰ã®å¤§ãã•
+	my $post = shift;    # æŠ•ç¨¿æ•°
 
-	# ¥¹¥ì¥Ã¥ÉÀ©¸Â¤Ë°ú¤Ã¤«¤«¤é¤Ê¤¤¾ì¹ç¤Ï²¿¤âÉ½¼¨¤·¤Ê¤¤
+	# ã‚¹ãƒ¬ãƒƒãƒ‰åˆ¶é™ã«å¼•ã£ã‹ã‹ã‚‰ãªã„å ´åˆã¯ä½•ã‚‚è¡¨ç¤ºã—ãªã„
 	return if ($amount < $CONF{'FILE_CAUTION'} and $post < $CONF{'THREAD_CAUTION'});
 
-	# ¥¹¥ì¥Ã¥É¤ÎÂç¤­¤µ¤òKBÃ±°Ì¤Ë¤¹¤ë
+	# ã‚¹ãƒ¬ãƒƒãƒ‰ã®å¤§ãã•ã‚’KBå˜ä½ã«ã™ã‚‹
 	my $kb    = int($amount / 1000);
 	my $limit = int($CONF{'FILE_LIMIT'} / 1000);
 
-	# ·Ù¹ğ¡¦Ãí°ÕÉ½¼¨¤ò¤¹¤ë
+	# è­¦å‘Šãƒ»æ³¨æ„è¡¨ç¤ºã‚’ã™ã‚‹
 	print "<div class='notice'>\n\n";
 
-	# ¾å¸Â¤ËÃ£¤·¤¿¾ì¹ç¤Î¥á¥Ã¥»¡¼¥¸
+	# ä¸Šé™ã«é”ã—ãŸå ´åˆã®ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸
 	my $already_display = 0;
 	if($amount >= $CONF{'FILE_LIMIT'}){
-		print "<p class='warning'>¥¹¥ì¥Ã¥É¤ÎÍÆÎÌ¤¬¾å¸Â($limit" . "KB)¤ËÃ£¤·¤Ş¤·¤¿¡£¤³¤ì°Ê¾åÅê¹Æ¡¢½¤Àµ¤Ï¤Ç¤­¤Ş¤»¤ó¡£</p>\n\n";
+		print "<p class='warning'>ã‚¹ãƒ¬ãƒƒãƒ‰ã®å®¹é‡ãŒä¸Šé™($limit" . "KB)ã«é”ã—ã¾ã—ãŸã€‚ã“ã‚Œä»¥ä¸ŠæŠ•ç¨¿ã€ä¿®æ­£ã¯ã§ãã¾ã›ã‚“ã€‚</p>\n\n";
 		$already_display = 1;
 	}
 	if($post >= $CONF{'THREAD_LIMIT'}){
-		print "<p class='warning'>¥¹¥ì¥Ã¥É¤Ø¤ÎÅê¹Æ¿ô¤¬¾å¸Â($CONF{'THREAD_LIMIT'}È¯¸À)¤ËÃ£¤·¤Ş¤·¤¿¡£¤³¤ì°Ê¾åÅê¹Æ¤Ç¤­¤Ş¤»¤ó¡£</p>\n\n";
+		print "<p class='warning'>ã‚¹ãƒ¬ãƒƒãƒ‰ã¸ã®æŠ•ç¨¿æ•°ãŒä¸Šé™($CONF{'THREAD_LIMIT'}ç™ºè¨€)ã«é”ã—ã¾ã—ãŸã€‚ã“ã‚Œä»¥ä¸ŠæŠ•ç¨¿ã§ãã¾ã›ã‚“ã€‚</p>\n\n";
 		$already_display = 1;
 	}
 	if($already_display){
@@ -483,24 +483,24 @@ sub notice{
 		return;
 	}
 
-	# ·Ù¹ğÉ½¼¨¡Ê¥Õ¥¡¥¤¥ëÍÆÎÌÀ©¸Â¡Ë
+	# è­¦å‘Šè¡¨ç¤ºï¼ˆãƒ•ã‚¡ã‚¤ãƒ«å®¹é‡åˆ¶é™ï¼‰
 	if($amount >= $CONF{'FILE_WARNING'}){
 		print '<p class="warning">';
 	}elsif($amount >= $CONF{'FILE_CAUTION'}){
 		print '<p class="caution">';
 	}
 	if ($amount >= $CONF{'FILE_CAUTION'}){
-		print "¥¹¥ì¥Ã¥É¤ÎÍÆÎÌ¤¬$kb" . "KB¤òÄ¶¤¨¤Æ¤¤¤Ş¤¹¡£$limit" . "KB¤òÄ¶¤¨¤ë¤ÈÅê¹Æ¡¢½¤Àµ¤¬½ĞÍè¤Ê¤¯¤Ê¤ê¤Ş¤¹¡£</p>\n\n";
+		print "ã‚¹ãƒ¬ãƒƒãƒ‰ã®å®¹é‡ãŒ$kb" . "KBã‚’è¶…ãˆã¦ã„ã¾ã™ã€‚$limit" . "KBã‚’è¶…ãˆã‚‹ã¨æŠ•ç¨¿ã€ä¿®æ­£ãŒå‡ºæ¥ãªããªã‚Šã¾ã™ã€‚</p>\n\n";
 	}
 
-	# ·Ù¹ğÉ½¼¨¡ÊÅê¹ÆÎÌÀ©¸Â¡Ë
+	# è­¦å‘Šè¡¨ç¤ºï¼ˆæŠ•ç¨¿é‡åˆ¶é™ï¼‰
 	if($post >= $CONF{'THREAD_WARNING'}){
-		print "<p class='warning'>¥¹¥ì¥Ã¥É¤Ø¤ÎÅê¹Æ¿ô¤¬$CONF{'THREAD_WARNING'}";
+		print "<p class='warning'>ã‚¹ãƒ¬ãƒƒãƒ‰ã¸ã®æŠ•ç¨¿æ•°ãŒ$CONF{'THREAD_WARNING'}";
 	}elsif($post >= $CONF{'THREAD_CAUTION'}){
-		print "<p class='caution'>¥¹¥ì¥Ã¥É¤Ø¤ÎÅê¹Æ¿ô¤¬$CONF{'THREAD_CAUTION'}";
+		print "<p class='caution'>ã‚¹ãƒ¬ãƒƒãƒ‰ã¸ã®æŠ•ç¨¿æ•°ãŒ$CONF{'THREAD_CAUTION'}";
 	}
 	if($post >= $CONF{'THREAD_CAUTION'}){
-		print "È¯¸À¤òÄ¶¤¨¤Æ¤¤¤Ş¤¹¡£$CONF{'THREAD_LIMIT'}È¯¸À¤òÄ¶¤¨¤ë¤ÈÅê¹Æ¤¬½ĞÍè¤Ê¤¯¤Ê¤ê¤Ş¤¹¡£</p>\n\n";
+		print "ç™ºè¨€ã‚’è¶…ãˆã¦ã„ã¾ã™ã€‚$CONF{'THREAD_LIMIT'}ç™ºè¨€ã‚’è¶…ãˆã‚‹ã¨æŠ•ç¨¿ãŒå‡ºæ¥ãªããªã‚Šã¾ã™ã€‚</p>\n\n";
 	}
 	print "</div>\n\n";
 
@@ -509,11 +509,11 @@ sub notice{
 
 
 ##########################################################################
-#                           ¿·µ¬Åê¹Æ¥Õ¥©¡¼¥àÉ½¼¨                         #
+#                           æ–°è¦æŠ•ç¨¿ãƒ•ã‚©ãƒ¼ãƒ è¡¨ç¤º                         #
 ##########################################################################
 sub form_new{
-	my $log = shift;  # [»²¾È]¥í¥°¥Ç¡¼¥¿
-	my $res = shift;  #¡Ê¥ì¥¹È¯¸À¤Î»ş¡Ë¥ì¥¹ÈÖ¹æ
+	my $log = shift;  # [å‚ç…§]ãƒ­ã‚°ãƒ‡ãƒ¼ã‚¿
+	my $res = shift;  #ï¼ˆãƒ¬ã‚¹ç™ºè¨€ã®æ™‚ï¼‰ãƒ¬ã‚¹ç•ªå·
 
 	my $no = $$log[0]{'THREAD_NO'};
 
@@ -522,26 +522,26 @@ sub form_new{
 	my $body  = '';
 
 	if(defined($res)){
-		$message = '¥ì¥¹È¯¸ÀÅê¹Æ';
+		$message = 'ãƒ¬ã‚¹ç™ºè¨€æŠ•ç¨¿';
 		$title = response($$log[$res]{'TITLE'});
 		$body  = quote($$log[$res]{'BODY'});
 	}else{
-		$message = '¿·µ¬È¯¸ÀÅê¹Æ';
+		$message = 'æ–°è¦ç™ºè¨€æŠ•ç¨¿';
 	}
 
 	print "<div class='post'>\n\n";
 	print "<h3 id='newpost'>$message</h3>\n\n";
 
 	if($$log[0]{'SIZE'} >= $CONF{'FILE_LIMIT'} or $$log[0]{'POST'} >= $CONF{'THREAD_LIMIT'}){
-		print '<p>¥¹¥ì¥Ã¥É¤ÎÍÆÎÌ¤òÄ¶¤¨¤Æ¤¤¤ë¤Î¤Ç';
-		if (defined($res)){  print '¥ì¥¹È¯¸ÀÅê¹Æ';  }
-		else{  print '¿·µ¬Åê¹Æ';  }
-		print "¤Ï½ĞÍè¤Ş¤»¤ó¡£</p>\n\n";
+		print '<p>ã‚¹ãƒ¬ãƒƒãƒ‰ã®å®¹é‡ã‚’è¶…ãˆã¦ã„ã‚‹ã®ã§';
+		if (defined($res)){  print 'ãƒ¬ã‚¹ç™ºè¨€æŠ•ç¨¿';  }
+		else{  print 'æ–°è¦æŠ•ç¨¿';  }
+		print "ã¯å‡ºæ¥ã¾ã›ã‚“ã€‚</p>\n\n";
 
 	}elsif(!defined($res) or !defined($$log[$res]{'DELETE_TIME'})){
 
 		unless(defined($res)){
-			print "<p>¤³¤³¤«¤é¡¢¿·µ¬¤ËÈ¯¸À¤òÅê¹Æ¤¹¤ë¤³¤È¤¬½ĞÍè¤Ş¤¹¡£¤â¤·¡¢¤¢¤ëÈ¯¸À¤Ë¥ì¥¹¤ò¤Ä¤±¤ë¾ì¹ç¤Ï¤½¤ÎÈ¯¸À¤òÉ½¼¨¤µ¤»¤Æ¤«¤é¡Ö¥ì¥¹¤ò¤Ä¤±¤ë¡×¤Î¥ê¥ó¥¯Àè¤Ë°ÜÆ°¤·¤Ş¤¹¡£</p>\n\n";
+			print "<p>ã“ã“ã‹ã‚‰ã€æ–°è¦ã«ç™ºè¨€ã‚’æŠ•ç¨¿ã™ã‚‹ã“ã¨ãŒå‡ºæ¥ã¾ã™ã€‚ã‚‚ã—ã€ã‚ã‚‹ç™ºè¨€ã«ãƒ¬ã‚¹ã‚’ã¤ã‘ã‚‹å ´åˆã¯ãã®ç™ºè¨€ã‚’è¡¨ç¤ºã•ã›ã¦ã‹ã‚‰ã€Œãƒ¬ã‚¹ã‚’ã¤ã‘ã‚‹ã€ã®ãƒªãƒ³ã‚¯å…ˆã«ç§»å‹•ã—ã¾ã™ã€‚</p>\n\n";
 		}
 
 		html::formparts_head(*STDOUT);
@@ -551,13 +551,13 @@ sub form_new{
 		html::formparts_foot(*STDOUT, $html::POST, $writecgi::POST, $no, $res);
 
 	}else{
-		print "<p>¤¹¤Ç¤ËÈ¯¸À¤¬ºï½ü¤µ¤ì¤Æ¤¤¤ë¤Î¤Ç¥ì¥¹¤ò¤Ä¤±¤ë¤³¤È¤Ï¤Ç¤­¤Ş¤»¤ó¡£</p>\n\n";
+		print "<p>ã™ã§ã«ç™ºè¨€ãŒå‰Šé™¤ã•ã‚Œã¦ã„ã‚‹ã®ã§ãƒ¬ã‚¹ã‚’ã¤ã‘ã‚‹ã“ã¨ã¯ã§ãã¾ã›ã‚“ã€‚</p>\n\n";
 	}
 	print "</div>\n\n";
 
 }
 
-# °úÍÑÉä¤ò¤Ä¤±¤ë
+# å¼•ç”¨ç¬¦ã‚’ã¤ã‘ã‚‹
 sub quote{
 	my $body = shift;
 	$body = "\n" . $body;
@@ -565,7 +565,7 @@ sub quote{
 	return substr($body, 1);
 }
 
-# È¯¸À¤ËRE:¤ò¤Ä¤±¤ë
+# ç™ºè¨€ã«RE:ã‚’ã¤ã‘ã‚‹
 sub response{
 	my $title = shift;
 	$title = 'Re:' . $title;
@@ -576,29 +576,29 @@ sub response{
 
 
 ##########################################################################
-#                           È¯¸À½¤Àµ¥Õ¥©¡¼¥àÉ½¼¨                         #
+#                           ç™ºè¨€ä¿®æ­£ãƒ•ã‚©ãƒ¼ãƒ è¡¨ç¤º                         #
 ##########################################################################
 sub form_rev{
-	my $log    = shift;  #¡Ê»²¾È¡Ë¥í¥°¥Ç¡¼¥¿
-	my $target = shift;  # ½¤Àµ¤ò¹Ô¤Ê¤¦È¯¸ÀÈÖ¹æ
+	my $log    = shift;  #ï¼ˆå‚ç…§ï¼‰ãƒ­ã‚°ãƒ‡ãƒ¼ã‚¿
+	my $target = shift;  # ä¿®æ­£ã‚’è¡Œãªã†ç™ºè¨€ç•ªå·
 
 	print "<div class='revise'>\n\n";
-	print "<h3 id='revise'>È¯¸À½¤Àµ</h3>\n\n";
+	print "<h3 id='revise'>ç™ºè¨€ä¿®æ­£</h3>\n\n";
 
 	if($$log[0]{'SIZE'} >= $CONF{'FILE_LIMIT'}){
-		print "<p>¥¹¥ì¥Ã¥É¤ÎÍÆÎÌ¤òÄ¶¤¨¤Æ¤¤¤ë¤Î¤Ç½¤Àµ¤Ç¤­¤Ş¤»¤ó¡£</p>\n\n";
+		print "<p>ã‚¹ãƒ¬ãƒƒãƒ‰ã®å®¹é‡ã‚’è¶…ãˆã¦ã„ã‚‹ã®ã§ä¿®æ­£ã§ãã¾ã›ã‚“ã€‚</p>\n\n";
 
 	}elsif(defined($$log[$target]{'DELETE_TIME'})){
-		print "<p>¤³¤ÎÈ¯¸À¤Ï¤¹¤Ç¤Ëºï½ü¤µ¤ì¤Æ¤¤¤ë¤Î¤Ç½¤Àµ¤Ç¤­¤Ş¤»¤ó¡£</p>\n\n";
+		print "<p>ã“ã®ç™ºè¨€ã¯ã™ã§ã«å‰Šé™¤ã•ã‚Œã¦ã„ã‚‹ã®ã§ä¿®æ­£ã§ãã¾ã›ã‚“ã€‚</p>\n\n";
 
 	}elsif(defined($$log[$target]{'CORRECT_TIME'}) && @{$$log[$target]{'CORRECT_TIME'}} >= $CONF{'CHANGE_LIMIT'}){
-		print "<p>$CONF{'CHANGE_LIMIT'}²ó¤òÄ¶¤¨¤ÆÈ¯¸À¤ò½¤Àµ¤¹¤ë¤³¤È¤Ï¤Ç¤­¤Ş¤»¤ó¡£</p>";
+		print "<p>$CONF{'CHANGE_LIMIT'}å›ã‚’è¶…ãˆã¦ç™ºè¨€ã‚’ä¿®æ­£ã™ã‚‹ã“ã¨ã¯ã§ãã¾ã›ã‚“ã€‚</p>";
 
 	}else{
 
 		if (defined($$log[$target]{'CORRECT_TIME'})){
 			my $limit = $CONF{'CHANGE_LIMIT'} - @{$$log[$target]{'CORRECT_TIME'}};
-			print "<p>¤¢¤È$limit²óÈ¯¸À¤ò½¤Àµ¤Ç¤­¤Ş¤¹¡£</p>\n\n";
+			print "<p>ã‚ã¨$limitå›ç™ºè¨€ã‚’ä¿®æ­£ã§ãã¾ã™ã€‚</p>\n\n";
 		}
 		my $body = $$log[$target]{'BODY'};
 		html::formparts_head(*STDOUT);
@@ -612,16 +612,16 @@ sub form_rev{
 
 
 ##########################################################################
-#                           È¯¸Àºï½ü¥Õ¥©¡¼¥àÉ½¼¨                         #
+#                           ç™ºè¨€å‰Šé™¤ãƒ•ã‚©ãƒ¼ãƒ è¡¨ç¤º                         #
 ##########################################################################
 sub form_del{
-	my $log    = shift;  #¡Ê»²¾È¡ËÈ¯¸À¥í¥°
-	my $target = shift;  # ¾Ã¤¹È¯¸À¤ÎÈÖ¹æ
+	my $log    = shift;  #ï¼ˆå‚ç…§ï¼‰ç™ºè¨€ãƒ­ã‚°
+	my $target = shift;  # æ¶ˆã™ç™ºè¨€ã®ç•ªå·
 
 	print "<div class='delete'>\n\n";
-	print "<h3 id='delete'>È¯¸Àºï½ü</h3>\n\n";
+	print "<h3 id='delete'>ç™ºè¨€å‰Šé™¤</h3>\n\n";
 	if(defined($$log[$target]{'DELETE_TIME'})){
-		print "<p>¤³¤ÎÈ¯¸À¤Ï¤¹¤Ç¤Ëºï½ü¤µ¤ì¤Æ¤¤¤Ş¤¹¡£</p>\n\n";
+		print "<p>ã“ã®ç™ºè¨€ã¯ã™ã§ã«å‰Šé™¤ã•ã‚Œã¦ã„ã¾ã™ã€‚</p>\n\n";
 		print "</div>\n\n";
 		return;
 	}
@@ -633,7 +633,7 @@ sub form_del{
 
 
 ##########################################################################
-#                     URI¥Ñ¥é¥á¡¼¥¿¡¼ÊÂ¤ÙÂØ¤¨¥Á¥§¥Ã¥¯                    #
+#                     URIãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ãƒ¼ä¸¦ã¹æ›¿ãˆãƒã‚§ãƒƒã‚¯                    #
 ##########################################################################
 sub regularization{
 	my $query = shift;
@@ -643,7 +643,7 @@ sub regularization{
 	           'res', 'rev', 'sub', 'mes', 'tree',
 	          );
 
-	# ¥¯¥¨¥ê¡¼ÊÂ¤ÙÂØ¤¨
+	# ã‚¯ã‚¨ãƒªãƒ¼ä¸¦ã¹æ›¿ãˆ
 	my $new_query = '';
 	for(my $i=0;$i<scalar @reg;++$i){
 		my $data = $$cgi->param($reg[$i]);
@@ -656,7 +656,7 @@ sub regularization{
 
 
 ##########################################################################
-#                             URIÅ¾Á÷¤·¤Æ½ªÎ»                            #
+#                             URIè»¢é€ã—ã¦çµ‚äº†                            #
 ##########################################################################
 sub location{
 	my $query = shift;
@@ -667,20 +667,20 @@ sub location{
 
 
 ##########################################################################
-#                         read.cgi ¥¨¥é¡¼¥á¥Ã¥»¡¼¥¸                      #
+#                         read.cgi ã‚¨ãƒ©ãƒ¼ãƒ¡ãƒƒã‚»ãƒ¼ã‚¸                      #
 ##########################################################################
 
 #
-# ´Ä¶­¥Õ¥¡¥¤¥ë¤¬ÆÉ¤ß¼è¤ì¤Ê¤¤
+# ç’°å¢ƒãƒ•ã‚¡ã‚¤ãƒ«ãŒèª­ã¿å–ã‚Œãªã„
 #
 sub error_fail_conf{
 	error_head();
-	print "<p>'bbs.conf'´Ä¶­¥Õ¥¡¥¤¥ë¤¬ÆÉ¤ß¼è¤ì¤Ê¤¤¤«¡¢¤Ş¤¿¤ÏÉÔÀµ¤Ç¤¹¡£</p>\n\n";
+	print "<p>'bbs.conf'ç’°å¢ƒãƒ•ã‚¡ã‚¤ãƒ«ãŒèª­ã¿å–ã‚Œãªã„ã‹ã€ã¾ãŸã¯ä¸æ­£ã§ã™ã€‚</p>\n\n";
 	error_foot();
 	exit;
 }
 #
-# ¥í¥°¤¬ÆÉ¤ß¼è¤ì¤Ê¤¤
+# ãƒ­ã‚°ãŒèª­ã¿å–ã‚Œãªã„
 #
 sub error_fail_read{
 	my $no = shift;
@@ -691,15 +691,15 @@ sub error_fail_read{
 	error_head();
 	print '<p>';
 	if(-f $html){
-		print "¥¹¥ì¥Ã¥ÉÈÖ¹æ$no¤Ç¤ÎµÄÏÀ¤Ï½ªÎ»¤·¤Ş¤·¤¿¡£";
-		print "<a href='$html'>²áµî¥í¥°</a>¤ò»²¾È¤·¤Æ¤¯¤À¤µ¤¤¡£";
+		print "ã‚¹ãƒ¬ãƒƒãƒ‰ç•ªå·$noã§ã®è­°è«–ã¯çµ‚äº†ã—ã¾ã—ãŸã€‚";
+		print "<a href='$html'>éå»ãƒ­ã‚°</a>ã‚’å‚ç…§ã—ã¦ãã ã•ã„ã€‚";
 
 	}elsif(-f $gz_log){
-		print "¥¹¥ì¥Ã¥ÉÈÖ¹æ$no¤Ç¤ÎµÄÏÀ¤Ï½ªÎ»¤·¤Ş¤·¤¿¡£";
-		print "¥í¥°¤¬HTML²½¤µ¤ì¤ë¤Ş¤Ç¤·¤Ğ¤é¤¯¤ªÂÔ¤Á¤¯¤À¤µ¤¤¡£";
+		print "ã‚¹ãƒ¬ãƒƒãƒ‰ç•ªå·$noã§ã®è­°è«–ã¯çµ‚äº†ã—ã¾ã—ãŸã€‚";
+		print "ãƒ­ã‚°ãŒHTMLåŒ–ã•ã‚Œã‚‹ã¾ã§ã—ã°ã‚‰ããŠå¾…ã¡ãã ã•ã„ã€‚";
 
 	}else{
-		print "¥¹¥ì¥Ã¥ÉÈÖ¹æ$no¤ÏÂ¸ºß¤·¤Ş¤»¤ó¡£";
+		print "ã‚¹ãƒ¬ãƒƒãƒ‰ç•ªå·$noã¯å­˜åœ¨ã—ã¾ã›ã‚“ã€‚";
 
 	}
 	print "</p>\n\n";
@@ -709,32 +709,32 @@ sub error_fail_read{
 
 
 #
-# ÆşÎÏ¥Õ¥©¡¼¥àÉÔÀµ
+# å…¥åŠ›ãƒ•ã‚©ãƒ¼ãƒ ä¸æ­£
 #
 sub error_illigal_call{
 	error_head();
-	print "<p>ÆşÎÏ¥Õ¥©¡¼¥à¤¬ÉÔÀµ¤Ê¤¿¤á¡¢È¯¸À¤òÉ½¼¨¤µ¤»¤ë¤³¤È¤¬¤Ç¤­¤Ş¤»¤ó¡£</p>\n\n";
+	print "<p>å…¥åŠ›ãƒ•ã‚©ãƒ¼ãƒ ãŒä¸æ­£ãªãŸã‚ã€ç™ºè¨€ã‚’è¡¨ç¤ºã•ã›ã‚‹ã“ã¨ãŒã§ãã¾ã›ã‚“ã€‚</p>\n\n";
 	error_foot();
 	exit;
 }
 
 
 #
-# ÆşÎÏ¿ôÃÍ¤¬ÈÏ°Ï³°
+# å…¥åŠ›æ•°å€¤ãŒç¯„å›²å¤–
 #
 sub error_over_value{
 	error_head();
-	print "<p>Í¿¤¨¤é¤ì¤¿ÃÍ¤¬¥Ç¡¼¥¿¤ÎÈÏ°Ï³°¤Î¤¿¤á¡¢È¯¸À¤òÉ½¼¨¤µ¤»¤ë¤³¤È¤¬¤Ç¤­¤Ş¤»¤ó¡£</p>\n\n";
+	print "<p>ä¸ãˆã‚‰ã‚ŒãŸå€¤ãŒãƒ‡ãƒ¼ã‚¿ã®ç¯„å›²å¤–ã®ãŸã‚ã€ç™ºè¨€ã‚’è¡¨ç¤ºã•ã›ã‚‹ã“ã¨ãŒã§ãã¾ã›ã‚“ã€‚</p>\n\n";
 	error_foot();
 	exit;
 }
 
 #
-# ÆşÎÏ¿ôÃÍ¤¬Ì·½â
+# å…¥åŠ›æ•°å€¤ãŒçŸ›ç›¾
 #
 sub error_complex{
 	error_head();
-	print "<p>Í¿¤¨¤é¤ì¤¿ÃÍ¤ËÌ·½â¤¬¤¢¤ë¤¿¤á¡¢È¯¸À¤òÉ½¼¨¤µ¤»¤ë¤³¤È¤¬¤Ç¤­¤Ş¤»¤ó¡£</p>\n\n";
+	print "<p>ä¸ãˆã‚‰ã‚ŒãŸå€¤ã«çŸ›ç›¾ãŒã‚ã‚‹ãŸã‚ã€ç™ºè¨€ã‚’è¡¨ç¤ºã•ã›ã‚‹ã“ã¨ãŒã§ãã¾ã›ã‚“ã€‚</p>\n\n";
 	error_foot();
 	exit;
 }
@@ -745,22 +745,22 @@ sub error_complex{
 
 
 #
-# ¤½¤ÎÂ¾
+# ãã®ä»–
 #
 sub error_other{
 	my $hint = shift;
 	error_head();
-	print "<p>¥Ğ¥°¤ê¤Ş¤·¤¿¡£¤¹¤ß¤Ş¤»¤ó¡£hint:$hint</p>\n\n";
+	print "<p>ãƒã‚°ã‚Šã¾ã—ãŸã€‚ã™ã¿ã¾ã›ã‚“ã€‚hint:$hint</p>\n\n";
 	error_foot();
 	exit;
 }
 
 
 #
-# ¥¨¥é¡¼¶¦ÄÌ½èÍı
+# ã‚¨ãƒ©ãƒ¼å…±é€šå‡¦ç†
 #
 sub error_head{
-	my $err_mes = 'read.cgi¥¨¥é¡¼È¯À¸';
+	my $err_mes = 'read.cgiã‚¨ãƒ©ãƒ¼ç™ºç”Ÿ';
 	html::http_response_header();
 	html::header(*STDOUT, $err_mes);
 	print "<div class='error'>\n\n";
@@ -782,7 +782,7 @@ sub error_foot{
 
 
 ##########################################################################
-#                              ¥Æ¥¹¥ÈÍÑÎÎ°è                              #
+#                              ãƒ†ã‚¹ãƒˆç”¨é ˜åŸŸ                              #
 ##########################################################################
 
 

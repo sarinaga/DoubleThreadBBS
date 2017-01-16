@@ -2,9 +2,9 @@
 #!c:/Perl/bin/Perl.exe
 #
 #
-# ¥Ş¥ë¥Á¥¹¥ì¥Ã¥É·Ç¼¨ÈÄ - ½ñ¤­¹ş¤ß¥¹¥¯¥ê¥×¥È
+# ãƒãƒ«ãƒã‚¹ãƒ¬ãƒƒãƒ‰æ²ç¤ºæ¿ - æ›¸ãè¾¼ã¿ã‚¹ã‚¯ãƒªãƒ—ãƒˆ
 #
-#                                          2003.01.14 ¤µ¤æ¤ê¤óÀèÀ¸
+#                                          2003.01.14 ã•ã‚†ã‚Šã‚“å…ˆç”Ÿ
 #
 use strict;
 use lib '/home/sarinaga/perllib/';
@@ -17,7 +17,7 @@ BEGIN{
 	print LOG "-admin.cgi-\n";
 }
 unless($ENV{'HTTP_HOST'}){
-	print "¤³¤Î¥×¥í¥°¥é¥à¤ÏCGIÍÑ¤Ç¤¹. ¥³¥Ş¥ó¥É¥é¥¤¥ó¤«¤é¤Î¼Â¹Ô¤Ï¤Ç¤­¤Ş¤»¤ó. \n";
+	print "ã“ã®ãƒ—ãƒ­ã‚°ãƒ©ãƒ ã¯CGIç”¨ã§ã™. ã‚³ãƒãƒ³ãƒ‰ãƒ©ã‚¤ãƒ³ã‹ã‚‰ã®å®Ÿè¡Œã¯ã§ãã¾ã›ã‚“. \n";
 	exit;
 }
 
@@ -28,12 +28,12 @@ require './write.pl';
 
 
 #
-# ¥³¥Ş¥ó¥É¤ÎÊ¸Ë¡
+# ã‚³ãƒãƒ³ãƒ‰ã®æ–‡æ³•
 #
-# n - Ã±°ì¿ôÃÍ
-# N - Ê£¿ô¿ô»ú
-# s - ±Ñ¿ô»ú
-# S - ±Ñ¿ô»ú[¥Ñ¥¹¥ï¡¼¥É]
+# n - å˜ä¸€æ•°å€¤
+# N - è¤‡æ•°æ•°å­—
+# s - è‹±æ•°å­—
+# S - è‹±æ•°å­—[ãƒ‘ã‚¹ãƒ¯ãƒ¼ãƒ‰]
 #
 use vars qw(%COMMAND_SYNTAX);
 %COMMAND_SYNTAX =  (
@@ -55,17 +55,17 @@ use vars qw(%COMMAND_SYNTAX);
                    );
 
 #
-# ¥³¥Ş¥ó¥É½èÍı·ë²Ì
+# ã‚³ãƒãƒ³ãƒ‰å‡¦ç†çµæœ
 #
 use vars qw(%RESULT);
-$RESULT{'OK'}      = '¡û';  # Àµ¾ï½ªÎ»
-$RESULT{'PART'}    = '¢¤';  # ÉôÊ¬½ªÎ»
-$RESULT{'BAD'}     = '¡ß';  # °Û¾ï½ªÎ»
-$RESULT{'INVALID'} = '¡á';  # ½èÍıÉÔÇ½
-$RESULT{'IGNORE'}  = '¡İ';  # ¥³¥Ş¥ó¥ÉÌµ¸ú
+$RESULT{'OK'}      = 'â—‹';  # æ­£å¸¸çµ‚äº†
+$RESULT{'PART'}    = 'â–³';  # éƒ¨åˆ†çµ‚äº†
+$RESULT{'BAD'}     = 'Ã—';  # ç•°å¸¸çµ‚äº†
+$RESULT{'INVALID'} = 'ï¼';  # å‡¦ç†ä¸èƒ½
+$RESULT{'IGNORE'}  = 'ï¼';  # ã‚³ãƒãƒ³ãƒ‰ç„¡åŠ¹
 
 #
-# ´ÉÍı¼ÔÍÑ¥Ñ¥¹¥ï¡¼¥ÉºÇ¾®Ä¹¤µ
+# ç®¡ç†è€…ç”¨ãƒ‘ã‚¹ãƒ¯ãƒ¼ãƒ‰æœ€å°é•·ã•
 #
 use vars qw($PASSWORD_LENGTH);
 $PASSWORD_LENGTH = 8;
@@ -74,27 +74,27 @@ $PASSWORD_LENGTH = 8;
 
 
 #--------------------------------------------------------------------------
-#                              Æ°ºî´Ä¶­¤òÆÉ¤ß¹ş¤ß
+#                              å‹•ä½œç’°å¢ƒã‚’èª­ã¿è¾¼ã¿
 #--------------------------------------------------------------------------
-# ¥³¥ó¥Õ¥£¥°¥Õ¥¡¥¤¥ëÆÉ¤ß¹ş¤ß
+# ã‚³ãƒ³ãƒ•ã‚£ã‚°ãƒ•ã‚¡ã‚¤ãƒ«èª­ã¿è¾¼ã¿
 use vars qw(%CONF);
 no_conf() unless(file::config_read(\%CONF));
 
 #--------------------------------------------------------------------------
-#                                 ¥Õ¥©¡¼¥à¼èÆÀ
+#                                 ãƒ•ã‚©ãƒ¼ãƒ å–å¾—
 #--------------------------------------------------------------------------
 #
-# ¼õ¤±ÉÕ¤±¤ëCGI¥Õ¥©¡¼¥à¤Î¼ïÎà¤ÈÆâÍÆ¤Ï°Ê²¼¤ÎÄÌ¤ê
+# å—ã‘ä»˜ã‘ã‚‹CGIãƒ•ã‚©ãƒ¼ãƒ ã®ç¨®é¡ã¨å†…å®¹ã¯ä»¥ä¸‹ã®é€šã‚Š
 #
-# user    = ´ÉÍı¼ÔID
-# pass    = ¥Ñ¥¹¥ï¡¼¥É
-# command = ÆşÎÏ¥³¥Ş¥ó¥É
+# user    = ç®¡ç†è€…ID
+# pass    = ãƒ‘ã‚¹ãƒ¯ãƒ¼ãƒ‰
+# command = å…¥åŠ›ã‚³ãƒãƒ³ãƒ‰
 #
 
-# ÍÆÎÌ¤¬Âç¤­¤¹¤®¤ë¤È¤­¤Ï¥¨¥é¡¼
+# å®¹é‡ãŒå¤§ãã™ãã‚‹ã¨ãã¯ã‚¨ãƒ©ãƒ¼
 post_huge() if ($ENV{'CONTENT_LENGTH'} > $CONF{'BUFFER_LIMIT'});
 
-# ¥Õ¥©¡¼¥à¥Ç¡¼¥¿¼èÆÀ
+# ãƒ•ã‚©ãƒ¼ãƒ ãƒ‡ãƒ¼ã‚¿å–å¾—
 my $cgi = new CGI;
 my $userid   = $cgi->param('user');
 my $password = $cgi->param('password');
@@ -103,16 +103,16 @@ $command=~s/\x0D\x0A/\n/g;
 $command=~tr/\x0D\x0A/\n\n/;
 
 #--------------------------------------------------------------------------
-#                              ¥Ñ¥¹¥ï¡¼¥É³ÎÇ§
+#                              ãƒ‘ã‚¹ãƒ¯ãƒ¼ãƒ‰ç¢ºèª
 #--------------------------------------------------------------------------
-# ¥Ñ¥¹¥ï¡¼¥É¥Õ¥¡¥¤¥ëÆÉ¤ß¹ş¤ß
+# ãƒ‘ã‚¹ãƒ¯ãƒ¼ãƒ‰ãƒ•ã‚¡ã‚¤ãƒ«èª­ã¿è¾¼ã¿
 use vars qw(%PASS);
-my $password_command_flag = 0;    # ¥Ñ¥¹¥ï¡¼¥É¥³¥Ş¥ó¥É¤¬¤¢¤ë¡©
-if ($command=~m/password/i){      # ¥Ñ¥¹¥ï¡¼¥É¥³¥Ş¥ó¥É¤¬¤¢¤ë¤È¤­¤À¤±¥Õ¥¡¥¤¥ë¤ò¥í¥Ã¥¯
+my $password_command_flag = 0;    # ãƒ‘ã‚¹ãƒ¯ãƒ¼ãƒ‰ã‚³ãƒãƒ³ãƒ‰ãŒã‚ã‚‹ï¼Ÿ
+if ($command=~m/password/i){      # ãƒ‘ã‚¹ãƒ¯ãƒ¼ãƒ‰ã‚³ãƒãƒ³ãƒ‰ãŒã‚ã‚‹ã¨ãã ã‘ãƒ•ã‚¡ã‚¤ãƒ«ã‚’ãƒ­ãƒƒã‚¯
 	no_password_file() unless(file::filelock(file::adminpass_name()));
 	$password_command_flag = 1;
 }
-no_password_file() unless(file::read_adminpass(\%PASS));           # ÆÉ¤ß¹ş¤ß
+no_password_file() unless(file::read_adminpass(\%PASS));           # èª­ã¿è¾¼ã¿
 invalid_call() unless($userid);
 if ( !exists($PASS{$userid}) or $PASS{$userid} ne unix_md5_crypt($password, $PASS{$userid}) ){
 	file::unlock(file::adminpass_name());
@@ -121,59 +121,59 @@ if ( !exists($PASS{$userid}) or $PASS{$userid} ne unix_md5_crypt($password, $PAS
 
 
 #--------------------------------------------------------------------------
-#                 ¥³¥Ş¥ó¥ÉÆÉ¤ß¼è¤ê¡¢¥í¥°¥Õ¥¡¥¤¥ëÆÉ¤ß¹ş¤ß¡¢½èÍı
+#                 ã‚³ãƒãƒ³ãƒ‰èª­ã¿å–ã‚Šã€ãƒ­ã‚°ãƒ•ã‚¡ã‚¤ãƒ«èª­ã¿è¾¼ã¿ã€å‡¦ç†
 #--------------------------------------------------------------------------
-my @command_lines = split(/\n/, $command);  # ¥³¥Ş¥ó¥É¹Ô¤´¤È¤ËÊ¬³ä
-my @errors;                                 # ·ë²Ì½¸·×³ÊÇ¼ÍÑ
-my $change_password_flag = 0;               # ¥Ñ¥¹¥ï¡¼¥ÉÊÑ¹¹¡©
+my @command_lines = split(/\n/, $command);  # ã‚³ãƒãƒ³ãƒ‰è¡Œã”ã¨ã«åˆ†å‰²
+my @errors;                                 # çµæœé›†è¨ˆæ ¼ç´ç”¨
+my $change_password_flag = 0;               # ãƒ‘ã‚¹ãƒ¯ãƒ¼ãƒ‰å¤‰æ›´ï¼Ÿ
 
 foreach my $c_line(@command_lines){
 
-	# ¥³¥Ş¥ó¥É¤ò²òÆÉ
+	# ã‚³ãƒãƒ³ãƒ‰ã‚’è§£èª­
 	my ($c, @p) = read_command($c_line);   # $c is command, @p is parameters.
 
-	# ¥³¥Ş¥ó¥É±£ÊÃ
+	# ã‚³ãƒãƒ³ãƒ‰éš è”½
 	my ($sub_phased_command, undef, undef) = split(/:/, $c_line, 3);
 	$c_line = "$sub_phased_command:?????:?????" if (uc($sub_phased_command) eq 'PASSWORD');
 
-	# 1¥³¥Ş¥ó¥É·ë²Ì³ÊÇ¼ÍÑ
+	# 1ã‚³ãƒãƒ³ãƒ‰çµæœæ ¼ç´ç”¨
 	my $error = $RESULT{'OK'};
 
-	# ¥³¥Ş¥ó¥É¤Ë¤è¤ë½èÍı¤ÎÊ¬´ô
-	# ³ºÅö¥³¥Ş¥ó¥É¤¬¤Ê¤¤¤«¡¢ÉÔÀµ¤Ê¥³¥Ş¥ó¥É¤Î»È¤¤Êı¤ò¤·¤¿
+	# ã‚³ãƒãƒ³ãƒ‰ã«ã‚ˆã‚‹å‡¦ç†ã®åˆ†å²
+	# è©²å½“ã‚³ãƒãƒ³ãƒ‰ãŒãªã„ã‹ã€ä¸æ­£ãªã‚³ãƒãƒ³ãƒ‰ã®ä½¿ã„æ–¹ã‚’ã—ãŸ
 	if(!defined($c)){
 		$error = $RESULT{'IGNORE'};
 
-	# È¯¸À¤òÆÉ¤à@
+	# ç™ºè¨€ã‚’èª­ã‚€@
 	}elsif($c eq 'READ' or $c eq 'TREEREAD'){
 		$error = display_command($c_line, $c, @p);
 
-	# È¯¸À¤Îºï½üÊÑ¹¹Åù@
+	# ç™ºè¨€ã®å‰Šé™¤å¤‰æ›´ç­‰@
 	}elsif($c eq 'DEL' or $c eq 'TREEDEL' or $c eq 'UNDEL' or  $c eq 'TOMATO' or $c eq 'UNTOMATO' ) {
 		$error = write_command($c, @p, $userid);
 
-	# ¥¹¥ì¥Ã¥É¤òage¤ë@
+	# ã‚¹ãƒ¬ãƒƒãƒ‰ã‚’ageã‚‹@
 	}elsif($c eq 'AGE'){
 		$error = age($p[0]);
 
-	# È¯¸ÀÊİ´ÉÅù@
+	# ç™ºè¨€ä¿ç®¡ç­‰@
 	}elsif($c eq 'DAT' or  $c eq 'UNDAT'){
 		$error = dat($c, $p[0]);
 
-	# ÁÒ¸ËÈ¯¸À¤ÎHTML²½
+	# å€‰åº«ç™ºè¨€ã®HTMLåŒ–
 	}elsif($c eq 'HTML'){
 		$error = html($p[0]);
 
-	# ¥¹¥ì¥Ã¥É°ìÍ÷É½¼¨@
+	# ã‚¹ãƒ¬ãƒƒãƒ‰ä¸€è¦§è¡¨ç¤º@
 	}elsif($c eq 'THREADLIST'){
 		$error = thread_list($c_line);
 
-	# ¥¹¥ì¥Ã¥É·Ï½èÍı @refresh  xcompress
+	# ã‚¹ãƒ¬ãƒƒãƒ‰ç³»å‡¦ç† @refresh  xcompress
 	}elsif($c eq 'REFRESH' or $c eq 'COMPRESS'){
 		$error = thread_command($c);
 
-	# ¥Ñ¥¹¥ï¡¼¥ÉÊÑ¹¹@
-	# ¤³¤ì¤ÏÄ¾ÀÜ½èÍı
+	# ãƒ‘ã‚¹ãƒ¯ãƒ¼ãƒ‰å¤‰æ›´@
+	# ã“ã‚Œã¯ç›´æ¥å‡¦ç†
 	}elsif($c eq 'PASSWORD'){
 		if ($p[0] ne $p[1]){
 			$error = $RESULT{'INVALID'};
@@ -184,7 +184,7 @@ foreach my $c_line(@command_lines){
 		}
 	}
 
-	# ·ë²Ì¤ò³ÊÇ¼
+	# çµæœã‚’æ ¼ç´
 	push(@errors, "$error - $c_line");
 
 }
@@ -192,14 +192,14 @@ foreach my $c_line(@command_lines){
 
 
 #--------------------------------------------------------------------------
-#                                    Äù¤á
+#                                    ç· ã‚
 #--------------------------------------------------------------------------
 
-# http-responce-header¤ÈHTML¥Ø¥Ã¥À½ĞÎÏ
+# http-responce-headerã¨HTMLãƒ˜ãƒƒãƒ€å‡ºåŠ›
 html::http_response_header();
-html::header(*STDOUT , '´ÉÍı¥³¥Ş¥ó¥É¼Â¹Ô');
+html::header(*STDOUT , 'ç®¡ç†ã‚³ãƒãƒ³ãƒ‰å®Ÿè¡Œ');
 
-# ¥Ñ¥¹¥ï¡¼¥É¥Õ¥¡¥¤¥ë½èÍı
+# ãƒ‘ã‚¹ãƒ¯ãƒ¼ãƒ‰ãƒ•ã‚¡ã‚¤ãƒ«å‡¦ç†
 if ($change_password_flag){
 	unless(file::write_adminpass(\%PASS)){
 		foreach my $error(@errors){
@@ -212,20 +212,20 @@ if ($change_password_flag){
 	file::unlock(file::adminpass_name()) if ($password_command_flag);
 }
 
-# ·ë²Ì½ĞÎÏ¡ÊÀ®Èİ¤ÎÉ½¼¨¡Ë
-print "<h2>¥³¥Ş¥ó¥É½èÍı·ë²Ì</h2>\n";
+# çµæœå‡ºåŠ›ï¼ˆæˆå¦ã®è¡¨ç¤ºï¼‰
+print "<h2>ã‚³ãƒãƒ³ãƒ‰å‡¦ç†çµæœ</h2>\n";
 print "<div class='command'>\n";
 foreach my $line(@errors){
 	print "$line<br />\n";
 }
 print "</div>\n\n";
-print "<p>¥³¥Ş¥ó¥É½èÍı¤¬½ªÎ»¤·¤Ş¤·¤¿¡£</p>\n";
+print "<p>ã‚³ãƒãƒ³ãƒ‰å‡¦ç†ãŒçµ‚äº†ã—ã¾ã—ãŸã€‚</p>\n";
 
 
-# ·ë²Ì½ĞÎÏ¡ÊÉ½¼¨·Ï¥³¥Ş¥ó¥É¤¬¤¢¤ë¾ì¹ç¡Ë
+# çµæœå‡ºåŠ›ï¼ˆè¡¨ç¤ºç³»ã‚³ãƒãƒ³ãƒ‰ãŒã‚ã‚‹å ´åˆï¼‰
 my $tempfile = temp_filename();
 if (open(FIN, $tempfile)) {
-	print "<p>°Ê²¼¤Ï¥Ç¡¼¥¿É½¼¨·Ï¥³¥Ş¥ó¥É¤Î·ë²Ì¤Ç¤¹¡£</p>\n\n";
+	print "<p>ä»¥ä¸‹ã¯ãƒ‡ãƒ¼ã‚¿è¡¨ç¤ºç³»ã‚³ãƒãƒ³ãƒ‰ã®çµæœã§ã™ã€‚</p>\n\n";
 	print "<div class='result'>\n";
 	until(eof(FIN)){
 		my $line = <FIN>;
@@ -238,7 +238,7 @@ if (open(FIN, $tempfile)) {
 }
 
 
-# ¥ê¥ó¥¯¥Ğ¡¼É½¼¨¤ÈHTML¤Î½ªÎ»
+# ãƒªãƒ³ã‚¯ãƒãƒ¼è¡¨ç¤ºã¨HTMLã®çµ‚äº†
 print "<div class='link'>";
 html::link_top(*STDOUT);
 html::link_adminmode(*STDOUT);
@@ -249,18 +249,18 @@ exit;
 
 
 ###########################################################################
-#                            ÆÉ¤ß¼è¤êÉ½¼¨·Ï¥³¥Ş¥ó¥É                       #
+#                            èª­ã¿å–ã‚Šè¡¨ç¤ºç³»ã‚³ãƒãƒ³ãƒ‰                       #
 ###########################################################################
 sub display_command{
 
-	# °ú¿ô¼õ¤±¼è¤ê(²òÀÏÁ°¥³¥Ş¥ó¥É¥é¥¤¥ó¡¢¥³¥Ş¥ó¥É¼ïÎà¡¢¥¹¥ì¥Ã¥ÉÈÖ¹æ¡¢È¯¸ÀÈÖ¹æ)
+	# å¼•æ•°å—ã‘å–ã‚Š(è§£æå‰ã‚³ãƒãƒ³ãƒ‰ãƒ©ã‚¤ãƒ³ã€ã‚³ãƒãƒ³ãƒ‰ç¨®é¡ã€ã‚¹ãƒ¬ãƒƒãƒ‰ç•ªå·ã€ç™ºè¨€ç•ªå·)
 	my ($purecommand, $command, $no, $num) = @_;
 
-	# ¥í¥°ÆÉ¤ß¼è¤ê / °ì»ş¥í¥Ã¥¯¤ÇÆÉ¤à
+	# ãƒ­ã‚°èª­ã¿å–ã‚Š / ä¸€æ™‚ãƒ­ãƒƒã‚¯ã§èª­ã‚€
 	my @log;
 	return $RESULT{'BAD'} unless(file::read_log($no, \@log, 1, 0, 1));
 
-	# ÆÉ¤ß¹ş¤àÈ¯¸À¤Î°ìÍ÷ºîÀ®
+	# èª­ã¿è¾¼ã‚€ç™ºè¨€ã®ä¸€è¦§ä½œæˆ
 	my @nums;
 	if ($command eq 'READ'){
 		@nums = read_number($num, @log-1);
@@ -271,14 +271,14 @@ sub display_command{
 		}
 	}
 
-	# ¥Ñ¥é¥á¡¼¥¿¡¼ÀßÄê
+	# ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿ãƒ¼è¨­å®š
 	my %param;
 	$param{'st'} = 0;
 	$param{'en'} = @log - 1;
 	$param{'no'} = $no;
 	$param{'mode'} = $html::ADMIN;
 
-	# ¥Æ¥ó¥İ¥é¥ê¥Õ¥¡¥¤¥ë¤ò³«¤¤¤Æ¡¢¤½¤³¤Ë¥í¥°¤ò½ñ¤­¹ş¤à
+	# ãƒ†ãƒ³ãƒãƒ©ãƒªãƒ•ã‚¡ã‚¤ãƒ«ã‚’é–‹ã„ã¦ã€ãã“ã«ãƒ­ã‚°ã‚’æ›¸ãè¾¼ã‚€
 	my $filename = temp_filename();
 	unless (open(FOUT, ">>$filename")) {
 		open(FOUT, ">$filename") or return $RESULT{'BAD'};
@@ -291,22 +291,22 @@ sub display_command{
 	print FOUT "</dl>\n\n";
 	close(FOUT);
 
-	# Àµ¾ï½ªÎ»
+	# æ­£å¸¸çµ‚äº†
 	return $RESULT{'OK'};
 }
 
 
 ###########################################################################
-#                              ½ñ¤­¹ş¤ß·Ï¥³¥Ş¥ó¥É                         #
+#                              æ›¸ãè¾¼ã¿ç³»ã‚³ãƒãƒ³ãƒ‰                         #
 ###########################################################################
 sub write_command{
 	my ($c, $no, $num, $admin) = @_;   # $c is command, $no is therad number, $num is post number.
 
-	# ¥í¥°¤òÆÉ¤ß¼è¤ë
+	# ãƒ­ã‚°ã‚’èª­ã¿å–ã‚‹
 	my @log;
-	return $RESULT{'BAD'} unless(file::read_log($no, \@log, 1, 1, 0));  # ¥í¥Ã¥¯·ÑÂ³¤ÇÆÉ¤à
+	return $RESULT{'BAD'} unless(file::read_log($no, \@log, 1, 1, 0));  # ãƒ­ãƒƒã‚¯ç¶™ç¶šã§èª­ã‚€
 
-	# ½èÍı¤ò¹Ô¤¦È¯¸À¤ò¥Ô¥Ã¥¯¥¢¥¦¥È
+	# å‡¦ç†ã‚’è¡Œã†ç™ºè¨€ã‚’ãƒ”ãƒƒã‚¯ã‚¢ã‚¦ãƒˆ
 	my @nums;
 	if ($c eq 'DEL' or $c eq 'UNDEL' or 
 		$c eq 'TOMATO' or $c eq 'UNTOMATO'){
@@ -319,10 +319,10 @@ sub write_command{
 		}
 	}
 
-	# ¥Ç¡¼¥¿ºï½ü/Éü³è½èÍı
+	# ãƒ‡ãƒ¼ã‚¿å‰Šé™¤/å¾©æ´»å‡¦ç†
 	foreach my $n(@nums){   # $n is processing post number.
 
-		next if ($n>= @log);      # ¥í¥°ÈÏ°Ï³°¤Î¾ì¹ç¤Ï½èÍı¤·¤Ê¤¤
+		next if ($n>= @log);      # ãƒ­ã‚°ç¯„å›²å¤–ã®å ´åˆã¯å‡¦ç†ã—ãªã„
 
 		if ($c eq 'DEL' or $c eq 'TREEDEL'){
 			$log[$n]{'DELETE_TIME'}  = time();
@@ -341,33 +341,33 @@ sub write_command{
 		}
 	}
 
-	# È¯¸À¹¹¿·
+	# ç™ºè¨€æ›´æ–°
 	return file::write_log(\@log) ? $RESULT{'OK'} : $RESULT{'BAD'};
 
 }
 
 
 ###########################################################################
-#                              ¥¹¥ì¥Ã¥É¤òage¤ë                            #
+#                              ã‚¹ãƒ¬ãƒƒãƒ‰ã‚’ageã‚‹                            #
 ###########################################################################
 sub age{
-	# ¾ğÊó¼èÆÀ
-	my $thread = shift;                              # ¥Ñ¥é¥á¡¼¥¿ÃÍÆÉ¤ß¹ş¤ß
-	my $pointer = file::read_pointer(0);             # ¥İ¥¤¥ó¥¿ÃÍÆÉ¤ß¹ş¤ß
-	return $RESULT{'BAD'} if (!defined($pointer));   # ¥İ¥¤¥ó¥¿ÃÍ°Û¾ï
-	my @threads = read_number($thread, $pointer-1);  # ¿ôÃÍ²òÀÏ¡ÊÃí:$pointer¤ò-1¤¹¤ë¤Î¤Ï
-	                                                 # ¼¡¤Î¥İ¥¤¥ó¥¿¤ò»Ø¤·¤Æ¤¤¤ë¤«¤é¡Ë
-	# age½èÍı
-	my $c=0; # $c¤Ï½èÍı¤Ç¤­¤¿¥¹¥ì¥Ã¥É¤Î¿ô
+	# æƒ…å ±å–å¾—
+	my $thread = shift;                              # ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿å€¤èª­ã¿è¾¼ã¿
+	my $pointer = file::read_pointer(0);             # ãƒã‚¤ãƒ³ã‚¿å€¤èª­ã¿è¾¼ã¿
+	return $RESULT{'BAD'} if (!defined($pointer));   # ãƒã‚¤ãƒ³ã‚¿å€¤ç•°å¸¸
+	my @threads = read_number($thread, $pointer-1);  # æ•°å€¤è§£æï¼ˆæ³¨:$pointerã‚’-1ã™ã‚‹ã®ã¯
+	                                                 # æ¬¡ã®ãƒã‚¤ãƒ³ã‚¿ã‚’æŒ‡ã—ã¦ã„ã‚‹ã‹ã‚‰ï¼‰
+	# ageå‡¦ç†
+	my $c=0; # $cã¯å‡¦ç†ã§ããŸã‚¹ãƒ¬ãƒƒãƒ‰ã®æ•°
 	foreach my $no(@threads){
 		my @log;
-		next unless(file::read_log($no, \@log, 1, 1, 0));  # ¥í¥Ã¥¯·ÑÂ³¤ÇÆÉ¤à
+		next unless(file::read_log($no, \@log, 1, 1, 0));  # ãƒ­ãƒƒã‚¯ç¶™ç¶šã§èª­ã‚€
 		$log[0]{'AGE_TIME'} = time();
 		unless (file::write_log(\@log)){  clear($no) ;  }
 		else { ++$c;  }
 	}
 
-	# ·ë²ÌÊÖµÑ
+	# çµæœè¿”å´
 	if (!$c){
 		return $RESULT{'BAD'};
 	}elsif ($c == scalar @threads){
@@ -378,7 +378,7 @@ sub age{
 
 
 ##########################################################################
-#                            ¥¹¥ì¥Ã¥ÉÊİÂ¸Áàºî                             #
+#                            ã‚¹ãƒ¬ãƒƒãƒ‰ä¿å­˜æ“ä½œ                             #
 ##########################################################################
 sub dat{
 	my ($c, $p) = @_;
@@ -386,7 +386,7 @@ sub dat{
 	return $RESULT{'BAD'} if (!defined($pointer));
 	my @thread = read_number($p, $pointer-1);
 
-	my $i = 0; # $i¤Ï½èÍı¤Ç¤­¤¿¥¹¥ì¥Ã¥É¤Î¿ô
+	my $i = 0; # $iã¯å‡¦ç†ã§ããŸã‚¹ãƒ¬ãƒƒãƒ‰ã®æ•°
 	foreach my $no(@thread){
 		if ($c eq 'DAT')      {  ++$i if (file::gzip($no));  }
 		elsif ($c eq 'UNDAT') {  ++$i if (file::gunzip_only($no));  }
@@ -404,7 +404,7 @@ sub dat{
 
 
 ##########################################################################
-#                              HTML²½ÊİÂ¸Áàºî                             #
+#                              HTMLåŒ–ä¿å­˜æ“ä½œ                             #
 ##########################################################################
 sub html{
 	my $no = shift;
@@ -417,19 +417,19 @@ sub html{
 	foreach $no(@thread){
 
 		my $filename = file::public_name($no) . ".$file::EXT_GZIP";
-		next unless (-f $filename);     # dat¥í¥°¤¬¤Ê¤¤»ş¤Ï¼¡¤Î¥¹¥ì¥Ã¥É¤Ø
+		next unless (-f $filename);     # datãƒ­ã‚°ãŒãªã„æ™‚ã¯æ¬¡ã®ã‚¹ãƒ¬ãƒƒãƒ‰ã¸
 
 		my @log;
 		next unless(file::read_log($no, \@log, 1, 1, 1));
-		                                # ¥í¥°¤¬ÆÉ¤á¤Ê¤¤»ş¤Ï¼¡¤Î¥¹¥ì¥Ã¥É¤Ø
+		                                # ãƒ­ã‚°ãŒèª­ã‚ãªã„æ™‚ã¯æ¬¡ã®ã‚¹ãƒ¬ãƒƒãƒ‰ã¸
 
 		my $htmlfile = file::html_name($no);
 		#next if (-f $htmlfile);
-		open(FOUT, ">$htmlfile") or next;  # ¥í¥°½ĞÎÏ¥Õ¥¡¥¤¥ë
+		open(FOUT, ">$htmlfile") or next;  # ãƒ­ã‚°å‡ºåŠ›ãƒ•ã‚¡ã‚¤ãƒ«
 
-		html::header(*FOUT, "$log[0]{'THREAD_TITLE'} - ²áµî¥í¥°É½¼¨", 0, undef, undef, 1);
+		html::header(*FOUT, "$log[0]{'THREAD_TITLE'} - éå»ãƒ­ã‚°è¡¨ç¤º", 0, undef, undef, 1);
 
-		# ¥ê¥ó¥¯¥Ğ¡¼1
+		# ãƒªãƒ³ã‚¯ãƒãƒ¼1
 		print FOUT '<div class="link">';
 		html::link_top(*FOUT);
 		html::link_exit(*FOUT);
@@ -445,7 +445,7 @@ sub html{
 		$param{'mode'} = $html::HTML;
 		html::multi(*FOUT, \@log, \%param);
 
-		# ¥ê¥ó¥¯¥Ğ¡¼2
+		# ãƒªãƒ³ã‚¯ãƒãƒ¼2
 		print FOUT '<div class="link">';
 		html::link_top(*FOUT);
 		html::link_exit(*FOUT);
@@ -455,12 +455,12 @@ sub html{
 		html::footer(*FOUT);
 
 		close(FOUT);
-		#unlink($filename);	# html²½¤·¤¿¥í¥°¥Õ¥¡¥¤¥ë¤Ïºï½ü¤¹¤ë
+		#unlink($filename);	# htmlåŒ–ã—ãŸãƒ­ã‚°ãƒ•ã‚¡ã‚¤ãƒ«ã¯å‰Šé™¤ã™ã‚‹
 		file::clear($no);
 		++$c;
 	}
 
-	# ·ë²Ì¤òÊÖ¤¹
+	# çµæœã‚’è¿”ã™
 	if (!$c){
 		return $RESULT{'BAD'};
 	}elsif($c < scalar @thread){
@@ -474,39 +474,39 @@ sub html{
 
 
 ###########################################################################
-#                              ¥¹¥ì¥Ã¥É°ìÍ÷É½¼¨                           #
+#                              ã‚¹ãƒ¬ãƒƒãƒ‰ä¸€è¦§è¡¨ç¤º                           #
 ###########################################################################
 sub thread_list{
 	my $c_line = shift;
 
-	# ¥¹¥ì¥Ã¥É°ìÍ÷ÆÉ¤ß¹ş¤ß
+	# ã‚¹ãƒ¬ãƒƒãƒ‰ä¸€è¦§èª­ã¿è¾¼ã¿
 	my @thread;
 	return $RESULT{'BAD'} unless (file::thread_read(\@thread, 1) );
 
-	# ¥¹¥ì¥Ã¥É°ìÍ÷½ĞÎÏ
+	# ã‚¹ãƒ¬ãƒƒãƒ‰ä¸€è¦§å‡ºåŠ›
 	my $filename = temp_filename();
 	unless (open(FOUT, ">>$filename")) {
 		open(FOUT, ">$filename") or return $RESULT{'BAD'};
 	}
 	print FOUT "<div class='commandline'>$c_line</div>\n";
 
-	# ¥¹¥ì¥Ã¥É°ìÍ÷É½¼¨
+	# ã‚¹ãƒ¬ãƒƒãƒ‰ä¸€è¦§è¡¨ç¤º
 	for(;;){
 
-		# ¥¹¥ì¥Ã¥É¤¬¤Ê¤¤¾ì¹ç
+		# ã‚¹ãƒ¬ãƒƒãƒ‰ãŒãªã„å ´åˆ
 		unless (scalar @thread > 0){
-			print FOUT "<p>¥¹¥ì¥Ã¥É¤ÏÂ¸ºß¤·¤Ş¤»¤ó¡£</p>\n\n";
+			print FOUT "<p>ã‚¹ãƒ¬ãƒƒãƒ‰ã¯å­˜åœ¨ã—ã¾ã›ã‚“ã€‚</p>\n\n";
 			last;
 		}
 
-		# ¥¹¥ì¥Ã¥É¤¬¤¢¤ë¾ì¹ç
+		# ã‚¹ãƒ¬ãƒƒãƒ‰ãŒã‚ã‚‹å ´åˆ
 		print FOUT "<table class='thread-list'><tbody>\n\n";
 		foreach my $t(@thread){
 			print FOUT '<tr><td class="no">';
 			print FOUT "$$t{'THREAD_NO'}.";
 			print FOUT '</td><td class="thread-admin">';
 			print FOUT "$$t{'THREAD_TITLE'}($$t{'POST'})";
-			print FOUT " [DAT¾õÂÖ]" if ($$t{'DAT'});
+			print FOUT " [DATçŠ¶æ…‹]" if ($$t{'DAT'});
 			print FOUT '</td><td class="date">';
 			print FOUT std::time_format($$t{'AGE_TIME'});
 			print FOUT '</td><td class="ip_addr">';
@@ -518,22 +518,22 @@ sub thread_list{
 	}
 	close(FOUT);
 
-	# Àµ¾ï½ªÎ»
+	# æ­£å¸¸çµ‚äº†
 	return $RESULT{'OK'};
 }
 
 
 ##########################################################################
-#                          ¥¹¥ì¥Ã¥ÉÁàºî·Ï¥³¥Ş¥ó¥É                        #
+#                          ã‚¹ãƒ¬ãƒƒãƒ‰æ“ä½œç³»ã‚³ãƒãƒ³ãƒ‰                        #
 ##########################################################################
 sub thread_command{
 	my $command = shift;
 
-	# ¥¹¥ì¥Ã¥É°ìÍ÷ÆÉ¤ß¹ş¤ß
+	# ã‚¹ãƒ¬ãƒƒãƒ‰ä¸€è¦§èª­ã¿è¾¼ã¿
 	my @thread;
 	return 0 unless (file::thread_read(\@thread));
 
-	# ³Æ¼ï½èÍı
+	# å„ç¨®å‡¦ç†
 	my $flag;
 	if ($command eq 'REFRESH'){
 		$flag  = file::create_bbshtml(\@thread);
@@ -551,7 +551,7 @@ sub thread_command{
 
 
 ###########################################################################
-#                          ¥Æ¥ó¥İ¥é¥ê¥Õ¥¡¥¤¥ëÌ¾ºîÀ®                       #
+#                          ãƒ†ãƒ³ãƒãƒ©ãƒªãƒ•ã‚¡ã‚¤ãƒ«åä½œæˆ                       #
 ###########################################################################
 sub temp_filename{
 	return "$CONF{'TEMP_DIR'}temp.$$";
@@ -559,7 +559,7 @@ sub temp_filename{
 
 
 ###########################################################################
-#                              ÆşÎÏ¥³¥Ş¥ó¥É²òÀÏ                           #
+#                              å…¥åŠ›ã‚³ãƒãƒ³ãƒ‰è§£æ                           #
 ###########################################################################
 sub read_command{
 	my $str = shift;
@@ -570,12 +570,12 @@ sub read_command{
 	}
 
 	my $command;
-	($command, @parameters) = @parameters;               # °ìÈÖºÇ½é¤Ï¥³¥Ş¥ó¥É
-	$command = uc($command);                             # ¥³¥Ş¥ó¥É¤ÎÂçÊ¸»ú¾®Ê¸»úÅı°ì
+	($command, @parameters) = @parameters;               # ä¸€ç•ªæœ€åˆã¯ã‚³ãƒãƒ³ãƒ‰
+	$command = uc($command);                             # ã‚³ãƒãƒ³ãƒ‰ã®å¤§æ–‡å­—å°æ–‡å­—çµ±ä¸€
 
-	return () unless(exists($COMMAND_SYNTAX{$command})); # ¼Âºß¤·¤Ê¤¤¥³¥Ş¥ó¥É¤¬½ñ¤«¤ì¤¿
+	return () unless(exists($COMMAND_SYNTAX{$command})); # å®Ÿåœ¨ã—ãªã„ã‚³ãƒãƒ³ãƒ‰ãŒæ›¸ã‹ã‚ŒãŸ
 	my $syntax = $COMMAND_SYNTAX{$command};
-	return () if (length($syntax) != @parameters);       # Ê¸Ë¡¤¬¹ç¤Ã¤Æ¤¤¤Ê¤¤
+	return () if (length($syntax) != @parameters);       # æ–‡æ³•ãŒåˆã£ã¦ã„ãªã„
 
 	for(my $i=0;$i<@parameters;++$i){
 
@@ -603,13 +603,13 @@ sub read_command{
 
 
 ###########################################################################
-#                            Ê£¿ô»ØÄêÈÖ¹æ¤òÆÉ¤ß¹ş¤à                       #
+#                            è¤‡æ•°æŒ‡å®šç•ªå·ã‚’èª­ã¿è¾¼ã‚€                       #
 ###########################################################################
 sub read_number{
 	my $str = shift;
 	my $last = shift;
 
-	$str =~s/[^0-9,\-\s]//g;             # ÉÔÀµ¤ÊÊ¸»ú¤ÏÆÉ¤ßÈô¤Ğ¤·¤Æ¤·¤Ş¤¦
+	$str =~s/[^0-9,\-\s]//g;             # ä¸æ­£ãªæ–‡å­—ã¯èª­ã¿é£›ã°ã—ã¦ã—ã¾ã†
 	my @parts = split(/,/ , $str);
 
 	my @nums = ();
@@ -617,14 +617,14 @@ sub read_number{
 
 		my ($st, $en) = split(/-/, $part, 2);
 
-		next unless(defined($st));  # null¤Î¾ì¹ç
+		next unless(defined($st));  # nullã®å ´åˆ
 
 		$st = 0 if ($st eq '');
 
-		unless(defined($en)){       # ¿ô¤ò1¤Ä¤À¤±»ØÄê¤·¤¿¾ì¹ç
+		unless(defined($en)){       # æ•°ã‚’1ã¤ã ã‘æŒ‡å®šã—ãŸå ´åˆ
 			$en = $st;
 		}else{
-			if ($en eq ''){     # ¥Ï¥¤¥Õ¥ó»ØÄê¤µ¤ì¤¿¾ì¹ç
+			if ($en eq ''){     # ãƒã‚¤ãƒ•ãƒ³æŒ‡å®šã•ã‚ŒãŸå ´åˆ
 				if (defined($last)){
 					$en = $last;
 				}else{
@@ -637,19 +637,19 @@ sub read_number{
 
 	}
 
-	my %seen;                            # ½ÅÊ£¤¹¤ë¥Ç¡¼¥¿¤òºï½ü
+	my %seen;                            # é‡è¤‡ã™ã‚‹ãƒ‡ãƒ¼ã‚¿ã‚’å‰Šé™¤
 	@nums = grep { !$seen{$_} ++} @nums;
-	@nums = sort {$a <=> $b} @nums;      # À°Îó
+	@nums = sort {$a <=> $b} @nums;      # æ•´åˆ—
 	return @nums;
 }
 
 
 
 ###########################################################################
-#                           ¥¨¥é¡¼É½¼¨¶¦ÄÌ½èÍı                            #
+#                           ã‚¨ãƒ©ãƒ¼è¡¨ç¤ºå…±é€šå‡¦ç†                            #
 ###########################################################################
 sub error_head{
-	my $err_mes = 'admin.cgi¥¨¥é¡¼È¯À¸';
+	my $err_mes = 'admin.cgiã‚¨ãƒ©ãƒ¼ç™ºç”Ÿ';
 	html::http_response_header();
 	html::header(*STDOUT, $err_mes);
 	print "<div class='error'>\n\n";
@@ -669,26 +669,26 @@ sub error_foot{
 
 
 ###########################################################################
-#                               ¥¨¥é¡¼É½¼¨                                #
+#                               ã‚¨ãƒ©ãƒ¼è¡¨ç¤º                                #
 ###########################################################################
 
 #
-# Åê¹Æ¤¬Âç¤­¤¹¤®¤ë
+# æŠ•ç¨¿ãŒå¤§ãã™ãã‚‹
 #
 sub post_huge{
 	error_head();
-	print "<p>¥³¥Ş¥ó¥É¤ò¼Â¹Ô¤µ¤»¤¹¤®¤Ç¤¹¡£</p>\n\n";
+	print "<p>ã‚³ãƒãƒ³ãƒ‰ã‚’å®Ÿè¡Œã•ã›ã™ãã§ã™ã€‚</p>\n\n";
 	error_foot();
 	exit;
 
 }
 
 #
-# ÉÔÀµ¤ÊCGI¸Æ¤Ó½Ğ¤·
+# ä¸æ­£ãªCGIå‘¼ã³å‡ºã—
 #
 sub invalid_call{
 	error_head();
-	print "<p>ÉÔÀµ¤Ê¸Æ¤Ó½Ğ¤·¤Ç¤¹¡£</p>\n\n";
+	print "<p>ä¸æ­£ãªå‘¼ã³å‡ºã—ã§ã™ã€‚</p>\n\n";
 	error_foot();
 	exit;
 
@@ -697,11 +697,11 @@ sub invalid_call{
 
 
 #
-# ¥Ñ¥¹¥ï¡¼¥ÉÉÔ°ìÃ×
+# ãƒ‘ã‚¹ãƒ¯ãƒ¼ãƒ‰ä¸ä¸€è‡´
 #
 sub unmatch_password{
 	error_head();
-	print "<p>¥Ñ¥¹¥ï¡¼¥É¤¬°ìÃ×¤·¤Ş¤»¤ó¡£¤â¤¦°ìÅÙ¤ä¤êÄ¾¤·¤Æ¤¯¤À¤µ¤¤¡£</p>\n\n";
+	print "<p>ãƒ‘ã‚¹ãƒ¯ãƒ¼ãƒ‰ãŒä¸€è‡´ã—ã¾ã›ã‚“ã€‚ã‚‚ã†ä¸€åº¦ã‚„ã‚Šç›´ã—ã¦ãã ã•ã„ã€‚</p>\n\n";
 	error_foot();
 	exit;
 
@@ -709,22 +709,22 @@ sub unmatch_password{
 
 
 #
-# ¥³¥ó¥Õ¥£¥°¥Õ¥¡¥¤¥ë¤¬¤¬ÆÉ¤ß¼è¤ì¤Ê¤¤
+# ã‚³ãƒ³ãƒ•ã‚£ã‚°ãƒ•ã‚¡ã‚¤ãƒ«ãŒãŒèª­ã¿å–ã‚Œãªã„
 #
 sub no_conf{
 	error_head();
-	print "<p>¥³¥ó¥Õ¥£¥°¥Õ¥¡¥¤¥ë¤¬ÆÉ¤ß¼è¤ì¤Ê¤¤¤«¡¢¤Ş¤¿¤ÏÉÔÀµ¤Ç¤¹¡£</p>\n\n";
+	print "<p>ã‚³ãƒ³ãƒ•ã‚£ã‚°ãƒ•ã‚¡ã‚¤ãƒ«ãŒèª­ã¿å–ã‚Œãªã„ã‹ã€ã¾ãŸã¯ä¸æ­£ã§ã™ã€‚</p>\n\n";
 	error_foot();
 	exit;
 }
 
 
 #
-# ¥Ñ¥¹¥ï¡¼¥É¥Õ¥¡¥¤¥ë¤¬ÆÉ¤ß¼è¤ì¤Ê¤¤
+# ãƒ‘ã‚¹ãƒ¯ãƒ¼ãƒ‰ãƒ•ã‚¡ã‚¤ãƒ«ãŒèª­ã¿å–ã‚Œãªã„
 #
 sub no_password_file{
 	error_head();
-	print "<p>¥Ñ¥¹¥ï¡¼¥É¥Õ¥¡¥¤¥ë¤¬ÆÉ¤ß¼è¤ì¤Ê¤¤¤«¡¢¤Ş¤¿¤ÏÉÔÀµ¤Ç¤¹¡£</p>\n\n";
+	print "<p>ãƒ‘ã‚¹ãƒ¯ãƒ¼ãƒ‰ãƒ•ã‚¡ã‚¤ãƒ«ãŒèª­ã¿å–ã‚Œãªã„ã‹ã€ã¾ãŸã¯ä¸æ­£ã§ã™ã€‚</p>\n\n";
 	error_foot();
 	exit;
 }
