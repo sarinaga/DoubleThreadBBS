@@ -1,8 +1,8 @@
 #
 #
-# �ޥ������åɷǼ��� - �ե����������ϴط�����
+# マルチスレッド掲示板 - ファイル入出力関係処理
 #
-#                                          2002.10.23 ����������
+#                                          2002.10.23 さゆりん先生
 #
 #
 package file;
@@ -13,8 +13,8 @@ use lib '/home/sarinaga/lib/i386-freebsd';
 use File::Copy;
 use Digest::SHA1 qw(sha1 sha1_hex sha1_base64);
 
-require './html.pl';    # create_bbshtml��
-require './write.pl';   # create_bbshtml��
+require './html.pl';    # create_bbshtml用
+require './write.pl';   # create_bbshtml用
 
 BEGIN{
 	use vars qw($TIME_HIRES_OK);
@@ -25,12 +25,12 @@ BEGIN{
 
 
 use vars qw($CONFIG_FILE $CONFIG_DIR $POINTER_FILE $BLACKLIST_FILE $BBS_TOP_PAGE_FILE $PASSWORD_FILE);
-$CONFIG_FILE         = 'bbs.conf';   # ����ե����ե�����
-$CONFIG_DIR          = './';         # ����ե����ե����뤬�֤���Ƥ���ǥ��쥯�ȥ�
-$POINTER_FILE        = 'pointer';    # �ݥ��󥿥ե�����
-$BLACKLIST_FILE      = 'blacklist';  # ����������¤˰��ä����äƤ���IP���ɥ쥹��IP�ۥ��Ȥ��Ǽ
-$BBS_TOP_PAGE_FILE   = 'bbs.html';   # �ȥåץڡ����ե�����/����åɰ���ɽ��
-$PASSWORD_FILE       = 'passwd';     # �ѥ���ɥե�����
+$CONFIG_FILE         = 'bbs.conf';   # コンフィグファイル
+$CONFIG_DIR          = './';         # コンフィグファイルが置かれているディレクトリ
+$POINTER_FILE        = 'pointer';    # ポインタファイル
+$BLACKLIST_FILE      = 'blacklist';  # スレ建て制限に引っかかっているIPアドレス、IPホストを格納
+$BBS_TOP_PAGE_FILE   = 'bbs.html';   # トップページファイル/スレッド一覧表示
+$PASSWORD_FILE       = 'passwd';     # パスワードファイル
 
 
 use vars qw($READ_SCRIPT $WRITE_SCRIPT $ADMIN_SCRIPT);
@@ -48,143 +48,143 @@ $SECRET_FILE_PERMISSION = 0600;
 
 use vars qw($EXT_LOG $EXT_PUBLIC $EXT_SECRET $EXT_GZIP $EXT_TEMP $EXT_LOCK);
 
-$EXT_LOG      = 'log';     # ȯ�������Ǥ��뤳�Ȥ򤢤�魯��ĥ��
-$EXT_PUBLIC   = 'pub';     # ��������Ƥ��뤳�Ȥ򤢤�魯��ĥ��
-$EXT_SECRET   = 'sec';     # ������Ǥ��뤳�Ȥ򤢤�魯��ĥ��
-$EXT_GZIP     = 'gz';      # gzip���̤γ�ĥ��
-$EXT_TEMP     = $$;        # ����ե������ĥ��
-$EXT_LOCK     = 'lock';    # ���å��ե������ĥ��
+$EXT_LOG      = 'log';     # 発言ログであることをあらわす拡張子
+$EXT_PUBLIC   = 'pub';     # 公開されていることをあらわす拡張子
+$EXT_SECRET   = 'sec';     # 非公開であることをあらわす拡張子
+$EXT_GZIP     = 'gz';      # gzip圧縮の拡張子
+$EXT_TEMP     = $$;        # 一時ファイル拡張子
+$EXT_LOCK     = 'lock';    # ロックファイル拡張子
 
 
 #
-# ���ץ�������߷׾�ν�������
+# ・プログラム設計上の重大注意
 #
-#  �ե��������å���������å�����Ȥ����ʲ��Τ褦�˽��֤��뤳��
+#  ファイルをロック／アンロックするとき、以下のように順番を守ること
 #
-#  1. �ݥ��󥿥ե�����
-#  2. �����ե����������
-#  3. �����ե������������
+#  1. ポインタファイル
+#  2. ログファイル公開部
+#  3. ログファイル非公開部
 #
-#  ���ν��֤���ʤ���硢�������֤�Ĺ���ʤä���
-#  �ǥåɥ��å��򵯤�����ǽ��������ޤ�.
+#  この順番を守らない場合、処理時間が長くなったり
+#  デッドロックを起こす可能性があります.
 #
 
 
 
 ##########################################################################
-#                       �Ķ�����ե�������ɤ߹���                       #
+#                       環境設定ファイルを読み込む                       #
 ##########################################################################
 sub config_read{
-	my $conf = shift;   # �ʻ��ȡ˴Ķ�������¸�ѥϥå���
+	my $conf = shift;   # （参照）環境設定保存用ハッシュ
 
-	# �ǥե�����ͤ򥻥åȤ���
+	# デフォルト値をセットする
 	%$conf = config_default();
 
-	# �Ķ�����ե�����򥪡��ץ󤹤�
+	# 環境設定ファイルをオープンする
 	my $config_file = config_name();
 	open(FIN, $config_file) || return 0;
 
-	# ���Ԥ��ĴĶ�����ե�������ɤ߼�ꡢ���Ϥ��Ƥ���
+	# １行ずつ環境設定ファイルを読み取り、解析していく
 	until(eof(FIN)){
 		my $read = <FIN>;
 		chomp($read);
 
-		$read=~s/\s+\#.*$//;     # ��Զ����'#'��������ʸ����
-		$read=~s/\s*$//;         # ��������ʸ�����
-		next if ($read eq '');   # ����Ԥ����ξ��Ͻ������ʤ�
-		next if ($read=~m/^\#/); # �����ȹԤϽ������ʤ�
+		$read=~s/\s+\#.*$//;     # 先行空白～'#'～コメント文を削除
+		$read=~s/\s*$//;         # 行末空白文字削除
+		next if ($read eq '');   # 空白行だけの場合は処理しない
+		next if ($read=~m/^\#/); # コメント行は処理しない
 
-		my ($elements, $contents) = split(/\s*=\s*/, $read ,2);  # ʬΥ
-		$elements =~tr/a-z/A-Z/;                                 # �Ķ�����̾����ʸ���Ѵ�
-		$$conf{$elements} = $contents;                           # ��Ǽ
+		my ($elements, $contents) = split(/\s*=\s*/, $read ,2);  # 分離
+		$elements =~tr/a-z/A-Z/;                                 # 環境設定名を大文字変換
+		$$conf{$elements} = $contents;                           # 格納
 
 	}
 	close(FIN);
 
-	return 0 unless(config_check($conf));  # �Ķ����꤬�����ʤ饨�顼���֤�
+	return 0 unless(config_check($conf));  # 環境設定が不正ならエラーを返す
 	return 1;
 }
 
 
 ##########################################################################
-#                      �Ķ��Υǥե�����ͤ����ꤹ��                      #
+#                      環境のデフォルト値を設定する                      #
 ##########################################################################
 sub config_default{
 
-	# �ǥե�����ͤ����ꡧ����Ū������
+	# デフォルト値を設定：一般的な設定
 	my %conf;
-	#$conf{'BASE_HTTP'}         = (�ʤ�)                   # �Ǽ��ĵ����Ȥʤ�URI
-	#$conf{'ADMIN_MAIL'}        = (�ʤ�)                   # �����ԥ᡼�륢�ɥ쥹
-	$conf{'BBS_NAME'}           = '���֥륹��åɷǼ���';  # �Ǽ��Ĥ�̾��
-	$conf{'NO_NAME'}            = '̵̾';                  # ��ƻ���̾�������Ϥ���ʤ��ä��Ȥ����������̾��
-	$conf{'NO_TITLE'}           = '̵��';                  # ��ƻ�����̾�����Ϥ���ʤ��ä��Ȥ������������̾
-	$conf{"THREAD_LENGTH_MAX"}  = 30;                      # ����å�̾��Ĺ������Ȥ��ˤɤ��Ǥ�����ڤ뤫��
-	$conf{'TITLE_LENGTH_MAX'}   = 20;                      # �����ȥ뤬Ĺ������Ȥ��ˤɤ��Ǥ�����ڤ뤫��
-	$conf{'NAME_LENGTH_MAX'}    = 10;                      # ̾����Ĺ������Ȥ��ˤɤ��Ǥ�����ڤ뤫��
-	$conf{'KILL_TITLE'}         = '�������ޤ���';        # ������줿ȯ����ɽ�魯ɽ���ʥ����ȥ��
-	$conf{'KILL_NAME'}          = '�������ޤ���';        # ������줿ȯ����ɽ�魯ɽ����̾����
-	$conf{'EXIT_TO'}            = '/';                     # �Ǽ��Ĥ���ȴ����Ȥ���������Υ��
-	$conf{'FORCE_TOMATO'}       = 0;                       # ��ƼԤ�IP���ɥ쥹����ɽ��
-	$conf{'CREATE_ID'}          = 1;                       # ��ƼԸ�ͭID����������
+	#$conf{'BASE_HTTP'}         = (なし)                   # 掲示板起点となるURI
+	#$conf{'ADMIN_MAIL'}        = (なし)                   # 管理者メールアドレス
+	$conf{'BBS_NAME'}           = 'ダブルスレッド掲示板';  # 掲示板の名前
+	$conf{'NO_NAME'}            = '無名';                  # 投稿時に名前が入力されなかったときに入れられる名前
+	$conf{'NO_TITLE'}           = '無題';                  # 投稿時に題名が入力されなかったときに入れられる題名
+	$conf{"THREAD_LENGTH_MAX"}  = 30;                      # スレッド名が長すぎるときにどこでちょん切るか？
+	$conf{'TITLE_LENGTH_MAX'}   = 20;                      # タイトルが長すぎるときにどこでちょん切るか？
+	$conf{'NAME_LENGTH_MAX'}    = 10;                      # 名前が長すぎるときにどこでちょん切るか？
+	$conf{'KILL_TITLE'}         = '削除されました';        # 削除された発言を表わす表示（タイトル）
+	$conf{'KILL_NAME'}          = '削除されました';        # 削除された発言を表わす表示（名前）
+	$conf{'EXIT_TO'}            = '/';                     # 掲示板から抜けるとき、その先のリンク
+	$conf{'FORCE_TOMATO'}       = 0;                       # 投稿者のIPアドレスを強制表示
+	$conf{'CREATE_ID'}          = 1;                       # 投稿者固有IDを生成する
 
-	$conf{'ACCEPT_CHANGE'}      = 1;                       # ȯ�����ѹ�������������ǧ��뤫
-	$conf{'COOKIE_EXPIRES'}     = 7;                       # cookieͭ������
-	$conf{'ID_LENGTH'}          = 5;                       # ID��Ĺ��
-	$conf{'DISPLAY_LAST'}       = 100;                     # �ǿ��쥹ɽ���򤤤��Ĥޤ�ɽ�����뤫
-	$conf{'TRIP_INPUT_LENGTH'}  = 10;                      # �ȥ�åפ�Ĺ�������ϡ�
-	$conf{'TRIP_OUTPUT_LENGTH'} = 10;                      # �ȥ�åפ�Ĺ���ʽ��ϡ�
-	$conf{'TRIP_KEY'}           = 'aa';                    # �ȥ�å׸�
-	$conf{'PASSWORD_LENGTH'}    = 20;                      # ���ϥѥ���ɤκ���Ĺ���ʺǾ���8��
+	$conf{'ACCEPT_CHANGE'}      = 1;                       # 発言の変更、削除、復活を認めるか
+	$conf{'COOKIE_EXPIRES'}     = 7;                       # cookie有効日数
+	$conf{'ID_LENGTH'}          = 5;                       # IDの長さ
+	$conf{'DISPLAY_LAST'}       = 100;                     # 最新レス表示をいくつまで表示するか
+	$conf{'TRIP_INPUT_LENGTH'}  = 10;                      # トリップの長さ（入力）
+	$conf{'TRIP_OUTPUT_LENGTH'} = 10;                      # トリップの長さ（出力）
+	$conf{'TRIP_KEY'}           = 'aa';                    # トリップ鍵
+	$conf{'PASSWORD_LENGTH'}    = 20;                      # 入力パスワードの最大長さ（最小は8）
 
-	# �ǥե�����ͤ����ꡧ�꥽��������
-	$conf{'THREAD_SAVE'}    = 20;      # ����åɤ򤤤��Ĥޤ���¸���뤫
-	$conf{'THREAD_MAX'}     = 5;       # ���ͤ����ꥹ��åɤ򤤤��ĺ����Ǥ��뤫 
-	$conf{'BUFFER_LIMIT'}   = 5000;    # ��ȯ�����礭�����¡ʥХ��ȿ���
+	# デフォルト値を設定：リソース設定
+	$conf{'THREAD_SAVE'}    = 20;      # スレッドをいくつまで保存するか
+	$conf{'THREAD_MAX'}     = 5;       # １人あたりスレッドをいくつ作成できるか 
+	$conf{'BUFFER_LIMIT'}   = 5000;    # １発言の大きさ制限（バイト数）
 
-	                                    # ����åɤؤν񤭹������¡ʥХ��ȿ���
-	$conf{'FILE_LIMIT'}     = 1000000;  # ����߶ػ�
-	$conf{'FILE_WARNING'}   = 900000;   # �ٹ�ɽ��
-	$conf{'FILE_CAUTION'}   = 800000;   # ���մ���
+	                                    # スレッドへの書き込み制限（バイト数）
+	$conf{'FILE_LIMIT'}     = 1000000;  # 書込み禁止
+	$conf{'FILE_WARNING'}   = 900000;   # 警告表示
+	$conf{'FILE_CAUTION'}   = 800000;   # 注意勧告
 
-	                                    # ����åɤؤν񤭹������¡�ȯ������
-	$conf{'THREAD_LIMIT'}   = 1000;     # ����߶ػ�
-	$conf{'THREAD_WARNING'} = 950;      # �ٹ�ɽ��
-	$conf{'THREAD_CAUTION'} = 900;      # ���մ���
+	                                    # スレッドへの書き込み制限（発言数）
+	$conf{'THREAD_LIMIT'}   = 1000;     # 書込み禁止
+	$conf{'THREAD_WARNING'} = 950;      # 警告表示
+	$conf{'THREAD_CAUTION'} = 900;      # 注意勧告
 
-	$conf{'CHANGE_LIMIT'}   = 5;        # ȯ���������Ǥ�����
-	$conf{'DUPE_BACK'}      = 5;        # �����Ƥ�Ƚ�Ǥ�ȯ���ޤ��̤äƸ��뤫
-	$conf{'CHAIN_POST'}     = 1;        # Ϣ³��ƹӤ餷�ɻߵ�����������
-	$conf{'CHAIN_TIME'}     = 30;       # Ϣ³��ƹӤ餷�ɻߵ������ƻ����
+	$conf{'CHANGE_LIMIT'}   = 5;        # 発言修正ができる回数
+	$conf{'DUPE_BACK'}      = 5;        # 二重投稿の判断を何発言まで遡って見るか
+	$conf{'CHAIN_POST'}     = 1;        # 連続投稿荒らし防止機構／数制限
+	$conf{'CHAIN_TIME'}     = 30;       # 連続投稿荒らし防止機構／監視時間
 
-	# �ǥե�����ͤ����ꡧ�����ƥ�����
-	$conf{'LOG_DIR_PUBLIC'} = './public_log/';       # �Ǽ��ĤΥ����Τ���������������Τ���¸����ǥ��쥯�ȥ�
-	$conf{'LOG_DIR_SECRET'} = './secret_log/';       # �Ǽ��ĤΥ����Τ�������������ʤ���Τ���¸����ǥ��쥯�ȥ�
-	$conf{'LOG_DIR_HTML'}   = './';                  # �Ǽ��ĤΥ����Τ�����HTML��������Τ���¸����ǥ��쥯�ȥ�
-	$conf{'TEMP_DIR'}       = '/tmp/';               # �ƥ�ݥ��(����˥ե��������ǥ��쥯�ȥ�
-	$conf{'FILE_LOCK'}      = 0;                     # �ե�������å�����ˡ(0:�ʤ���1:symlink��2:mkdir)
+	# デフォルト値を設定：システム設定
+	$conf{'LOG_DIR_PUBLIC'} = './public_log/';       # 掲示板のログのうち、公開されるものを保存するディレクトリ
+	$conf{'LOG_DIR_SECRET'} = './secret_log/';       # 掲示板のログのうち、公開されないものを保存するディレクトリ
+	$conf{'LOG_DIR_HTML'}   = './';                  # 掲示板のログのうち、HTML化したものを保存するディレクトリ
+	$conf{'TEMP_DIR'}       = '/tmp/';               # テンポラリ(一時）ファイルを作るディレクトリ
+	$conf{'FILE_LOCK'}      = 0;                     # ファイルロックの方法(0:なし／1:symlink／2:mkdir)
 
-	# ����¾�δĶ���
-	$conf{'VERSION'} = 70;      # �С�������ֹ� x 100
+	# その他の環境値
+	$conf{'VERSION'} = 70;      # バージョン番号 x 100
 
 	return %conf;
 }
 
 
 ##########################################################################
-#                �Ķ������������ꤵ��Ƥ��뤫�����å�����                #
+#                環境が正しく設定されているかチェックする                #
 ##########################################################################
 sub config_check{
-	my $conf = shift;   # �ʻ��ȡ˴Ķ�������¸�ѥϥå���
+	my $conf = shift;   # （参照）環境設定保存用ハッシュ
 
-	# ɬ�����ϳ�ǧ
+	# 必須入力確認
 	return 0 unless(defined($$conf{'BASE_HTTP'}));
 	return 0 unless(defined($$conf{'ADMIN_MAIL'}));
 
-	# ɬ��������������ǧ
+	# 必須入力正当性確認
 	return 0 unless (std::uri_valid($$conf{'BASE_HTTP'}));
 	return 0 unless (std::email_valid($$conf{'ADMIN_MAIL'}));
 
-	# ���ͤ�������Τ�ʸ��������줿��������
+	# 数値を入れるものに文字列を入れた場合は不正
 	my @number_only = (
 	                    'THREAD_LENGTH_MAX',
 	                    'TITLE_LENGTH_MAX',
@@ -218,7 +218,7 @@ sub config_check{
 		return 0 unless($$conf{$item}=~m/^\d+$/);
 	}
 
-	# �����ϥ����å�
+	# 代入系チェック
 	return 0 if ($$conf{'BBS_NAME'}   eq '');
 	return 0 if ($$conf{'NO_NAME'}    eq '');
 	return 0 if ($$conf{'NO_TITLE'}   eq '');
@@ -226,7 +226,7 @@ sub config_check{
 	return 0 if ($$conf{'KILL_TITLE'} eq '');
 	return 0 if ($$conf{'TRIP_KEY'}   eq '');
 
-	# ˰�·ϥ����å�
+	# 飽和系チェック
 	$$conf{'THREAD_LENGTH_MAX'}  = 5   if ($$conf{'THREAD_LENGTH_MAX'}  <   5);
 	$$conf{'TITLE_LENGTH_MAX'}   = 5   if ($$conf{'TITLE_LENGTH_MAX'}   <   5);
 	$$conf{'NAME_LENGTH_MAX'}    = 5   if ($$conf{'NAME_LENGTH_MAX'}    <   5);
@@ -236,7 +236,7 @@ sub config_check{
 	$$conf{'THREAD_SAVE'}        = 5   if ($$conf{'THREAD_SAVE'}        <   5);
 	$$conf{'BUFFER_LIMIT'}       = 500 if ($$conf{'BUFFER_LIMIT'}       < 500);
 
-	# �����������å�
+	# 整合性チェック
 	return 0 if ($$conf{'FILE_LIMIT'}   <= $$conf{'FILE_WARNING'} or
 	             $$conf{'FILE_WARNING'} <= $$conf{'FILE_CAUTION'}  );
 
@@ -244,7 +244,7 @@ sub config_check{
 	             $$conf{'THREAD_WARNING'} <= $$conf{'THREAD_CAUTION'}  );
 
 
-	# symlink�ե�������å������ѤǤ��ʤ��Ȥ��ϥ��å����ʤ�
+	# symlinkファイルロックが利用できないときはロックしない
 	if ($$conf{'FILE_LOCK'} == 1){
 		eval {   symlink("","");   };
 		$$conf{'FILE_LOCK'} = 0 if ($@);
@@ -256,22 +256,22 @@ sub config_check{
 
 
 ##########################################################################
-#                   �ե����롢�ǥ��쥯�ȥ�ν����                       #
+#                   ファイル、ディレクトリの初期化                       #
 ##########################################################################
 sub init{
 
-	# �ǥ��쥯�ȥ����
+	# ディレクトリを作る
 	my @directorys = ($main::CONF{'LOG_DIR_PUBLIC'},
 	                  $main::CONF{'LOG_DIR_SECRET'},
 	                  $main::CONF{'LOG_DIR_HTML'}  ,
 	                  $main::CONF{'TEMP_DIR'}      , 
 	                 );
 
-	# �����ѥ����������������Ʊ���ǥ��쥯�ȥ����¸�������
-	# �����ѥ����ǥ��쥯�ȥ����ʤ�
+	# 公開用ログと非公開ログを同じディレクトリに保存する場合は
+	# 公開用ログディレクトリを作らない
 	shift(@directorys) if($main::CONF{'LOG_DIR_PUBLIC'} eq $main::CONF{'LOG_DIR_SECRET'});
 
-	# �ǥ��쥯�ȥ����������
+	# ディレクトリを生成する
 	foreach my $directory(@directorys){
 		my $permission;
 		if ($directory eq $main::CONF{'LOG_DIR_SECRET'}){  $permission = $SECRET_DIR_PERMISSION;  }
@@ -283,7 +283,7 @@ sub init{
 	}
 
 
-	# �ݥ��󥿥ե��������
+	# ポインタファイルを作る
 	my $pointer_file = pointer_name();
 	unless(-e $pointer_file){
 		return 0 unless(open(FOUT, ">$pointer_file"));
@@ -292,7 +292,7 @@ sub init{
 	}
 	return 0 unless(chmod($SECRET_FILE_PERMISSION, $pointer_file));
 
-	# ����åɷ��Ƥ����֥�å��ꥹ�ȥե��������
+	# スレッド建てすぎブラックリストファイルを作る
 	my $blacklist_file = blacklist_name();
 	#system("touch $blacklist_file");
 	unless(-e $blacklist_file){
@@ -301,7 +301,7 @@ sub init{
 	}
 	return 0 unless(chmod($SECRET_FILE_PERMISSION, $blacklist_file));
 
-	# �������ѥѥ���ɥե��������
+	# 管理者用パスワードファイルを作る
 	my $password_file = adminpass_name();
 	unless(-e $password_file){
 		return 0 unless(open(FOUT, ">$password_file"));
@@ -310,7 +310,7 @@ sub init{
 	}
 	return 0 unless(chmod($SECRET_FILE_PERMISSION, $password_file));
 
-	# ���٤����ｪλ
+	# すべて正常終了
 	return 1;
 
 }
@@ -319,61 +319,61 @@ sub init{
 
 
 ##########################################################################
-#                        �����ե�������ɤ߼��                          #
+#                        ログファイルを読み取る                          #
 ##########################################################################
 sub read_log{
-	my $no     = shift(@_); # ����å��ֹ�ʽ����ֹ�Τߡ�
-	my $log    = shift(@_); # [����]�������Ƥ��֤�
-	my $all    = shift(@_); # �����ͤ����λ�������åɾ���������ɤ߼��[$lock���ͤϾ�˵��Ȥ���]
-	my $lock   = shift(@_); # �����ͤ����λ����ɤ߹�������ȥե�������å��򤫤��äѤʤ��ˤ��롣
-	my $gzip   = shift(@_); # �����ͤ����λ���gzip���̤������äƤ�������ե�������ɤࡣ
+	my $no     = shift(@_); # スレッド番号（純粋に番号のみ）
+	my $log    = shift(@_); # [参照]ログ内容を返す
+	my $all    = shift(@_); # この値が偽の時、スレッド情報だけを読み取る[$lockの値は常に偽とする]
+	my $lock   = shift(@_); # この値が真の時、読み込んだあとファイルロックをかけっぱなしにする。
+	my $gzip   = shift(@_); # この値が真の時、gzip圧縮がかかっているログファイルも読む。
 
-	# �����ե����뤬��¸����Ƥ���ǥ��쥯�ȥ�����
+	# ログファイルが保存されているディレクトリを取得
 	my ($log_public, $log_secret, $lock_public, $lock_secret);
-	$log_public = $lock_public = public_name($no);    # ����[������]
-	$log_secret = $lock_secret = secret_name($no);    # ����[�������]
+	$log_public = $lock_public = public_name($no);    # ログ[公開部]
+	$log_secret = $lock_secret = secret_name($no);    # ログ[非公開部]
 
 
-	# �����ե������õ������
-	# �����ե����뤬�ʤ��Ȥ���gzip���̤��줿�����ե�����̾�����
+	# ログファイルを探索する
+	# ログファイルがないときはgzip圧縮されたログファイル名を取得
 	unless(-f $log_public and -f $log_secret){
-		return 0 unless($gzip);                # gzip�����򤷤ʤ����Ͻ�λ
+		return 0 unless($gzip);                # gzip処理をしない場合は終了
 		$lock_public .= ".$EXT_GZIP";
 		$lock_secret .= ".$EXT_GZIP";
 		return 0 unless(-f $lock_public and -f $lock_secret);
 	}else{
-		$gzip = 0;	# �̾�Υե����뤬���Ĥ��ä�����gzip�����Ϥ��ʤ��Ƥ���
+		$gzip = 0;	# 通常のファイルが見つかった時はgzip処理はしなくていい
 	}
 
-	# ����[���������������]����å�����
+	# ログ[公開部／非公開部]をロックする
 	return 0 unless(filelock($lock_public));
 	unless(filelock($lock_secret)){
 		clear($no);   return 0;
 	}
 
 
-	# gzipŸ����Ÿ�����줿�����ե�����̾�����
+	# gzip展開をし展開されたログファイル名を取得
 	if ($gzip){
-		gunzip($no);                                # gzipŸ��
-		$log_public = gz_public_name($no);          # gzipŸ���������Υ���[������]
-		$log_secret = gz_secret_name($no);          # gzipŸ���������Υ���[�������]
-		unless(-f $log_public and -f $log_secret){  # gzipŸ������Ƥ��ʤ����Ͻ�λ
+		gunzip($no);                                # gzip展開
+		$log_public = gz_public_name($no);          # gzip展開した時のログ[公開部]
+		$log_secret = gz_secret_name($no);          # gzip展開した時のログ[非公開部]
+		unless(-f $log_public and -f $log_secret){  # gzip展開されていない時は終了
 			return 0;
 			clear($no);  return 0;
 		}
 	}
 
 
-	# �ե�������������
+	# ファイル情報を入手
 	my @stat_public = stat($log_public);
 	my @stat_secret = stat($log_secret);
-	$$log[0]{'THREAD_NO'}     = $no;                                    # ����å��ֹ�
-	$$log[0]{'SIZE'}          = $stat_public[7] + $stat_secret[7];      # �ե����륵����
-	$$log[0]{'LAST_MODIFIED'} = $stat_public[9];                        # �ǽ���������
-	$$log[0]{'DAT'}           = ($log_public eq $lock_public) ? 0 : 1;  # gzip�Υ������ɤ���
+	$$log[0]{'THREAD_NO'}     = $no;                                    # スレッド番号
+	$$log[0]{'SIZE'}          = $stat_public[7] + $stat_secret[7];      # ファイルサイズ
+	$$log[0]{'LAST_MODIFIED'} = $stat_public[9];                        # 最終更新時間
+	$$log[0]{'DAT'}           = ($log_public eq $lock_public) ? 0 : 1;  # gzipのログかどうか
 
 
-	# ����[���������������]�򳫤�
+	# ログ[公開部／非公開部]を開く
 	unless(open(FIN_P, $log_public)){
 		clear($no);  return 0;
 	}
@@ -382,37 +382,37 @@ sub read_log{
 	}
 
 
-	# ����[���������������]���饹��åɾ�����ɤ߽Ф�
-	my $result = read_header(*FIN_P, $log);      # [������]
-	if(!defined($result) or $result ne '&&'){    # ��������»���Ƥ�����Ͻ�λ
+	# ログ[公開部／非公開部]からスレッド情報を読み出す
+	my $result = read_header(*FIN_P, $log);      # [公開部]
+	if(!defined($result) or $result ne '&&'){    # ログが破損している場合は終了
 		close(FIN_S);  close(FIN_P);  clear($no);  return 0;
 	}
-	$result = read_header(*FIN_S, $log);         # [�������]
-	if(!defined($result) or $result ne '&&'){    # ��������»���Ƥ�����Ͻ�λ
+	$result = read_header(*FIN_S, $log);         # [非公開部]
+	if(!defined($result) or $result ne '&&'){    # ログが破損している場合は終了
 		close(FIN_S);  close(FIN_P);  clear($no);  return 0;
 	}
 
 
-	# ����åɾ���������ɤ���Ͻ�λ
+	# スレッド情報だけを読む場合は終了
 	unless($all){
 		close(FIN_S);
 		close(FIN_P);
-		clear($no, 0);  # ����åɾ���������ɤ����ɬ�����å���
-		return 1;       # ������뤳�Ȥ�����[��񤭤򤷤ʤ�����]
+		clear($no, 0);  # スレッド情報だけを読む場合は必ずロックを
+		return 1;       # 解除することに注意[上書きをしないため]
 	}
 
 
-	# ����[������]��ȯ���ǡ������ɤ߹���
+	# ログ[公開部]の発言データを読み込む
 	my $error_flag = 0;
 	my $count_public = 0;
 	until(eof(FIN_P)){
 
-		# ����[������]�ν������إå�
+		# ログ[公開部]の処理・ヘッダ
 		my $read = read_header(*FIN_P, $log, $count_public);
 		unless(defined($read)){ $error_flag = 1; last; }
 		if ($read eq '&&'){ ++$count_public; next; }
 
-		# ����[������]�ν�������ʸ
+		# ログ[公開部]の処理・本文
 		$read = read_body(*FIN_P, $log, $count_public);
 		unless(defined($read)){ $error_flag = 1; last; }
 		$$log[$count_public]{'BODY'} = $read;
@@ -421,7 +421,7 @@ sub read_log{
 	close(FIN_P);
 
 
-	# �����������ξ��Ͻ�λ
+	# ログが不正の場合は終了
 	if ($error_flag){
 		clear($no);  return 0;
 	}
@@ -429,12 +429,12 @@ sub read_log{
 	my $count_secret = 0;
 	until(eof(FIN_S)){
 
-		# ������������ν������إå�
+		# 非公開部ログの処理・ヘッダ
 		my $read = read_header(*FIN_S, $log, $count_secret);
 		unless(defined($read)){ $error_flag = 1; last; }
 		if ($read eq '&&'){ ++$count_secret; next; }
 
-		# ������������ν�������ʸ
+		# 非公開部ログの処理・本文
 		$read = read_body(*FIN_S, $log, $count_secret);
 		unless(defined($read)){ $error_flag = 1; last; }
 		$$log[$count_secret]{'BODY'} = $read;
@@ -442,44 +442,44 @@ sub read_log{
 	}
 	close(FIN_S);
 
-	# �����ե����������������å�
+	# ログファイル整合性チェック
 	$error_flag = 1 unless($count_public == $count_secret and $count_secret == $$log[0]{'POST'});
 	if($error_flag){
 		clear($no); return 0;
 	}
 
-	# ������������ɤ߼�줿���ν���
+	# ログが正常に読み取れた場合の処理
 	clear($no, $lock);
 	return 1;
 
 
 	#
-	#   ���ȥåѡ�'&','&&'���Ф�ޤǥ����إå���ʬ����ɤ���
+	#   ストッパー'&','&&'が出るまでログヘッダ部分を解読する
 	#
 	sub read_header{
-		local(*FIN) = shift;  # �ե�����ϥ�ɥ�
-		my $log     = shift;  # [����]�ǡ�����Ǽ��
-		my $count   = shift;  # ���ߺ�Ȥ��Ƥ���ȯ���ֹ�
+		local(*FIN) = shift;  # ファイルハンドル
+		my $log     = shift;  # [参照]データ格納用
+		my $count   = shift;  # 現在作業している発言番号
 
 		loop: for(;;){
 
-			# ����ʸ��������EOF���褿�Ȥ���̤����ͤ��֤�
+			# 区切文字より先にEOFが来たときは未定義値を返す
 			return undef if (eof(FIN));
 
-			# �����ɤࡿ���ڤ�ʸ���򸫤Ĥ����餽����֤�
+			# １行読む／区切り文字を見つけたらそれを返す
 			my $read = <FIN>;
 			chomp($read);
 			return $read if ($read eq '&' or $read eq '&&');
 
-			# ���������Ƥ�ʬΥ
+			# キーと内容を分離
 			my ($key, $value) = split(/<>/, $read, 2);
 
-			# ��������ʸ����
+			# キーを大文字化
 			$key=~tr/a-z/A-Z/;
 
-			# ����åɾ��� [��������Ƭ��ʬ] ����
+			# スレッド情報 [公開部冒頭部分] 処理
 			my @thread_data = ('THREAD_TITLE', 'POST', 'AGE_TIME',
-						'BUILDER_IP_ADDR', 'BUILDER_IP_HOST');  # �ü����5�ѥ�᡼��
+						'BUILDER_IP_ADDR', 'BUILDER_IP_HOST');  # 特殊処理5パラメータ
 			foreach my $element(@thread_data){
 				if ($key eq $element){
 					$$log[0]{$key} = $value;
@@ -487,53 +487,53 @@ sub read_log{
 				}
 			}
 
-			# �������� [������] �����ѹ����� �ü����
+			# ログ本体 [公開部] ログ変更時刻 特殊処理
 			if ($key eq 'CORRECT_TIME'){
 				push(@{$$log[$count]{'CORRECT_TIME'}}, $value);
 				next loop;
 			}
 
-			# �������� [���������������] ȯ���ֹ� �ü����
+			# ログ本体 [公開部／非公開部] 発言番号 特殊処理
 			if ($key eq 'NO'){
 
-				# ��Ͽ����Ƥ���ȯ���ֹ���ɤ߽Ф��Ƥ���ȯ���ο���
-				# ���äƤ��뤫�����å�����
-				return undef unless ($count == $value);                    # ����
+				# 記録されている発言番号と読み出している発言の数が
+				# あっているかチェックする
+				return undef unless ($count == $value);                    # 不正
 				if (defined($$log[$count]{'NO'})){
-					return undef unless ($$log[$count]{'NO'} == $value);   # ����
-					$$log[$count]{'NO'} = $value;                          # or $count ; ���ޤ��̣���ʤ�
+					return undef unless ($$log[$count]{'NO'} == $value);   # 不正
+					$$log[$count]{'NO'} = $value;                          # or $count ; あまり意味がない
 				}
 				next loop;
 			}
 
-			# �������� [�������] IP���ɥ쥹 IP�ۥ��� �桼������������� �ü����
+			# ログ本体 [非公開部] IPアドレス IPホスト ユーザエージェント 特殊処理
 			if ($key eq 'IP_HOST' or $key eq 'IP_ADDR' or $key eq 'USER_AGENT'){
 				push(@{$$log[$count]{$key}}, $value);
 				next loop;
 			}
 
-			# ��������[���������������] ���̽���
+			# ログ本体[公開部／非公開部] 共通処理
 			$$log[$count]{$key} = $value;
 			next loop;
 		}
 	}
 
 	#
-	#   ���ȥåѡ�'&&'���Ф�ޤǥ�����ʸ��ʬ���ɤ߼��
+	#   ストッパー'&&'が出るまでログ本文部分を読み取る
 	#
 	sub read_body{
-		local(*FIN) = shift;  # �ե�����ϥ�ɥ�
+		local(*FIN) = shift;  # ファイルハンドル
 
 		my $body = '';
 		for(;;){
-			return undef if(eof(FIN));        # ���륢��
+			return undef if(eof(FIN));        # ゴルア！
 			my $read = <FIN>;
 			chomp($read);
-			if ($read eq '&&'){               # ���ڤ국��ޤ��ɤ��
+			if ($read eq '&&'){               # 区切り記号まで読んだ
 				chomp($body);
 				return $body;
 			}
-			return undef if ($read eq '&');   # ���륢��
+			return undef if ($read eq '&');   # ゴルア！
 			$body .= "$read\n";
 		}
 	}
@@ -544,38 +544,38 @@ sub read_log{
 
 
 #
-#   gzip���̤���Ƥ�������ե������ƥ�ݥ����
-#   �ǥ��쥯�ȥ��Ÿ������
+#   gzip圧縮されているログファイルをテンポラリ用
+#   ディレクトリに展開する
 #
 sub gunzip{
 	my $no   = shift;
-	my $lock = shift;  # ���λ������å��򤫤���
+	my $lock = shift;  # 真の時、ロックをかける
 
-	# ���ԡ����ե�ѥ�
+	# コピー元フルパス
 	my $gzip_log_public_from = public_name($no) . ".$EXT_GZIP";
 	my $gzip_log_secret_from = secret_name($no) . ".$EXT_GZIP";
 
-	# �ե�������å�
+	# ファイルロック
 	if ($lock){
 		return 0 unless(filelock($gzip_log_public_from) and
 		                filelock($gzip_log_secret_from)      );
 	}
 
-	# ���ԡ���ǥ��쥯�ȥ�
+	# コピー先ディレクトリ
 	my $gzip_log_public_to = gz_public_name($no) . ".$EXT_GZIP";
 	my $gzip_log_secret_to = gz_secret_name($no) . ".$EXT_GZIP";
 
-	# �ƥ�ݥ���ѥǥ��쥯�ȥ�˥��ԡ�
+	# テンポラリ用ディレクトリにコピー
 	copy($gzip_log_public_from, $gzip_log_public_to);
 	copy($gzip_log_secret_from, $gzip_log_secret_to);
 ####	system("cp $gzip_log_public_from $gzip_log_public_to");
 ####	system("cp $gzip_log_secret_from $gzip_log_secret_to");
 
-	# �ե�������å����
+	# ファイルロック解除
 	unlock($gzip_log_public_from);
 	unlock($gzip_log_secret_from);
 
-	# gzipŸ��
+	# gzip展開
 ####	system("gunzip $gzip_log_public_to");
 ####	system("gunzip $gzip_log_secret_to");
 	rename($gzip_log_public_to, gz_public_name($no));
@@ -585,25 +585,25 @@ sub gunzip{
 
 
 #
-#   gzip���̤���Ƥ�������ե������Ÿ������
+#   gzip圧縮されているログファイルを展開する
 #
 sub gunzip_only{
 	my $no = shift;
 
-	# Ÿ����������ե�����
+	# 展開するログファイル
 	my $gzip_log_public = public_name($no) . ".$EXT_GZIP";
 	my $gzip_log_secret = secret_name($no) . ".$EXT_GZIP";
 
-	# �ե�������å�
+	# ファイルロック
 	return 0 unless(filelock($gzip_log_public) and filelock($gzip_log_secret));
 
-	# gzipŸ��
+	# gzip展開
 ####	system("gunzip $gzip_log_public");
 ####	system("gunzip $gzip_log_secret");
 	rename($gzip_log_public, public_name($no));
 	rename($gzip_log_secret, secret_name($no));
 
-	# �ե�������å����
+	# ファイルロック解除
 	unlock($gzip_log_public);
 	unlock($gzip_log_secret);
 
@@ -612,7 +612,7 @@ sub gunzip_only{
 
 
 #
-# �����ե������gzip���̤���
+# ログファイルをgzip圧縮する
 #
 sub gzip{
 	my $no = shift;
@@ -634,15 +634,15 @@ sub gzip{
 
 
 #
-#   �������ɤ߼��������äƺ�����������ե������
-#   ���å��ե������������
+#   ログを読み取るに当たって作成した一時ファイルや
+#   ロックファイルを削除する
 #
 sub clear{
-	my $no   = shift;  # ȯ���ֹ�
-	my $lock = shift;  # ���å��������뤫�ɤ�����
-	                   #�ʵ��ʤ������ǥե����ư�����å�����Ȥ��뤿���
+	my $no   = shift;  # 発言番号
+	my $lock = shift;  # ロックを解除するかどうか？
+	                   #（偽なら解除；デフォルト動作をロック解除とするため）
 
-	# ���å���������
+	# ロックを解除する
 	unless($lock){
 		unlock(public_name($no));
 		unlock(secret_name($no));
@@ -650,7 +650,7 @@ sub clear{
 		unlock(secret_name($no) . ".$EXT_GZIP");
 	}
 
-	# gzipŸ�����������ե������������
+	# gzip展開したログファイルを削除する
 	unlink(gz_public_name($no));
 	unlink(gz_secret_name($no));
 
@@ -659,14 +659,14 @@ sub clear{
 
 
 ###########################################################################
-#                    ����åɾ���������ɤ߹���                           #
+#                    スレッド情報一覧を読み込む                           #
 ###########################################################################
 sub thread_read{
-	my $thread = shift;   # ����åɾ���(����)
-	my $gzip   = shift;   # �����ͤ����ΤȤ���dat�����줿����åɤξ�����ɤ߼��
-	my $lock   = shift;   # ̤����
+	my $thread = shift;   # スレッド情報(参照)
+	my $gzip   = shift;   # この値が真のとき、dat化されたスレッドの情報も読み取る
+	my $lock   = shift;   # 未使用
 
-	# �ʸ����˥����ǥ��쥯�ȥ꤫������ե�����̾�������ɤ߹���
+	# （公開）ログディレクトリからログファイル名一覧を読み込む
 	return undef unless(opendir (DIR, $main::CONF{'LOG_DIR_PUBLIC'}));
 	my @filenames = readdir(DIR);
 	closedir(DIR);
@@ -675,16 +675,16 @@ sub thread_read{
 		push(@logfiles, grep(/^\d+\.$EXT_PUBLIC\.$EXT_LOG\.$EXT_GZIP$/, @filenames));
 	}
 
-	# ����򥹥�å��ֹ���Ѵ�����
+	# それをスレッド番号に変換する
 	my @thread_no = map { $_=~s/^(\d+).*/$1/; $_=$1; } @logfiles;
 
 
-	# �ǡ����������ɤ߹���
+	# データを全部読み込む
 	my $c = 0;    # $c is counter.
 	foreach my $no(@thread_no){
 		my @log;
 		next unless(file::read_log($no, \@log, 0, 0, 1));
-		        # ���å��򤫤��ʤ����إå���ʬ�������ɤࡢgz�����б��򤹤�
+		        # ロックをかけない、ヘッダ部分だけを読む、gz圧縮対応をする
 		push(@$thread, $log[0]);
 		$c++;
 	}
@@ -694,12 +694,12 @@ sub thread_read{
 
 
 ##########################################################################
-#                        �����ե�����򹹿�����                          #
+#                        ログファイルを更新する                          #
 ##########################################################################
 sub write_log{
-	my $log = shift(@_);  # ��¸�����������ǡ���
+	my $log = shift(@_);  # 保存したいログデータ
 
-	# �Ƽ�ե�����̾�ǡ�������
+	# 各種ファイル名データ作成
 	my $no          = $$log[0]{'THREAD_NO'};
 
 	my $log_public  = public_name($no);
@@ -707,113 +707,113 @@ sub write_log{
 	my $temp_public = temp_name($log_public);
 	my $temp_secret = temp_name($log_secret);
 
-	# �����ƥ�ݥ��ե�����[������]�򳫤�
+	# ログテンポラリファイル[公開部]を開く
 	unless(open(TEMP, ">$temp_public")){
 		unlock($log_public);
 		unlock($log_secret);
 		return 0;
 	}
 
-	# ����������åɾ����񤭹���
-	print TEMP "THREAD_TITLE<>$$log[0]{'THREAD_TITLE'}\n";       # ����å�̾
-	print TEMP "POST<>$$log[0]{'POST'}\n";                       # ��Ƥ���Ƥ����
-	print TEMP "AGE_TIME<>$$log[0]{'AGE_TIME'}\n";               # ����åɤ��夬�ä�����
+	# 公開部スレッド情報を書き込む
+	print TEMP "THREAD_TITLE<>$$log[0]{'THREAD_TITLE'}\n";       # スレッド名
+	print TEMP "POST<>$$log[0]{'POST'}\n";                       # 投稿されている数
+	print TEMP "AGE_TIME<>$$log[0]{'AGE_TIME'}\n";               # スレッドが上がった時間
 	print TEMP "&&\n";
 
-	# ������ȯ�������񤭹���
+	# 公開部発言情報を書き込む
 	for(my $i=0;$i<$$log[0]{'POST'};++$i){
 
-		print TEMP "NO<>$i\n";                                               # ȯ���ֹ�
-		print TEMP "RES<>$$log[$i]{'RES'}\n" if (defined($$log[$i]{'RES'})); # �쥹���ֹ�
+		print TEMP "NO<>$i\n";                                               # 発言番号
+		print TEMP "RES<>$$log[$i]{'RES'}\n" if (defined($$log[$i]{'RES'})); # レス先番号
 
-		# ȯ�����������Ƥ��ʤ����
+		# 発言が削除されていない場合
 		common_write(*TEMP, $$log[$i]) unless(defined($$log[$i]{'DELETE_TIME'}));
 		sub common_write{
-			local(*FOUT) = shift; # ������ե�����ϥ�ɥ�
+			local(*FOUT) = shift; # 出力先ファイルハンドル
 			my $log = shift;
-			print FOUT "TITLE<>$$log{'TITLE'}\n";                                     # ȯ�������ȥ�
-			print FOUT "USER_NAME<>$$log{'USER_NAME'}\n";                             # ��ƼԻ�̾
-			print FOUT "USER_EMAIL<>$$log{'USER_EMAIL'}\n";                           # ��Ƽ�e-mail
-			print FOUT "USER_WEBPAGE<>$$log{'USER_WEBPAGE'}\n";                       # ��Ƽ�webpage
-			print FOUT "USER_ID<>$$log{'USER_ID'}\n" if (defined($$log{'USER_ID'})); # ��ƼԸ�ͭID
-			print FOUT "TRIP<>$$log{'TRIP'}\n" if (defined($$log{'TRIP'}));           # �ȥ�å�
+			print FOUT "TITLE<>$$log{'TITLE'}\n";                                     # 発言タイトル
+			print FOUT "USER_NAME<>$$log{'USER_NAME'}\n";                             # 投稿者氏名
+			print FOUT "USER_EMAIL<>$$log{'USER_EMAIL'}\n";                           # 投稿者e-mail
+			print FOUT "USER_WEBPAGE<>$$log{'USER_WEBPAGE'}\n";                       # 投稿者webpage
+			print FOUT "USER_ID<>$$log{'USER_ID'}\n" if (defined($$log{'USER_ID'})); # 投稿者固有ID
+			print FOUT "TRIP<>$$log{'TRIP'}\n" if (defined($$log{'TRIP'}));           # トリップ
 		}
 
-		# ����������ˡ
-		print TEMP "TOMATO<>$$log[$i]{'TOMATO'}\n";                                 # IP���ɥ쥹ɽ��
+		# アクセス方法
+		print TEMP "TOMATO<>$$log[$i]{'TOMATO'}\n";                                 # IPアドレス表示
 		tomato_write(*TEMP, $$log[$i]) if ($$log[$i]{'TOMATO'});
 		sub tomato_write{
-			local(*FOUT) = shift; # ������ե�����ϥ�ɥ�
+			local(*FOUT) = shift; # 出力先ファイルハンドル
 			my $log = shift;
-			foreach my $ip_host(@{$$log{'IP_HOST'}}){                           # IP���ɥ쥹�ʥɥᥤ���
+			foreach my $ip_host(@{$$log{'IP_HOST'}}){                           # IPアドレス（ドメイン）
 				print TEMP "IP_HOST<>$ip_host\n";
 			}
-			foreach my $ip_addr(@{$$log{'IP_ADDR'}}){                           # IP���ɥ쥹
+			foreach my $ip_addr(@{$$log{'IP_ADDR'}}){                           # IPアドレス
 				print TEMP "IP_ADDR<>$ip_addr\n";
 			}
-			foreach my $user_agent(@{$$log{'USER_AGENT'}}){                     # ���ѥ桼�������������
+			foreach my $user_agent(@{$$log{'USER_AGENT'}}){                     # 利用ユーザエージェント
 				print TEMP "USER_AGENT<>$user_agent\n";
 			}
 		}
 
-		# ��ƽ�������
-		print TEMP "POST_TIME<>$$log[$i]{'POST_TIME'}\n";                           # ��ƻ���
+		# 投稿修正時間
+		print TEMP "POST_TIME<>$$log[$i]{'POST_TIME'}\n";                           # 投稿時間
 		foreach my $correct_time(@{$$log[$i]{'CORRECT_TIME'}}){
-			print TEMP "CORRECT_TIME<>$correct_time\n";                         # ��������
+			print TEMP "CORRECT_TIME<>$correct_time\n";                         # 修正時間
 		}
 
-		# ȯ�����������Ƥ�����
+		# 発言が削除されている場合
 		if (defined($$log[$i]{'DELETE_TIME'})){
-			print TEMP "DELETE_TIME<>$$log[$i]{'DELETE_TIME'}\n";               # ȯ���������
+			print TEMP "DELETE_TIME<>$$log[$i]{'DELETE_TIME'}\n";               # 発言削除時間
 			if (defined($$log[$i]{'DELETE_ADMIN'})){
-				print TEMP "DELETE_ADMIN<>$$log[$i]{'DELETE_ADMIN'}\n";     # ȯ����ä���������
+				print TEMP "DELETE_ADMIN<>$$log[$i]{'DELETE_ADMIN'}\n";     # 発言を消した管理者
 			}
 		}else{
-			print TEMP "&\n$$log[$i]{'BODY'}\n";                         # ȯ����ʸ
+			print TEMP "&\n$$log[$i]{'BODY'}\n";                         # 発言本文
 		}
 
-		print TEMP "&&\n";                                               # ���ڵ���
+		print TEMP "&&\n";                                               # 区切記号
 
 	}
 	close(TEMP);
 
 
-	# �����ե�����[�������]�򳫤�
+	# ログファイル[非公開部]を開く
 	unless(open(TEMP,">$temp_secret")){
 		unlock($log_public);
 		unlock($log_secret);
 		return 0;
 	}
 
-	# �����������åɾ����񤭹���
-	print TEMP "BUILDER_IP_ADDR<>$$log[0]{'BUILDER_IP_ADDR'}\n"; # ����åɺ����� IP���ɥ쥹
-	print TEMP "BUILDER_IP_HOST<>$$log[0]{'BUILDER_IP_HOST'}\n"; # ����åɺ����� IP�ۥ���
+	# 非公開部スレッド情報を書き込む
+	print TEMP "BUILDER_IP_ADDR<>$$log[0]{'BUILDER_IP_ADDR'}\n"; # スレッド作成者 IPアドレス
+	print TEMP "BUILDER_IP_HOST<>$$log[0]{'BUILDER_IP_HOST'}\n"; # スレッド作成者 IPホスト
 	print TEMP "&&\n";
 
-	# �������ȯ�������񤭹���
+	# 非公開部発言情報を書き込む
 	for(my $i=0;$i<$$log[0]{'POST'};++$i){
 
-		print TEMP "NO<>$i\n";                                           # ȯ���ֹ�
+		print TEMP "NO<>$i\n";                                           # 発言番号
 
-		# ȯ������ξ��
+		# 発言削除の場合
 		common_write(*TEMP, $$log[$i]) if(defined($$log[$i]{'DELETE_TIME'}));
 		tomato_write(*TEMP, $$log[$i]) unless($$log[$i]{'TOMATO'});
 
-		print TEMP "PASSWORD<>$$log[$i]{'PASSWORD'}\n";                  # ȯ���ѹ��ѥѥ����
+		print TEMP "PASSWORD<>$$log[$i]{'PASSWORD'}\n";                  # 発言変更用パスワード
 
 		if(defined($$log[$i]{'DELETE_TIME'})){
-			print TEMP "&\n$$log[$i]{'BODY'}\n";                         # ȯ����ʸ
+			print TEMP "&\n$$log[$i]{'BODY'}\n";                         # 発言本文
 		}
-		print TEMP "&&\n";                                               # ���ڵ���
+		print TEMP "&&\n";                                               # 区切記号
 	}
 	close(TEMP);
 
-	# �����ե����빹��
+	# ログファイル更新
 	chmod($PUBLIC_FILE_PERMISSION, $temp_public);
 	chmod($SECRET_FILE_PERMISSION, $temp_secret);
 	return 1 if (renew($log_public) and renew($log_secret));
 
-	# ��������
+	# 更新失敗
 	unlock($log_public);
 	unlock($log_secret);
 	return 0;
@@ -823,25 +823,25 @@ sub write_log{
 
 
 ###########################################################################
-#                    ����åɾ��󤫤�bbs.html���������                   #
+#                    スレッド情報からbbs.htmlを作成する                   #
 ###########################################################################
 #
-#  ���Υ��֥롼���������ʤ�write.cgi���֤����٤�ʪ�Ǥ�����
-#  admin.cgi�Ȥζ������ѤȤʤ뤿�ᡢfile.pl���֤���뤳�Ȥˤʤ�ޤ���
+#  このサブルーチンは本来ならwrite.cgiに置かれるべき物ですが、
+#  admin.cgiとの共通利用となるため、file.plに置かれることになります。
 #
 sub create_bbshtml{
-	my $thread      = shift;   # ����åɾ���[����]
+	my $thread      = shift;   # スレッド情報[参照]
 
-	# bbs.html ����å�����
+	# bbs.html をロックする
 	my $bbs_html = "./$BBS_TOP_PAGE_FILE";
 	return 0 unless (filelock($bbs_html));
 
-	# bbs.html�إå�����
+	# bbs.htmlヘッダ作成
 	my $tempfile = temp_name($bbs_html);
 	return 0 unless(open(FOUT, ">$tempfile"));
-	html::header(*FOUT, '����åɰ���ɽ��');
+	html::header(*FOUT, 'スレッド一覧表示');
 
-	# bbs.html��Ƭ����ʸ����
+	# bbs.html冒頭説明文出力
 	my $info = '';
 	open(FIN, $writecgi::THREADLIST_INFO);
 	until(eof(FIN)){
@@ -853,23 +853,23 @@ sub create_bbshtml{
 	print FOUT "</div>\n\n";
 	html::hr(*FOUT);
 
-	# ��󥯥С�����
+	# リンクバー出力
 	print FOUT "<div class='link'>";
-	print FOUT '<a href="#create-thread">��������åɺ���</a>��';
+	print FOUT '<a href="#create-thread">新規スレッド作成</a>　';
 	html::link_exit(*FOUT);
 	html::link_adminmode(*FOUT);
 	html::link_adminmail(*FOUT);
 	print FOUT "</div>\n\n";
 	html::hr(*FOUT);
 
-	# ����åɰ�����ʬ����
+	# スレッド一覧部分出力
 	print FOUT "<div class='thread'>\n\n";
-	print FOUT "<h3 id='thread'>����åɰ���</h3>\n\n";
+	print FOUT "<h3 id='thread'>スレッド一覧</h3>\n\n";
 	html::thread_list(*FOUT, $thread);
 	print FOUT "</div>\n\n";
 	html::hr(*FOUT);
 
-	# ��󥯥С�
+	# リンクバー
 	print FOUT "<div class='link'>";
 	html::link_exit(*FOUT);
 	html::link_adminmode(*FOUT);
@@ -877,9 +877,9 @@ sub create_bbshtml{
 	print FOUT "</div>\n\n";
 	html::hr(*FOUT);
 
-	# ��������åɺ����ե��������
+	# 新規スレッド作成フォーム作成
 	print FOUT "<div class='create-thread'>\n\n";
-	print FOUT "<h3 id='create-thread'>��������åɺ���</h3>\n\n";
+	print FOUT "<h3 id='create-thread'>新規スレッド作成</h3>\n\n";
 	html::formparts_head(*FOUT);
 	html::formparts_createthread(*FOUT);
 	html::formparts_name(*FOUT, undef, '', '', undef, undef);
@@ -888,7 +888,7 @@ sub create_bbshtml{
 	html::formparts_foot(*FOUT, $html::CREATE, $writecgi::CREATE);
 	print FOUT "</div>\n\n";
 
-	# ��󥯥С�
+	# リンクバー
 	print FOUT "<div class='link'>";
 	html::link_exit(*FOUT);
 	html::link_adminmode(*FOUT);
@@ -896,11 +896,11 @@ sub create_bbshtml{
 	print FOUT "</div>\n\n";
 	html::hr(*FOUT);
 
-	# ������ʬ
+	# 末尾部分
 	html::footer(*FOUT);
 	close(FOUT);
 
-	# �ƥ�ݥ��ե����뤫�������ե�������Ѵ�
+	# テンポラリファイルから正式ファイルに変換
 	return renew($bbs_html);
 }
 
@@ -908,30 +908,30 @@ sub create_bbshtml{
 
 
 ###########################################################################
-#                     �Ť��ʤä�����åɤ򰵽̽�������                    #
+#                     古くなったスレッドを圧縮処理する                    #
 ###########################################################################
 sub compress{
-	my $thread = shift;    # ����åɾ���[����]
-	my $force  = shift;    # ����Ū���̤򤹤���
+	my $thread = shift;    # スレッド情報[参照]
+	my $force  = shift;    # 強制的圧縮をする場合
 
-	# DAT�Ǥʤ�����åɤο��������
+	# DATでないスレッドの数を数える
 	my $live = 0;
 	for(my $i=0;$i<scalar @$thread;++$i){
 		++$live unless($$thread[$i]{'DAT'});
 	}
 
-	# ����åɰ��̾���ܰ�
+	# スレッド圧縮上限目安
 	my $limit = $main::CONF{'THREAD_SAVE'} + std::math_max(10, $main::CONF{'THREAD_SAVE'} / 2);
 	unless($force){
-		return 0 unless($live > $limit);    # �����̤�Ķ���Ƥ��ʤ����Ͻ�����Ԥ�ʤ�
+		return 0 unless($live > $limit);    # 許容量を超えていない場合は処理を行わない
 	}else{
-		return 0 unless($live > $main::CONF{'THREAD_SAVE'});  # 1�ĤǤ�Ķ�����鰵�̤������Ƚ��
+		return 0 unless($live > $main::CONF{'THREAD_SAVE'});  # 1つでも超えたら圧縮する場合の判定
 	}
 
-	# ����ͥ���̤ǥ�����
+	# 圧縮優先順位でソート
 	@$thread = sort {  $$b{'LAST_MODIFIED'} + $$b{'AGE_TIME'} / 2 <=> $$a{'LAST_MODIFIED'} + $$a{'AGE_TIME'} / 2  } @$thread;
 
-	# Ķ�ᤷ������åɤν�����Ԥ�
+	# 超過したスレッドの処理を行う
 	my ($c, $j) = (0, 0);
 	for(my $i=0;$i<scalar @$thread;++$i){
 		next if ($$thread[$i]{'DAT'});
@@ -942,7 +942,7 @@ sub compress{
 		}
 	}
 
-	# ������������åɤ���
+	# 処理したスレッドを削除
 	@$thread = grep{ defined($_); } @$thread;
 	return $c;
 
@@ -950,15 +950,15 @@ sub compress{
 
 
 ###########################################################################
-#                      admin.html �����ڡ����򹹿�����                    #
+#                      admin.html 管理ページを更新する                    #
 ###########################################################################
 #
-#  ���Υ��֥롼���������ʤ�write.cgi���֤����٤�ʪ�Ǥ�����
-#  admin.cgi�Ȥζ������ѤȤʤ뤿�ᡢfile.pl���֤���뤳�Ȥˤʤ�ޤ���
+#  このサブルーチンは本来ならwrite.cgiに置かれるべき物ですが、
+#  admin.cgiとの共通利用となるため、file.plに置かれることになります。
 #
 sub create_adminpage{
 
-	# ��������
+	# 情報整理
 	my $version      = sprintf("%1.2f",$main::CONF{'VERSION'} / 100);
 	my $bbs_top      = "./$file::BBS_TOP_PAGE_FILE";
 	my $stylesheet   = "./$html::STYLESHEET";
@@ -966,7 +966,7 @@ sub create_adminpage{
 	my $admin_script = "./$file::ADMIN_SCRIPT";
 	my $programmer   = $html::PROGRAMMER_WEBPAGE;
 
-	# admin.info���ɤ߹���
+	# admin.infoの読み込み
 	return 0 unless(open(FIN, $writecgi::ADMIN_INFO));
 	my $info = '';
 	until(eof(FIN)){
@@ -975,7 +975,7 @@ sub create_adminpage{
 	$info = std::encodeEUC($info);
 	$info =~ s/(\$\w+)/$1/gee;
 
-	# admin.html�ν񤭽Ф�
+	# admin.htmlの書き出し
 	my $admin_html = "./$html::ADMIN_PAGE";
 	return 0 unless (filelock($admin_html));
 	my $tempfile = temp_name($admin_html);
@@ -983,7 +983,7 @@ sub create_adminpage{
 	print FOUT $info;
 	close(FOUT);
 
-	# �ƥ�ݥ��ե����뤫�������ե�������Ѵ�
+	# テンポラリファイルから正式ファイルに変換
 	return renew($admin_html);
 
 
@@ -991,19 +991,19 @@ sub create_adminpage{
 
 
 ##########################################################################
-#                      �ݥ��󥿥ե�������ɤ߹���                        #
+#                      ポインタファイルを読み込む                        #
 ##########################################################################
 sub read_pointer{
-	my $lock = shift;    # �����ͤ����λ����ɤ߹�������ȥե�������å��򤫤��äѤʤ��ˤ���
+	my $lock = shift;    # この値が真の時、読み込んだあとファイルロックをかけっぱなしにする
 
-	# ���å����ե����뤫���ɤ߹���
+	# ロック→ファイルから読み込み
 	my $pointer_file = pointer_name();
 	return undef unless (filelock($pointer_file) and open(FIN, $pointer_file));
 	my $read=<FIN>;
 	close(FIN);
 	unlock($pointer_file) unless($lock);
 
-	# ����
+	# 洗浄
 	chomp($read);
 	return undef unless ($read=~m/^(\d+)$/);
 	return $1;
@@ -1011,15 +1011,15 @@ sub read_pointer{
 
 
 ##########################################################################
-#                         �ݥ��󥿥ե�����򹹿�����                     #
+#                         ポインタファイルを更新する                     #
 ##########################################################################
 sub write_pointer{
 
 	#
-	# ���ν�����¹Ԥ������˥ݥ��󥿥ե������
-	# ���å����Ƥ������Ȥ�ɬ��
+	# この処理を実行する前にポインタファイルを
+	# ロックしておくことが必要
 	#
-	my $pointer = shift;                  # �������ݥ�����
+	my $pointer = shift;                  # 新しいポインタ値
 
 	my $pointer_file = pointer_name();
 	my $pointer_temp = temp_name($pointer_file);
@@ -1035,7 +1035,7 @@ sub write_pointer{
 
 
 ##########################################################################
-#               ����åɷ��Ƥ����֥�å��ꥹ�Ȥ��ɤ߹���                 #
+#               スレッド建てすぎブラックリストを読み込む                 #
 ##########################################################################
 sub read_overbuilder{
 	my $list = shift;
@@ -1052,14 +1052,14 @@ sub read_overbuilder{
 }
 
 ##########################################################################
-#               ����åɷ��Ƥ����֥�å��ꥹ�Ȥ򹹿�����                 #
+#               スレッド建てすぎブラックリストを更新する                 #
 ##########################################################################
 sub write_overbuilder{
 	#
-	# ����äƥե��������å����Ƥ�������
+	# 前もってファイルをロックしておくこと
 	#
 
-	# �ե����륪���ץ�
+	# ファイルオープン
 	my $filename = blacklist_name();
 	my $tempfile = temp_name($filename);
 	unless(open(TEMP, ">$tempfile")){
@@ -1067,7 +1067,7 @@ sub write_overbuilder{
 		return 0;
 	}
 
-	# �֥�å��ꥹ�Ƚ񤭹��ߡ�����
+	# ブラックリスト書き込み～更新
 	foreach my $line(@_){
 		print TEMP "$line\n";
 	}
@@ -1078,11 +1078,11 @@ sub write_overbuilder{
 
 
 ###########################################################################
-#                         �����ԥѥ���ɤ��ɤ߹���                      #
+#                         管理者パスワードを読み込む                      #
 ###########################################################################
 sub read_adminpass{
-	my $passwords = shift;       # (����)�ѥ���ɥǡ���������
-	my $lock      = shift;       # ̤����
+	my $passwords = shift;       # (参照)パスワードデータ授受用
+	my $lock      = shift;       # 未使用
 	my $pass_file = adminpass_name();
 	return 0 unless (open(FIN, $pass_file));
 	foreach my $line(<FIN>){
@@ -1096,14 +1096,14 @@ sub read_adminpass{
 
 
 ###########################################################################
-#                         �����ԥѥ���ɤ�񤭹���                      #
+#                         管理者パスワードを書き込む                      #
 ###########################################################################
 sub write_adminpass{
 	#
-	# ���ν�����¹Ԥ������˥ѥ���ɰ����ե������
-	# ���å����Ƥ������Ȥ�ɬ��
+	# この処理を実行する前にパスワード一覧ファイルを
+	# ロックしておくことが必要
 	#
-	my $passwords = shift;                  # (����)�ѥ���ɥǡ���������
+	my $passwords = shift;                  # (参照)パスワードデータ授受用
 	my $pass_file = adminpass_name();
 	my $pass_temp = temp_name($pass_file);
 
@@ -1123,34 +1123,34 @@ sub write_adminpass{
 
 
 ##########################################################################
-#                 �ե��������å�����/���å������Ԥ�                    #
+#                 ファイルをロックする/ロック開放待ち                    #
 ##########################################################################
 sub filelock{
-	my $filename = shift;                  # ���å�����ե�����̾
+	my $filename = shift;                  # ロックするファイル名
 
 	return 0 unless(-f $filename);
-	return 1 if ($main::CONF{'FILE_LOCK'} == 0);            # �ե�������å��ʤ�
+	return 1 if ($main::CONF{'FILE_LOCK'} == 0);            # ファイルロックなし
 
 	my $lockfile = lock_name($filename);
 	foreach (1..10){
 
 		unless(lock_check($filename)){
 
-			if ($main::CONF{'FILE_LOCK'} == 1){     # symlink���å�
+			if ($main::CONF{'FILE_LOCK'} == 1){     # symlinkロック
 				my $lock_ok;
 				eval "$lock_ok = symlink($filename, $lockfile)";
 				return 0 if ($@);
 				return 1 if ($lock_ok);
 
-			}else{                                  # mkdir���å�
+			}else{                                  # mkdirロック
 				return 1 if (mkdir($lockfile, 0755));
 
 			}
 		}
 		if ($TIME_HIRES_OK){
-			sleep(0.1);	# 0.1���Ԥ�(Time::Hires����)
+			sleep(0.1);	# 0.1秒待つ(Time::Hires利用)
 		}else{
-			sleep(1);	# 1���Ԥ�(�̾�)
+			sleep(1);	# 1秒待つ(通常)
 		}
 	}
 	return 0;
@@ -1158,17 +1158,17 @@ sub filelock{
 
 
 ##########################################################################
-#          �ե����뤬���å�����Ƥ��뤫�ɤ��������å�����                #
+#          ファイルがロックされているかどうかチェックする                #
 ##########################################################################
 sub lock_check{
 
-	if ($main::CONF{'FILE_LOCK'} == 0){      # �ե�������å��ʤ�
+	if ($main::CONF{'FILE_LOCK'} == 0){      # ファイルロックなし
 		return 1;
 
-	}elsif ($main::CONF{'FILE_LOCK'} == 1){  # symlink���å�
+	}elsif ($main::CONF{'FILE_LOCK'} == 1){  # symlinkロック
 		return (-l lock_name(shift));
 
-	}else{                                   # mkdir���å�
+	}else{                                   # mkdirロック
 		return (-d lock_name(shift));
 
 	}
@@ -1176,16 +1176,16 @@ sub lock_check{
 
 
 ##########################################################################
-#                       �ե�����Υ��å���������                       #
+#                       ファイルのロックを解除する                       #
 ##########################################################################
 sub unlock{
-	if ($main::CONF{'FILE_LOCK'} == 0){      # �ե�������å��ʤ�
+	if ($main::CONF{'FILE_LOCK'} == 0){      # ファイルロックなし
 		return 1;
 
-	}elsif ($main::CONF{'FILE_LOCK'} == 1){  # symlink���å�
+	}elsif ($main::CONF{'FILE_LOCK'} == 1){  # symlinkロック
 		return unlink(lock_name(shift));
 
-	}else{                                   # rmdir���å�
+	}else{                                   # rmdirロック
 		return rmdir(lock_name(shift));
 
 	}
@@ -1193,31 +1193,31 @@ sub unlock{
 
 
 ##########################################################################
-#           �ƥ�ݥ��ե�������Ѵ����ƥե�����򹹿�����               #
+#           テンポラリファイルを変換してファイルを更新する               #
 ##########################################################################
 sub renew{
-	my $filename = shift;                  # �����������ե�����
+	my $filename = shift;                  # 更新したいファイル
 
-	my $lockfile = lock_name($filename);   # ���å��ե�����
-	my $tempfile = temp_name($filename);   # �ƥ�ݥ��ե�����
+	my $lockfile = lock_name($filename);   # ロックファイル
+	my $tempfile = temp_name($filename);   # テンポラリファイル
 
-	# ������ɬ�פʥե����뤬�����äƤ��뤫�����å�����
+	# 更新に必要なファイルがそろっているかチェックする
 	return 0 unless (-e $filename);
 	return 0 unless (-e $tempfile);
 #	return 0 unless (lock_check($filename));
 
-	# �Ѵ�
-	move($tempfile, $filename);    # ����
+	# 変換
+	move($tempfile, $filename);    # 更新
 #	rename($tempfile, $filename);  
 
-	if ($main::CONF{'FILE_LOCK'} == 2){   # ���å������rmdir���Ѥξ���
+	if ($main::CONF{'FILE_LOCK'} == 2){   # ロック解除（rmdir利用の場合）
 		rmdir($lockfile);
-	}else{                                # ���å�����ʤ���¾��
+	}else{                                # ロック解除（その他）
 		unlink($lockfile);
 	}
 
-	# �ƥ�ݥ��ե����뤬�ĤäƤ���Ȥ�������˽񤭴���äƤ��ʤ�
-	# �����Ǥʤ��Ȥ�������
+	# テンポラリファイルが残っているときは正常に書き換わっていない
+	# そうでないときは成功
 	return 0 if (unlink($tempfile) > 0);
 	return 1;
 }
@@ -1225,11 +1225,11 @@ sub renew{
 
 
 ##########################################################################
-#                         �Ƽ�ե�����̾�����ͥ졼����                   #
+#                         各種ファイル名ジェネレーター                   #
 ##########################################################################
 
 #
-# ���������ե�����̾����������
+# 公開ログファイル名を生成する
 #
 sub public_name{
 	my $no = shift;
@@ -1238,7 +1238,7 @@ sub public_name{
 
 
 #
-# ����������ե�����̾����������
+# 非公開ログファイル名を生成する
 #
 sub secret_name{
 	my $no = shift;
@@ -1247,7 +1247,7 @@ sub secret_name{
 
 
 #
-# gzip���̤����������������ե�����̾����������
+# gzip圧縮を解除した公開ログファイル名を生成する
 #
 sub gz_public_name{
 	my $no = shift;
@@ -1256,7 +1256,7 @@ sub gz_public_name{
 
 
 #
-# gzip���̤�����������������ե�����̾����������
+# gzip圧縮を解除した非公開ログファイル名を生成する
 #
 sub gz_secret_name{
 	my $no = shift;
@@ -1265,7 +1265,7 @@ sub gz_secret_name{
 
 
 #
-# ���å��ե�����̾����������
+# ロックファイル名を生成する
 #
 sub lock_name{
 	my $filename = shift;
@@ -1274,7 +1274,7 @@ sub lock_name{
 
 
 #
-# �ƥ�ݥ��ե�����̾����������
+# テンポラリファイル名を生成する
 #
 sub temp_name{
 	my $filename = shift;
@@ -1283,7 +1283,7 @@ sub temp_name{
 
 
 #
-# �ݥ��󥿥ե�����̾����������
+# ポインタファイル名を生成する
 #
 sub pointer_name{
 	return $main::CONF{'LOG_DIR_SECRET'} . $POINTER_FILE;
@@ -1291,7 +1291,7 @@ sub pointer_name{
 
 
 #
-# ����åɷ��Ƥ����֥�å��ꥹ�ȥե�����̾����������
+# スレッド建てすぎブラックリストファイル名を生成する
 #
 sub blacklist_name{
 	return $main::CONF{'LOG_DIR_SECRET'} . $BLACKLIST_FILE;
@@ -1299,7 +1299,7 @@ sub blacklist_name{
 
 
 #
-# ����ե����ե�����̾����������
+# コンフィグファイル名を生成する
 #
 sub config_name{
 	return $CONFIG_DIR . $CONFIG_FILE;
@@ -1307,7 +1307,7 @@ sub config_name{
 
 
 #
-# HTML���ѤߤΥ����ե�����̾���������
+# HTML化済みのログファイル名を作成する
 #
 sub html_name{
 	return $main::CONF{'LOG_DIR_HTML'} . shift() . '.html';
@@ -1315,14 +1315,14 @@ sub html_name{
 
 
 #
-# �����ԥѥ���ɥե�����̾����������
+# 管理者パスワードファイル名を生成する
 #
 sub adminpass_name{
 	return "$main::CONF{'LOG_DIR_SECRET'}$PASSWORD_FILE";
 }
 
 ##########################################################################
-#                               ����ΰ�                               #
+#                               試験用領域                               #
 ##########################################################################
 
 

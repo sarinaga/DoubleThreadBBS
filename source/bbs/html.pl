@@ -1,8 +1,8 @@
 #
 #
-# ¥Ş¥ë¥Á¥¹¥ì¥Ã¥É·Ç¼¨ÈÄ - ¥í¥°É½¼¨¥Ç¡¼¥¿ºîÀ®
+# ãƒãƒ«ãƒã‚¹ãƒ¬ãƒƒãƒ‰æ²ç¤ºæ¿ - ãƒ­ã‚°è¡¨ç¤ºãƒ‡ãƒ¼ã‚¿ä½œæˆ
 #
-#                                          2002.10.23 ¤µ¤æ¤ê¤óÀèÀ¸
+#                                          2002.10.23 ã•ã‚†ã‚Šã‚“å…ˆç”Ÿ
 #
 package html;
 use strict;
@@ -12,65 +12,65 @@ require './file.pl';
 require './write.pl';
 
 use vars qw($PROGRAMMER_WEBPAGE $MANUAL_PAGE $ADMIN_PAGE $JAVA_SCRIPT $STYLESHEET);
-$PROGRAMMER_WEBPAGE = 'http://www.sarinaga.com/';  # ¥¹¥¯¥ê¥×¥Èºî¼Ô¤Î¥Ú¡¼¥¸
-$MANUAL_PAGE  = 'index.html';                      # ¥¤¥ó¥Ç¥Ã¥¯¥¹¥Ú¡¼¥¸
-$ADMIN_PAGE   = 'admin.html';                      # ´ÉÍı¼ÔÍÑ¥Ú¡¼¥¸
+$PROGRAMMER_WEBPAGE = 'http://www.sarinaga.com/';  # ã‚¹ã‚¯ãƒªãƒ—ãƒˆä½œè€…ã®ãƒšãƒ¼ã‚¸
+$MANUAL_PAGE  = 'index.html';                      # ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ãƒšãƒ¼ã‚¸
+$ADMIN_PAGE   = 'admin.html';                      # ç®¡ç†è€…ç”¨ãƒšãƒ¼ã‚¸
 $JAVA_SCRIPT  = 'bbs.js';                          # javascript
-$STYLESHEET   = 'bbs.css';                         # ¥¹¥¿¥¤¥ë¥·¡¼¥È
+$STYLESHEET   = 'bbs.css';                         # ã‚¹ã‚¿ã‚¤ãƒ«ã‚·ãƒ¼ãƒˆ
 
 
 use vars qw($TRIP_SEPARETE  $TREE_SPACE  $TREE_BRANCH  $TREE_BRANCH_END  $TREE_NODE);
-$TRIP_SEPARETE   = '¢¡';  # Ì¾Á°/¥È¥ê¥Ã¥×¶èÀÚ¤êµ­¹æ
-$TREE_SPACE      = '¡¡';  # ¥Ä¥ê¡¼É½¼¨ÍÑµ­¹æ1
-$TREE_BRANCH     = '¨­';  # ¥Ä¥ê¡¼É½¼¨ÍÑµ­¹æ2
-$TREE_BRANCH_END = '¨±';  # ¥Ä¥ê¡¼É½¼¨ÍÑµ­¹æ3
-$TREE_NODE       = '¨²';  # ¥Ä¥ê¡¼É½¼¨ÍÑµ­¹æ4
-#$TREE_SPACE      = '¡¡';  # ¥Ä¥ê¡¼É½¼¨ÍÑµ­¹æ1
-#$TREE_BRANCH     = '¨¢';  # ¥Ä¥ê¡¼É½¼¨ÍÑµ­¹æ2
-#$TREE_BRANCH_END = '¨¦';  # ¥Ä¥ê¡¼É½¼¨ÍÑµ­¹æ3
-#$TREE_NODE       = '¨§';  # ¥Ä¥ê¡¼É½¼¨ÍÑµ­¹æ4
+$TRIP_SEPARETE   = 'â—†';  # åå‰/ãƒˆãƒªãƒƒãƒ—åŒºåˆ‡ã‚Šè¨˜å·
+$TREE_SPACE      = 'ã€€';  # ãƒ„ãƒªãƒ¼è¡¨ç¤ºç”¨è¨˜å·1
+$TREE_BRANCH     = 'â”ƒ';  # ãƒ„ãƒªãƒ¼è¡¨ç¤ºç”¨è¨˜å·2
+$TREE_BRANCH_END = 'â”—';  # ãƒ„ãƒªãƒ¼è¡¨ç¤ºç”¨è¨˜å·3
+$TREE_NODE       = 'â”£';  # ãƒ„ãƒªãƒ¼è¡¨ç¤ºç”¨è¨˜å·4
+#$TREE_SPACE      = 'ã€€';  # ãƒ„ãƒªãƒ¼è¡¨ç¤ºç”¨è¨˜å·1
+#$TREE_BRANCH     = 'â”‚';  # ãƒ„ãƒªãƒ¼è¡¨ç¤ºç”¨è¨˜å·2
+#$TREE_BRANCH_END = 'â””';  # ãƒ„ãƒªãƒ¼è¡¨ç¤ºç”¨è¨˜å·3
+#$TREE_NODE       = 'â”œ';  # ãƒ„ãƒªãƒ¼è¡¨ç¤ºç”¨è¨˜å·4
 
 
 #
-# È¯¸ÀÉ½¼¨¥â¡¼¥É¤òÉ½¤ï¤¹¼±ÊÌ
+# ç™ºè¨€è¡¨ç¤ºãƒ¢ãƒ¼ãƒ‰ã‚’è¡¨ã‚ã™è­˜åˆ¥
 #
 use vars qw($COMPLETE $NO_REVISE $ATONE $RES $REV $TOMATO $TITLE $ADMIN
             $MESSAGE $TREE $IGNORE_KILL $HTML $FINAL $CONST);
-$COMPLETE    = std::bin2dec('0000000000000001');  #¡Ö¿·µ¬Åê¹Æ¡×¤¬¤Ç¤­¤Ê¤¤¾õÂÖ¡ÊÈ¯¸À¿ô¥ª¡¼¥Ğ¡¼¡Ë
-$NO_REVISE   = std::bin2dec('0000000000000010');  #¡ÖÈ¯¸À½¤Àµ¡×¤¬¤Ç¤­¤Ê¤¤¾õÂÖ¡ÊÍÆÎÌ¥ª¡¼¥Ğ¡¼¡Ë
+$COMPLETE    = std::bin2dec('0000000000000001');  #ã€Œæ–°è¦æŠ•ç¨¿ã€ãŒã§ããªã„çŠ¶æ…‹ï¼ˆç™ºè¨€æ•°ã‚ªãƒ¼ãƒãƒ¼ï¼‰
+$NO_REVISE   = std::bin2dec('0000000000000010');  #ã€Œç™ºè¨€ä¿®æ­£ã€ãŒã§ããªã„çŠ¶æ…‹ï¼ˆå®¹é‡ã‚ªãƒ¼ãƒãƒ¼ï¼‰
 
-$ATONE       = std::bin2dec('0000000000000100');  # £±È¯¸ÀÃ±ÂÎÉ½¼¨¥â¡¼¥É¤Ç¤ÎÈ¯¸À½ĞÎÏ
-$RES         = std::bin2dec('0000000000001000');  # ¥ì¥¹È¯¸ÀÅê¹Æ¥Õ¥©¡¼¥àÍÑÈ¯¸À½ĞÎÏ
-$REV         = std::bin2dec('0000000000010000');  # È¯¸À½¤Àµ¥Õ¥©¡¼¥àÍÑÈ¯¸À½ĞÎÏ
+$ATONE       = std::bin2dec('0000000000000100');  # ï¼‘ç™ºè¨€å˜ä½“è¡¨ç¤ºãƒ¢ãƒ¼ãƒ‰ã§ã®ç™ºè¨€å‡ºåŠ›
+$RES         = std::bin2dec('0000000000001000');  # ãƒ¬ã‚¹ç™ºè¨€æŠ•ç¨¿ãƒ•ã‚©ãƒ¼ãƒ ç”¨ç™ºè¨€å‡ºåŠ›
+$REV         = std::bin2dec('0000000000010000');  # ç™ºè¨€ä¿®æ­£ãƒ•ã‚©ãƒ¼ãƒ ç”¨ç™ºè¨€å‡ºåŠ›
 
-$TOMATO      = std::bin2dec('0000000000100000');  # ¶¯À©¥È¥Ş¥ÈÉ½¼¨
+$TOMATO      = std::bin2dec('0000000000100000');  # å¼·åˆ¶ãƒˆãƒãƒˆè¡¨ç¤º
 
-$TITLE       = std::bin2dec('1000000000000000');  # ÄÌ¾ïÉ½¼¨¥â¡¼¥É¤Ç¥¿¥¤¥È¥ë¤òÉ½¼¨¤¹¤ë
-$MESSAGE     = std::bin2dec('0100000000000000');  # ÄÌ¾ïÉ½¼¨¥â¡¼¥É¤ÇÈ¯¸À¤òÉ½¼¨¤¹¤ë
-$TREE        = std::bin2dec('0010000000000000');  # ¥³¥á¥ó¥È¥ê¥ó¥¯¥Ä¥ê¡¼·Á¼°¤ÇÉ½¼¨¤¹¤ë
+$TITLE       = std::bin2dec('1000000000000000');  # é€šå¸¸è¡¨ç¤ºãƒ¢ãƒ¼ãƒ‰ã§ã‚¿ã‚¤ãƒˆãƒ«ã‚’è¡¨ç¤ºã™ã‚‹
+$MESSAGE     = std::bin2dec('0100000000000000');  # é€šå¸¸è¡¨ç¤ºãƒ¢ãƒ¼ãƒ‰ã§ç™ºè¨€ã‚’è¡¨ç¤ºã™ã‚‹
+$TREE        = std::bin2dec('0010000000000000');  # ã‚³ãƒ¡ãƒ³ãƒˆãƒªãƒ³ã‚¯ãƒ„ãƒªãƒ¼å½¢å¼ã§è¡¨ç¤ºã™ã‚‹
 
-$IGNORE_KILL = std::bin2dec('0001000000000000');  # ¡Ê´ÉÍıÍÑ¡Ë¶¯À©É½¼¨¡Ê¥­¥ë¥Ş¡¼¥¯Ìµ»ë¡¢ID¡¢IP¥¢¥É¥ì¥¹¤¬¾ï¤ËÉ½¼¨¤µ¤ì¤ë¡Ë
-$ADMIN       = std::bin2dec('0001000000000000');  # ¡Ê´ÉÍıÍÑ¡Ë¾å¤ÈÆ±¤¸
-$HTML        = std::bin2dec('0000100000000000');  # ¡Ê´ÉÍıÍÑ¡ËHTMLÍÑ½ĞÎÏ
+$IGNORE_KILL = std::bin2dec('0001000000000000');  # ï¼ˆç®¡ç†ç”¨ï¼‰å¼·åˆ¶è¡¨ç¤ºï¼ˆã‚­ãƒ«ãƒãƒ¼ã‚¯ç„¡è¦–ã€IDã€IPã‚¢ãƒ‰ãƒ¬ã‚¹ãŒå¸¸ã«è¡¨ç¤ºã•ã‚Œã‚‹ï¼‰
+$ADMIN       = std::bin2dec('0001000000000000');  # ï¼ˆç®¡ç†ç”¨ï¼‰ä¸Šã¨åŒã˜
+$HTML        = std::bin2dec('0000100000000000');  # ï¼ˆç®¡ç†ç”¨ï¼‰HTMLç”¨å‡ºåŠ›
 
-$FINAL       = $COMPLETE | $NO_REVISE;  # °ìÀÚ¤ÎÊÑ¹¹¤¬¤Ç¤­¤Ê¤¤¾õÂÖ¤Ç¤¢¤ë
-$CONST       = $FINAL;                  # Æ±¾å
+$FINAL       = $COMPLETE | $NO_REVISE;  # ä¸€åˆ‡ã®å¤‰æ›´ãŒã§ããªã„çŠ¶æ…‹ã§ã‚ã‚‹
+$CONST       = $FINAL;                  # åŒä¸Š
 
 
 use vars qw($PASS_MESSAGE $PASS_REINPUT $TRIP_MES $POST $CREATE $REVISE);
-$PASS_MESSAGE = 'È¯¸À¤òºï½ü¡¢ÄûÀµ¤¹¤ë¤Î¤ËÉ¬Í×. [0-9A-Za-z]¤Ç%dÊ¸»ú°Ê¾å%dÊ¸»ú°ÊÆâ.';
-$PASS_REINPUT = 'È¯¸À¤ò½ñ¤­¹ş¤ó¤À¤È¤­¤Î¥Ñ¥¹¥ï¡¼¥É¤òÆşÎÏ.';
-$TRIP_MES = '¸ÇÍ­ID¤òÀ¸À®¤¹¤ë. [0-9A-Za-z]¤Ç0Ê¸»ú°Ê¾å%dÊ¸»ú°ÊÆâ.';
-$POST   = 'Åê¹Æ¤¹¤ë';
-$CREATE = '¥¹¥ì¥Ã¥ÉºîÀ®';
-$REVISE = 'È¯¸ÀÄûÀµ';
+$PASS_MESSAGE = 'ç™ºè¨€ã‚’å‰Šé™¤ã€è¨‚æ­£ã™ã‚‹ã®ã«å¿…è¦. [0-9A-Za-z]ã§%dæ–‡å­—ä»¥ä¸Š%dæ–‡å­—ä»¥å†….';
+$PASS_REINPUT = 'ç™ºè¨€ã‚’æ›¸ãè¾¼ã‚“ã ã¨ãã®ãƒ‘ã‚¹ãƒ¯ãƒ¼ãƒ‰ã‚’å…¥åŠ›.';
+$TRIP_MES = 'å›ºæœ‰IDã‚’ç”Ÿæˆã™ã‚‹. [0-9A-Za-z]ã§0æ–‡å­—ä»¥ä¸Š%dæ–‡å­—ä»¥å†….';
+$POST   = 'æŠ•ç¨¿ã™ã‚‹';
+$CREATE = 'ã‚¹ãƒ¬ãƒƒãƒ‰ä½œæˆ';
+$REVISE = 'ç™ºè¨€è¨‚æ­£';
 
 ###########################################################################
-#                          http response header¤òÀ¸À®                     #
+#                          http response headerã‚’ç”Ÿæˆ                     #
 ###########################################################################
 sub http_response_header{
 
-	# content-type¤ÎÁªÂò
+	# content-typeã®é¸æŠ
 	my $content_type = 'text/html; charset=EUC-JP';
 	if ($main::ENV{'HTTP_ACCEPT'}=~m/application\/xhtml\+xml/){
 		$content_type='application/xhtml+xml';
@@ -79,7 +79,7 @@ sub http_response_header{
 	}
 	$content_type = 'text/html; charset=EUC-JP';
 
-	# http-response-header¤Î½ĞÎÏ
+	# http-response-headerã®å‡ºåŠ›
 	print << "RES";
 Content-Type: $content_type
 Content-Language: ja
@@ -95,12 +95,12 @@ RES
 
 
 ###########################################################################
-#                           ÈÖ¹æ½ç¤ÇÈ¯¸À¥Ç¡¼¥¿¤ò½ĞÎÏ                      #
+#                           ç•ªå·é †ã§ç™ºè¨€ãƒ‡ãƒ¼ã‚¿ã‚’å‡ºåŠ›                      #
 ###########################################################################
 sub multi{
-	local(*FOUT) = shift; # ½ĞÎÏÀè¥Õ¥¡¥¤¥ë¥Ï¥ó¥É¥ë
-	my $log      = shift; # [»²¾È]¥í¥°
-	my $param    = shift; # [»²¾È]½ĞÎÏÍÑ¥Ñ¥é¥á¡¼¥¿
+	local(*FOUT) = shift; # å‡ºåŠ›å…ˆãƒ•ã‚¡ã‚¤ãƒ«ãƒãƒ³ãƒ‰ãƒ«
+	my $log      = shift; # [å‚ç…§]ãƒ­ã‚°
+	my $param    = shift; # [å‚ç…§]å‡ºåŠ›ç”¨ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
 
 	my $st       = $$param{'st'};
 	my $en       = $$param{'en'};
@@ -115,14 +115,14 @@ sub multi{
 
 
 ###########################################################################
-#                       ¥³¥á¥ó¥È¥Ä¥ê¡¼½ç¤ÇÈ¯¸À¥Ç¡¼¥¿¤ò½ĞÎÏ                #
+#                       ã‚³ãƒ¡ãƒ³ãƒˆãƒ„ãƒªãƒ¼é †ã§ç™ºè¨€ãƒ‡ãƒ¼ã‚¿ã‚’å‡ºåŠ›                #
 ###########################################################################
 sub comment{
-	local(*FOUT) = shift; # ½ĞÎÏÀè¥Õ¥¡¥¤¥ë¥Ï¥ó¥É¥ë
-	my $log      = shift; # [»²¾È]¥í¥°
-	my $param    = shift; # [»²¾È]½ĞÎÏÍÑ¥Ñ¥é¥á¡¼¥¿
+	local(*FOUT) = shift; # å‡ºåŠ›å…ˆãƒ•ã‚¡ã‚¤ãƒ«ãƒãƒ³ãƒ‰ãƒ«
+	my $log      = shift; # [å‚ç…§]ãƒ­ã‚°
+	my $param    = shift; # [å‚ç…§]å‡ºåŠ›ç”¨ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
 
-	# È¯¸À¤ò¥Ä¥ê¡¼½ç¤ËÊÂ¤Ù¤ë
+	# ç™ºè¨€ã‚’ãƒ„ãƒªãƒ¼é †ã«ä¸¦ã¹ã‚‹
 	my @nums = search_thread($log, $$param{'st'}, $$param{'en'});
 	foreach my $num(@nums){
 		($num, undef, undef) = split(/:/, $num, 3);
@@ -138,43 +138,43 @@ sub comment{
 
 
 #
-# ¥¹¥ì¥Ã¥ÉÈ¯¸ÀÈÖ¹æ
+# ã‚¹ãƒ¬ãƒƒãƒ‰ç™ºè¨€ç•ªå·
 #
 sub search_thread{
-	my $log   = shift; # [»²¾È]¥í¥°
-	my $st    = shift; # Ãµº÷¤¹¤ëÈÏ°Ï¡Ê»Ï¡Ë
-	my $en    = shift; # Ãµº÷¤¹¤ëÈÏ°Ï¡Ê½ª¡Ë
+	my $log   = shift; # [å‚ç…§]ãƒ­ã‚°
+	my $st    = shift; # æ¢ç´¢ã™ã‚‹ç¯„å›²ï¼ˆå§‹ï¼‰
+	my $en    = shift; # æ¢ç´¢ã™ã‚‹ç¯„å›²ï¼ˆçµ‚ï¼‰
 	my $max   = @$log-1;
 
-	# ¥Ä¥ê¡¼ºîÀ®ÍÑ¥Ç¡¼¥¿¡õ³ÊÇ¼ÍÑ
+	# ãƒ„ãƒªãƒ¼ä½œæˆç”¨ãƒ‡ãƒ¼ã‚¿ï¼†æ ¼ç´ç”¨
 	my $space      = 'S';
 	my $branch_end = 'E';
 	my $branch     = 'B';
 	my $node       = 'N';
 
-	my @t_no;    # È¯¸ÀÈÖ¹æ
-	my @t_tree;  # ¥Ä¥ê¡¼¹½Â¤
-	my @t_deep;  # ¥Ä¥ê¡¼¿¼¤µ
+	my @t_no;    # ç™ºè¨€ç•ªå·
+	my @t_tree;  # ãƒ„ãƒªãƒ¼æ§‹é€ 
+	my @t_deep;  # ãƒ„ãƒªãƒ¼æ·±ã•
 
-	# Ãµº÷³«»Ï
+	# æ¢ç´¢é–‹å§‹
 	for(my $i=$st;$i<=$en;$i++){
 
-		# ¥ì¥¹È¯¸À¤Î¤È¤­¤Ï¤¹¤Ç¤ËÁªÂò¤µ¤ì¤Æ¤¤¤ë¤È¹Í¤¨¤ë
+		# ãƒ¬ã‚¹ç™ºè¨€ã®ã¨ãã¯ã™ã§ã«é¸æŠã•ã‚Œã¦ã„ã‚‹ã¨è€ƒãˆã‚‹
 		if (defined($$log[$i]{'RES'})){
 			next if ($$log[$i]{'RES'}>=$st);
 		}
 
-		# º¬¤òµ­²±
+		# æ ¹ã‚’è¨˜æ†¶
 		push(@t_no, $i);
 		push(@t_deep, 0);
 		push(@t_tree, '');
 
-		# »Ş¤òµ­²±¤¹¤ë¤Î¤ËÉ¬Í×¤Ê¥Ç¡¼¥¿ÎÎ°è
+		# æã‚’è¨˜æ†¶ã™ã‚‹ã®ã«å¿…è¦ãªãƒ‡ãƒ¼ã‚¿é ˜åŸŸ
 		my @stack;
 		my $now=$i+1;
 		my $point=$i;
 
-		# »Ş¤ÎÃµº÷¡ÊÆó½Å¥ë¡¼¥×¤ËÃí°Õ¡Ë
+		# æã®æ¢ç´¢ï¼ˆäºŒé‡ãƒ«ãƒ¼ãƒ—ã«æ³¨æ„ï¼‰
 		for(;;){
 
 			my $j;
@@ -182,27 +182,27 @@ sub search_thread{
 				next unless(defined($$log[$j]{'RES'}));
 				next unless($$log[$j]{'RES'}==$point);
 
-				# ³ºÅöÈ¯¸ÀÈÖ¹æ¤òµ­²±¡Ê»Ş¡Ë
+				# è©²å½“ç™ºè¨€ç•ªå·ã‚’è¨˜æ†¶ï¼ˆæï¼‰
 				my $deep=@stack+1;
 				push(@t_no, $j);
 				push(@t_deep, $deep);
 				push(@t_tree, std::spacer(std::math_min($deep-1, 10), $space) . $branch_end);
 
-				# ¾å¤Ë¸ş¤«¤Ã¤ÆÀş¤ò°ú¤¯
+				# ä¸Šã«å‘ã‹ã£ã¦ç·šã‚’å¼•ã
 				for(my $k=@t_tree-2;$k>=0;--$k){
 					last if ($t_deep[$k] < $deep);
 					if ($t_deep[$k] == $deep){ substr($t_tree[$k], $deep-1, 1) = $node; }
 					else { substr($t_tree[$k], $deep-1, 1) = $branch }
 				}
 
-				# »Ş¤ÎÊ¬´ô¤òµ­²±
+				# æã®åˆ†å²ã‚’è¨˜æ†¶
 				push(@stack, $point);
 				$point=$j;
 				$now=$j+1;
 				last;
 			}
 
-			# »Ş¤ÎÃµº÷¤¬È¯¸ÀºÇ¸å¤Ş¤Ç¹Ô¤ï¤ì¤¿¾ì¹ç¤Ïµ­²±¤·¤¿»Ş¤ÎÊ¬´ô¤Ş¤ÇÌá¤ë
+			# æã®æ¢ç´¢ãŒç™ºè¨€æœ€å¾Œã¾ã§è¡Œã‚ã‚ŒãŸå ´åˆã¯è¨˜æ†¶ã—ãŸæã®åˆ†å²ã¾ã§æˆ»ã‚‹
 			if ($j>$max){
 				last if (@stack==0);
 				$now=$point+1;
@@ -211,7 +211,7 @@ sub search_thread{
 		}
 	}
 
-	# ¥Ä¥ê¡¼¥Ç¡¼¥¿¤òÁ´³Ñ²½
+	# ãƒ„ãƒªãƒ¼ãƒ‡ãƒ¼ã‚¿ã‚’å…¨è§’åŒ–
 	foreach my $tree(@t_tree){
 		$tree =~s/$space/$TREE_SPACE/g;
 		$tree =~s/$branch_end/$TREE_BRANCH_END/g;
@@ -219,7 +219,7 @@ sub search_thread{
 		$tree =~s/$node/$TREE_NODE/g;
 	}
 
-	# ¥Ç¡¼¥¿¤ò·ë¹ç¤·¤ÆÊÖ¤¹
+	# ãƒ‡ãƒ¼ã‚¿ã‚’çµåˆã—ã¦è¿”ã™
 	my @thread;
 	for(my $i=0;$i<scalar @t_no;++$i){
 		push(@thread, join(':' , ($t_no[$i], $t_deep[$i], $t_tree[$i]) ));
@@ -231,19 +231,19 @@ sub search_thread{
 
 
 #
-# È¯¸À¤ò£±¤Ä½ĞÎÏ
+# ç™ºè¨€ã‚’ï¼‘ã¤å‡ºåŠ›
 #
 sub mes_one{
-	local(*FOUT) = shift; # ½ĞÎÏÀè¥Õ¥¡¥¤¥ë¥Ï¥ó¥É¥ë
-	my $no       = shift; # É½¼¨¤µ¤»¤ëÈ¯¸ÀÈÖ¹æ
-	my $log      = shift; # [»²¾È]¥í¥°¥Ç¡¼¥¿
-	my $param    = shift; # [»²¾È]È¯¸ÀÉ½¼¨¥Ñ¥é¥á¡¼¥¿
+	local(*FOUT) = shift; # å‡ºåŠ›å…ˆãƒ•ã‚¡ã‚¤ãƒ«ãƒãƒ³ãƒ‰ãƒ«
+	my $no       = shift; # è¡¨ç¤ºã•ã›ã‚‹ç™ºè¨€ç•ªå·
+	my $log      = shift; # [å‚ç…§]ãƒ­ã‚°ãƒ‡ãƒ¼ã‚¿
+	my $param    = shift; # [å‚ç…§]ç™ºè¨€è¡¨ç¤ºãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
 
-	# ¥Ñ¥é¥á¡¼¥¿Ãê½Ğ
+	# ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿æŠ½å‡º
 	my $st   = $$param{'st'};
 	my $mode = $$param{'mode'};
 
-	# ¥í¥°¥Ç¡¼¥¿¤«¤éÉ¬Í×¤Ê¾ğÊó¤òÃê½Ğ¡Ê¥¹¥ì¥Ã¥É¾ğÊó¡Ë
+	# ãƒ­ã‚°ãƒ‡ãƒ¼ã‚¿ã‹ã‚‰å¿…è¦ãªæƒ…å ±ã‚’æŠ½å‡ºï¼ˆã‚¹ãƒ¬ãƒƒãƒ‰æƒ…å ±ï¼‰
 	my $post  = $$log[0]{'POST'};
 	my $size  = $$log[0]{'SIZE'};
 	my $t_no  = $$log[0]{'THREAD_NO'};
@@ -251,18 +251,18 @@ sub mes_one{
 	return 0 if($no < 0 or $post <= $no);
 
 
-	# ¥í¥°¥Ç¡¼¥¿¤«¤éÉ¬Í×¤Ê¾ğÊó¤òÃê½Ğ¡ÊÈ¯¸À¾ğÊó¡Ë
+	# ãƒ­ã‚°ãƒ‡ãƒ¼ã‚¿ã‹ã‚‰å¿…è¦ãªæƒ…å ±ã‚’æŠ½å‡ºï¼ˆç™ºè¨€æƒ…å ±ï¼‰
 	my %dat = %{$$log[$no]};
 
 	my @correct_time;
 	@correct_time = @{$dat{'CORRECT_TIME'}} if (defined($dat{'CORRECT_TIME'}));
 
-	# È¯¸ÀÈÖ¹æ¡Á¥¿¥¤¥È¥ë¡Á¥æ¡¼¥¶Ì¾¡ÁIP¥¢¥É¥ì¥¹¡¿¥æ¡¼¥¶ID¡Á»ş´Ö¡Á¥ì¥¹Àè¤òÉ½¼¨
+	# ç™ºè¨€ç•ªå·ï½ã‚¿ã‚¤ãƒˆãƒ«ï½ãƒ¦ãƒ¼ã‚¶åï½IPã‚¢ãƒ‰ãƒ¬ã‚¹ï¼ãƒ¦ãƒ¼ã‚¶IDï½æ™‚é–“ï½ãƒ¬ã‚¹å…ˆã‚’è¡¨ç¤º
 	print FOUT "<dt id='s$no' class='header'>\n";
 	message_header(*FOUT, $no, $log, $param);
 	print FOUT "<br />\n";
 
-	# Ã±ÂÎÉ½¼¨¡Á¥ì¥¹¤ò¤Ä¤±¤ë¡ÁÈ¯¸À½¤Àµ¤Î³Æ¥ê¥ó¥¯¤òÉ½¼¨
+	# å˜ä½“è¡¨ç¤ºï½ãƒ¬ã‚¹ã‚’ã¤ã‘ã‚‹ï½ç™ºè¨€ä¿®æ­£ã®å„ãƒªãƒ³ã‚¯ã‚’è¡¨ç¤º
 	my $kill = 0;
 	if (!($mode & $ADMIN)){
 		$kill = defined($dat{'DELETE_TIME'});
@@ -274,19 +274,19 @@ sub mes_one{
 	if ($ctrl){
 		print FOUT "<span class='ctrl'>";
 		unless(($mode & $ATONE) !=0){
-			print FOUT "<a href='./$file::READ_SCRIPT?no=$t_no;at=$no'>Ã±È¯¸ÀÉ½¼¨</a>¡¡";
+			print FOUT "<a href='./$file::READ_SCRIPT?no=$t_no;at=$no'>å˜ç™ºè¨€è¡¨ç¤º</a>ã€€";
 		}
 		unless(($mode & $COMPLETE) !=0 or ($mode & $RES) !=0){
-			print FOUT "<a href='./$file::READ_SCRIPT?no=$t_no;res=$no'>¥ì¥¹¤ò¤Ä¤±¤ë</a>¡¡";
+			print FOUT "<a href='./$file::READ_SCRIPT?no=$t_no;res=$no'>ãƒ¬ã‚¹ã‚’ã¤ã‘ã‚‹</a>ã€€";
 		}
 		unless(($mode & $REV) !=0){
-			print FOUT "<a href='./$file::READ_SCRIPT?no=$t_no;rev=$no'>È¯¸À½¤Àµ</a>";
+			print FOUT "<a href='./$file::READ_SCRIPT?no=$t_no;rev=$no'>ç™ºè¨€ä¿®æ­£</a>";
 		}
 		print FOUT "</span><br />\n";
 	}
 	print FOUT "</dt>\n\n";
 
-	# ¥í¥°ËÜÂÎ¤òÉ½¼¨
+	# ãƒ­ã‚°æœ¬ä½“ã‚’è¡¨ç¤º
 	if (!$kill){
 		my $body = body($dat{'BODY'});
 		print FOUT "<dd class='body'>\n$body\n</dd>\n\n";
@@ -294,7 +294,7 @@ sub mes_one{
 		print FOUT "\n";
 	}
 
-	# IP¥¢¥É¥ì¥¹¤òÉ½¼¨
+	# IPã‚¢ãƒ‰ãƒ¬ã‚¹ã‚’è¡¨ç¤º
 	if ($$log[$no]{'TOMATO'} or ($mode & $TOMATO) !=0 or ($mode & $ADMIN) !=0 ){
 		print FOUT "<dd class='tomato'>\n";
 		for(my $i=0;$i<@{$$log[$no]{'IP_HOST'}};++$i){
@@ -303,37 +303,37 @@ sub mes_one{
 		print FOUT "</dd>\n";
 	}
 
-	# È¯¸À½¤Àµ¡¢È¯¸Àºï½üÆü»ş¤òÉ½¼¨
+	# ç™ºè¨€ä¿®æ­£ã€ç™ºè¨€å‰Šé™¤æ—¥æ™‚ã‚’è¡¨ç¤º
 	if (@correct_time > 0 or defined($dat{'DELETE_TIME'})){
 		print FOUT "<dd class='info'>\n";
 		foreach my $c_time(@correct_time){
-			print FOUT '¤³¤ÎÈ¯¸À¤Ï' . std::time_format($c_time) . "¤Ë½¤Àµ¤µ¤ì¤Æ¤¤¤Ş¤¹¡£<br />\n";
+			print FOUT 'ã“ã®ç™ºè¨€ã¯' . std::time_format($c_time) . "ã«ä¿®æ­£ã•ã‚Œã¦ã„ã¾ã™ã€‚<br />\n";
 		}
 		if (defined($dat{'DELETE_TIME'})){
-			print FOUT '¤³¤ÎÈ¯¸À¤Ï' . std::time_format($dat{'DELETE_TIME'}) . '¤Ë';
-			print FOUT "ºï½ü¿Í¡Ö$dat{'DELETE_ADMIN'}¡×¤Ë¤è¤Ã¤Æ" if (defined($dat{'DELETE_ADMIN'}));
-			print FOUT "ºï½ü¤µ¤ì¤Æ¤¤¤Ş¤¹¡£<br />\n";
+			print FOUT 'ã“ã®ç™ºè¨€ã¯' . std::time_format($dat{'DELETE_TIME'}) . 'ã«';
+			print FOUT "å‰Šé™¤äººã€Œ$dat{'DELETE_ADMIN'}ã€ã«ã‚ˆã£ã¦" if (defined($dat{'DELETE_ADMIN'}));
+			print FOUT "å‰Šé™¤ã•ã‚Œã¦ã„ã¾ã™ã€‚<br />\n";
 		}
 		print FOUT "</dd>\n\n";
 	}
 
-	# Ã±È¯¸ÀÉ½¼¨½ªÎ»
+	# å˜ç™ºè¨€è¡¨ç¤ºçµ‚äº†
 	print FOUT "\n";
 	return;
 
 }
 
 #
-# È¯¸À¤Î¥Ø¥Ã¥À¤ò½ĞÎÏ¤¹¤ë
+# ç™ºè¨€ã®ãƒ˜ãƒƒãƒ€ã‚’å‡ºåŠ›ã™ã‚‹
 #
-# È¯¸ÀÈÖ¹æ¡¢È¯¸À¥¿¥¤¥È¥ë¡¢Ì¾Á°¡¢¥È¥ê¥Ã¥×¡¢ID
-# È¯¸À»ş´Ö¡¢¥ì¥¹Àè
+# ç™ºè¨€ç•ªå·ã€ç™ºè¨€ã‚¿ã‚¤ãƒˆãƒ«ã€åå‰ã€ãƒˆãƒªãƒƒãƒ—ã€ID
+# ç™ºè¨€æ™‚é–“ã€ãƒ¬ã‚¹å…ˆ
 #
 sub message_header{
-	local(*FOUT) = shift;  # ½ĞÎÏÀè
-	my $target   = shift;  # È¯¸À¤µ¤»¤ëÉ½¼¨ÈÖ¹æ
-	my $log      = shift;  # È¯¸À¥í¥°Á´Éô
-	my $param    = shift;  # ½ĞÎÏ¥Ñ¥é¥á¡¼¥¿
+	local(*FOUT) = shift;  # å‡ºåŠ›å…ˆ
+	my $target   = shift;  # ç™ºè¨€ã•ã›ã‚‹è¡¨ç¤ºç•ªå·
+	my $log      = shift;  # ç™ºè¨€ãƒ­ã‚°å…¨éƒ¨
+	my $param    = shift;  # å‡ºåŠ›ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
 
 	my $mode = $$param{'mode'};
 	my $res  = $$log[$target]{'RES'};
@@ -344,23 +344,23 @@ sub message_header{
 	print FOUT "<br />\n";
 	print FOUT scalar std::time_format($$log[$target]{'POST_TIME'});
 	if (defined($res)){
-		print FOUT '¡¡[';
+		print FOUT 'ã€€[';
 		if($mode & $ADMIN){
-			print FOUT "$resÈÖ";
+			print FOUT "$resç•ª";
 		}elsif ($$param{'st'} > $res){
-			print FOUT "<a href='./$file::READ_SCRIPT?no=$$param{'no'};at=$res'>$resÈÖ</a>";
+			print FOUT "<a href='./$file::READ_SCRIPT?no=$$param{'no'};at=$res'>$resç•ª</a>";
 		}else{
-			print FOUT "<a href='#s$res'>$resÈÖ</a>";
+			print FOUT "<a href='#s$res'>$resç•ª</a>";
 		}
-		print FOUT '¤Ø¤Î¥³¥á¥ó¥È]';
+		print FOUT 'ã¸ã®ã‚³ãƒ¡ãƒ³ãƒˆ]';
 	}
 
 }
 
 
 #
-# ËÜÊ¸ÉôÊ¬¤ÎÁõ¾ş¡§²ş¹Ô¤ò<br />¤Ë¡¢¹ÔÆ¬°úÍÑÉä¤ËÂ°À­¤òÉÕ¤±¡¢
-# Ï¢Â³¶õÇò¤ò&nbsp;¤ËÊÑ´¹
+# æœ¬æ–‡éƒ¨åˆ†ã®è£…é£¾ï¼šæ”¹è¡Œã‚’<br />ã«ã€è¡Œé ­å¼•ç”¨ç¬¦ã«å±æ€§ã‚’ä»˜ã‘ã€
+# é€£ç¶šç©ºç™½ã‚’&nbsp;ã«å¤‰æ›
 #
 sub body{
 	my $body=shift;
@@ -376,12 +376,12 @@ sub body{
 
 
 ###########################################################################
-#                             ÈÖ¹æ½ç¤ËÈ¯¸À¥¿¥¤¥È¥ë¤ò½ĞÎÏ                  #
+#                             ç•ªå·é †ã«ç™ºè¨€ã‚¿ã‚¤ãƒˆãƒ«ã‚’å‡ºåŠ›                  #
 ###########################################################################
 sub list{
-	local(*FOUT) = shift; # ½ĞÎÏÀè¥Õ¥¡¥¤¥ë¥Ï¥ó¥É¥ë
-	my $log      = shift; # [»²¾È]¥í¥°
-	my $param    = shift; # [»²¾È]½ĞÎÏÍÑ¥Ñ¥é¥á¡¼¥¿
+	local(*FOUT) = shift; # å‡ºåŠ›å…ˆãƒ•ã‚¡ã‚¤ãƒ«ãƒãƒ³ãƒ‰ãƒ«
+	my $log      = shift; # [å‚ç…§]ãƒ­ã‚°
+	my $param    = shift; # [å‚ç…§]å‡ºåŠ›ç”¨ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
 
 	my $no = $$log[0]{'THREAD_NO'};
 
@@ -412,35 +412,35 @@ sub list{
 }
 
 #
-# ¥ê¥¹¥ÈÉ½¼¨¤ò½ĞÎÏ¤¹¤ë
+# ãƒªã‚¹ãƒˆè¡¨ç¤ºã‚’å‡ºåŠ›ã™ã‚‹
 #
-# È¯¸ÀÈÖ¹æ¡¢È¯¸À¥¿¥¤¥È¥ë¡¢Ì¾Á°¡¢¥È¥ê¥Ã¥×¡¢ID¡¢IP¥¢¥É¥ì¥¹¡¢¥ì¥¹Àè
+# ç™ºè¨€ç•ªå·ã€ç™ºè¨€ã‚¿ã‚¤ãƒˆãƒ«ã€åå‰ã€ãƒˆãƒªãƒƒãƒ—ã€IDã€IPã‚¢ãƒ‰ãƒ¬ã‚¹ã€ãƒ¬ã‚¹å…ˆ
 #
 sub list_header{
-	local(*FOUT) = shift;  # ½ĞÎÏÀè
-	my $target = shift;    # È¯¸À¤µ¤»¤ëÉ½¼¨ÈÖ¹æ
-	my $log = shift;       # È¯¸À¥í¥°Á´Éô
-	my $param = shift;     # ½ĞÎÏ¥Ñ¥é¥á¡¼¥¿
+	local(*FOUT) = shift;  # å‡ºåŠ›å…ˆ
+	my $target = shift;    # ç™ºè¨€ã•ã›ã‚‹è¡¨ç¤ºç•ªå·
+	my $log = shift;       # ç™ºè¨€ãƒ­ã‚°å…¨éƒ¨
+	my $param = shift;     # å‡ºåŠ›ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
 
 	my $mode = $$param{'mode'};
 	my $res  = $$log[$target]{'RES'};
 	my $kill = (defined($$log[$target]{'DELETE_TIME'}) and !($mode & $IGNORE_KILL));
 
-	# È¯¸À¥¿¥¤¥È¥ë½ĞÎÏ
+	# ç™ºè¨€ã‚¿ã‚¤ãƒˆãƒ«å‡ºåŠ›
 	my $title = $$log[$target]{'TITLE'};
 	my $short_title = short_string($title, $main::CONF{'TITLE_LENGTH_MAX'});
 	print FOUT "<td class='num'><tt>$target.</tt></td>";
 	print FOUT ' <td class="title">';
-	if ($kill){                                   # È¯¸À¤¬ºï½ü¤µ¤ì¤Æ¤¤¤ë¾ì¹ç
+	if ($kill){                                   # ç™ºè¨€ãŒå‰Šé™¤ã•ã‚Œã¦ã„ã‚‹å ´åˆ
 		print FOUT '<em class="kill">';
 		$short_title = $main::CONF{'KILL_TITLE'};
 
 	}elsif((($mode & $TITLE) != 0 and ($mode & $MESSAGE) == 0) or ($mode & $ATONE) != 0 ){
-	                                              # ¥¿¥¤¥È¥ë¤À¤±¤òÉ½¼¨¤µ¤ì¤ë¾ì¹ç¤È
-	                                              # ¾åµ­¡¢¸½ºßÉ½¼¨¤µ¤ì¤Æ¤¤¤ëÈ¯¸À°Ê³°¤Î¾ì¹ç
+	                                              # ã‚¿ã‚¤ãƒˆãƒ«ã ã‘ã‚’è¡¨ç¤ºã•ã‚Œã‚‹å ´åˆã¨
+	                                              # ä¸Šè¨˜ã€ç¾åœ¨è¡¨ç¤ºã•ã‚Œã¦ã„ã‚‹ç™ºè¨€ä»¥å¤–ã®å ´åˆ
 		print FOUT "<a href='./$file::READ_SCRIPT?$$log[0]{'THREAD_NO'};at=$target' class='sub' title='$title'>";
 
-	}else{                                        # ¤½¤ÎÂ¾¤Î¾ì¹ç
+	}else{                                        # ãã®ä»–ã®å ´åˆ
 		print FOUT "<a href='#s$target' class='sub' title='$title'>";
 	}
 	print FOUT $short_title;
@@ -448,7 +448,7 @@ sub list_header{
 	else{        print FOUT "</a>";   }
 	print FOUT '</td> ';
 
-	# Ì¾Á°½ĞÎÏ¡Á¥È¥ê¥Ã¥×
+	# åå‰å‡ºåŠ›ï½ãƒˆãƒªãƒƒãƒ—
 	print FOUT '<td class="name">';
 	unless($kill){
 		my $name = $$log[$target]{'USER_NAME'};
@@ -464,19 +464,19 @@ sub list_header{
 	print FOUT '</td>';
 
 
-	# ¥ì¥¹¥İ¥ó¥¹Àè½ĞÎÏ
+	# ãƒ¬ã‚¹ãƒãƒ³ã‚¹å…ˆå‡ºåŠ›
 	print FOUT ' <td class="response">';
 	if (defined($res)){
 		if ($$param{'st'} > $res){
-			print FOUT "<a href='./$file::READ_SCRIPT?no=$$param{'no'};at=$res'>$resÈÖ</a>";
+			print FOUT "<a href='./$file::READ_SCRIPT?no=$$param{'no'};at=$res'>$resç•ª</a>";
 		}else{
-			print FOUT "<a href='#d$res'>$resÈÖ</a>";
+			print FOUT "<a href='#d$res'>$resç•ª</a>";
 		}
-		print FOUT '¤Ø¤Î¥³¥á¥ó¥È';
+		print FOUT 'ã¸ã®ã‚³ãƒ¡ãƒ³ãƒˆ';
 	}
 	print FOUT '</td>';
 
-	# ID½ĞÎÏ
+	# IDå‡ºåŠ›
 	if ($$log[$target]{'USER_ID'}){
 		print FOUT ' <td class="id">';
 		print FOUT "ID:$$log[$target]{'USER_ID'}" if (!$kill);
@@ -487,35 +487,35 @@ sub list_header{
 
 
 ###########################################################################
-#                     ¥³¥á¥ó¥È¥Ä¥ê¡¼½ç¤ÇÈ¯¸À¥¿¥¤¥È¥ë¤ò½ĞÎÏ                #
+#                     ã‚³ãƒ¡ãƒ³ãƒˆãƒ„ãƒªãƒ¼é †ã§ç™ºè¨€ã‚¿ã‚¤ãƒˆãƒ«ã‚’å‡ºåŠ›                #
 ###########################################################################
 sub tree{
-	local(*FOUT) = shift; # ½ĞÎÏÀè¥Õ¥¡¥¤¥ë¥Ï¥ó¥É¥ë
-	my $log      = shift; # [»²¾È]¥í¥°
-	my $param    = shift; # [»²¾È]½ĞÎÏÍÑ¥Ñ¥é¥á¡¼¥¿
+	local(*FOUT) = shift; # å‡ºåŠ›å…ˆãƒ•ã‚¡ã‚¤ãƒ«ãƒãƒ³ãƒ‰ãƒ«
+	my $log      = shift; # [å‚ç…§]ãƒ­ã‚°
+	my $param    = shift; # [å‚ç…§]å‡ºåŠ›ç”¨ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
 
 	my $max = @$log-1;
 	my $st  = $$param{'st'};
 	my $en  = $$param{'en'};
 
-	# ¥Ä¥ê¡¼¤Îº¬¤òÃµ¤¹(Ã±ÂÎÉ½¼¨¤Î¤È¤­)
+	# ãƒ„ãƒªãƒ¼ã®æ ¹ã‚’æ¢ã™(å˜ä½“è¡¨ç¤ºã®ã¨ã)
 	if (($$param{'mode'} & $ATONE) != 0){
 		while(defined($$log[$st]{'RES'})){
 			$st = $en = $$log[$st]{'RES'};
 		}
 	}
 
- 	# È¯¸À¤ò¥Ä¥ê¡¼½ç¤ËÊÂ¤Ù¤ë
+ 	# ç™ºè¨€ã‚’ãƒ„ãƒªãƒ¼é †ã«ä¸¦ã¹ã‚‹
 	my @nums = search_thread($log, $st, $en);
 
-	# ¥Ä¥ê¡¼É½¼¨¤¹¤ë
+	# ãƒ„ãƒªãƒ¼è¡¨ç¤ºã™ã‚‹
 	print FOUT "<div class='tree'>\n\n";
 	for(my $i=0;$i<@nums;++$i){
 
 		my ($num, $spc, $tree) = split(/:/, $nums[$i], 3);
 		print FOUT "<br />\n" if ($spc == 0 and $i > 0);
 		print FOUT $tree;
-#		print FOUT scalar std::spacer(std::math_min($spc, 10), '¡¡');
+#		print FOUT scalar std::spacer(std::math_min($spc, 10), 'ã€€');
 		title(*FOUT, $num, $log, $param);
 		print FOUT "<br />\n";
 	}
@@ -525,14 +525,14 @@ sub tree{
 
 
 #
-# ¥¿¥¤¥È¥ë¡¢Ì¾Á°¡¢¥È¥ê¥Ã¥×¡¢ID¡ÊÁªÂò¤µ¤ì¤¿¾ì¹ç¤Î¤ß¡Ë¤òÉ½¼¨
+# ã‚¿ã‚¤ãƒˆãƒ«ã€åå‰ã€ãƒˆãƒªãƒƒãƒ—ã€IDï¼ˆé¸æŠã•ã‚ŒãŸå ´åˆã®ã¿ï¼‰ã‚’è¡¨ç¤º
 #
 sub title{
-	local(*FOUT) = shift;  # ½ĞÎÏÀè¥Õ¥¡¥¤¥ë¥Ï¥ó¥É¥ë
-	my $num      = shift;  # É½¼¨¤¹¤ëÈ¯¸ÀÈÖ¹æ
-	my $log      = shift;  # [»²¾È] ¥í¥°
-	my $param    = shift;  # [»²¾È] ¥Ñ¥é¥á¡¼¥¿
-	my $id       = shift;  # ID¤òÉ½¼¨¤¹¤ë¤«¡©
+	local(*FOUT) = shift;  # å‡ºåŠ›å…ˆãƒ•ã‚¡ã‚¤ãƒ«ãƒãƒ³ãƒ‰ãƒ«
+	my $num      = shift;  # è¡¨ç¤ºã™ã‚‹ç™ºè¨€ç•ªå·
+	my $log      = shift;  # [å‚ç…§] ãƒ­ã‚°
+	my $param    = shift;  # [å‚ç…§] ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
+	my $id       = shift;  # IDã‚’è¡¨ç¤ºã™ã‚‹ã‹ï¼Ÿ
 
 	my $no     = $$log[0]{'THREAD_NO'};
 	my $name   = $$log[$num]{'USER_NAME'};
@@ -548,7 +548,7 @@ sub title{
 	my $no_link = 0;
 
 
-	# ¾õÂÖÄ´À°
+	# çŠ¶æ…‹èª¿æ•´
 	if (!($mode & $ADMIN)){
 		if (defined($$log[$num]{'DELETE_TIME'}) ){
 			$no_link = 1;
@@ -563,22 +563,22 @@ sub title{
 	$no_link = 1 if (($mode & $ATONE) != 0 and $num==$st);
 	$no_link = 1 if ($mode & $ADMIN);
 
-	# ¥Ø¥Ã¥ÀÉôÊ¬½ĞÎÏ
+	# ãƒ˜ãƒƒãƒ€éƒ¨åˆ†å‡ºåŠ›
 	print FOUT "<tt>$num.</tt>";
-	if ($kill){   # È¯¸À¤¬ºï½ü¤µ¤ì¤Æ¤¤¤ë¾ì¹ç
+	if ($kill){   # ç™ºè¨€ãŒå‰Šé™¤ã•ã‚Œã¦ã„ã‚‹å ´åˆ
 
 		print FOUT '<em class="kill">';
 
-	}elsif($no_link){  # ¼«Ê¬¼«¿È¤Ø¤Î¥ê¥ó¥¯¤ò¤·¤Ê¤¤¾ì¹ç
+	}elsif($no_link){  # è‡ªåˆ†è‡ªèº«ã¸ã®ãƒªãƒ³ã‚¯ã‚’ã—ãªã„å ´åˆ
 
 		print FOUT "<em class='now' title='$title'>";
 
 	}elsif((($mode & $TITLE) != 0 and ($mode & $MESSAGE) == 0) or ($mode & $ATONE) != 0 ){
-	                                            # ¥¿¥¤¥È¥ë¤À¤±¤òÉ½¼¨¤¹¤ë¾ì¹ç¤È
-	                                            # ¾åµ­¡¢¸½ºßÉ½¼¨¤µ¤ì¤Æ¤¤¤ëÈ¯¸À°Ê³°¤Î¾ì¹ç
+	                                            # ã‚¿ã‚¤ãƒˆãƒ«ã ã‘ã‚’è¡¨ç¤ºã™ã‚‹å ´åˆã¨
+	                                            # ä¸Šè¨˜ã€ç¾åœ¨è¡¨ç¤ºã•ã‚Œã¦ã„ã‚‹ç™ºè¨€ä»¥å¤–ã®å ´åˆ
 		print FOUT "<a href='./$file::READ_SCRIPT?no=$no;at=$num' class='sub' title='$title'>";
 
-	}else{                                      # ¤½¤ÎÂ¾¤Î¾ì¹ç
+	}else{                                      # ãã®ä»–ã®å ´åˆ
 		print FOUT "<a href='#s$num' class='sub' title='$title'>";
 
 	}
@@ -594,17 +594,17 @@ sub title{
 	}
 
 	my $short_name = std::trans_space(short_string($name, $main::CONF{'NAME_LENGTH_MAX'}));
-	print FOUT "¡¿<span title='$name'>$short_name";
+	print FOUT "ï¼<span title='$name'>$short_name";
 	print FOUT "<span class='trip'>$TRIP_SEPARETE$trip</span>" if(defined($trip));
 	print FOUT '</span>';
 
 	if((!$kill or ($mode & $IGNORE_KILL) !=0) and $$log[$num]{'USER_ID'}){
-		print FOUT "¡¡<span class='id'>ID:$$log[$num]{'USER_ID'}</span>¡¡";
+		print FOUT "ã€€<span class='id'>ID:$$log[$num]{'USER_ID'}</span>ã€€";
 	}else{
-		print FOUT '¡¡';
+		print FOUT 'ã€€';
 	}
 
-	# email¡¢web¥Ú¡¼¥¸¤òÉ½¼¨¤¹¤ë
+	# emailã€webãƒšãƒ¼ã‚¸ã‚’è¡¨ç¤ºã™ã‚‹
 	link_email(*FOUT, $email, $name) if ($email and !$kill);
 	link_webpage(*FOUT, $web, $name) if ($web   and !$kill);
 
@@ -612,7 +612,7 @@ sub title{
 
 
 #
-# Ê¸»úÎó¡Ê¥¹¥ì¥Ã¥ÉÌ¾¡¢¥¿¥¤¥È¥ëÌ¾¡¢¿ÍÌ¾¡Ë¤òÃ»¤¯¤¹¤ë
+# æ–‡å­—åˆ—ï¼ˆã‚¹ãƒ¬ãƒƒãƒ‰åã€ã‚¿ã‚¤ãƒˆãƒ«åã€äººåï¼‰ã‚’çŸ­ãã™ã‚‹
 #
 sub short_string{
 	my $string = shift;
@@ -621,8 +621,8 @@ sub short_string{
 	$string = std::html_unescape($string);
 	for(my $i=$length;;++$i){
 		my $short = std::strnum_limit_euc($string, $i);
-		my $euc   = ($short=~tr/\xa1-\xfe/\xa1-\xfe/) / 2;  # EUCÊ¸»ú¤ò¿ô¤¨¤ë
-		my $ascii = ($short=~tr/\x00-\x7f/\x00-\x7f/);      # ASCIIÊ¸»ú¤ò¿ô¤¨¤ë
+		my $euc   = ($short=~tr/\xa1-\xfe/\xa1-\xfe/) / 2;  # EUCæ–‡å­—ã‚’æ•°ãˆã‚‹
+		my $ascii = ($short=~tr/\x00-\x7f/\x00-\x7f/);      # ASCIIæ–‡å­—ã‚’æ•°ãˆã‚‹
 		return std::html_escape($string) if ($string eq $short);
 		return std::html_escape($short) . '...' if ($ascii / 2 + $euc >= $length);
 	}
@@ -630,32 +630,32 @@ sub short_string{
 
 
 ###########################################################################
-#                           ¥¹¥ì¥Ã¥É°ìÍ÷¤ò½ĞÎÏ¤¹¤ë                        #
+#                           ã‚¹ãƒ¬ãƒƒãƒ‰ä¸€è¦§ã‚’å‡ºåŠ›ã™ã‚‹                        #
 ###########################################################################
 sub thread_list{
-	local(*FOUT) = shift;  # ½ĞÎÏÀè¥Õ¥¡¥¤¥ë¥Ï¥ó¥É¥ë
-	my $thread   = shift;  # ¥¹¥ì¥Ã¥É¾ğÊó[»²¾È]
-	my $dat      = shift;  # dat¹Ô¤­¤Î¾ğÊó¤â½ĞÎÏ¤¹¤ë¤«¤É¤¦¤«/´ÉÍı¥â¡¼¥É[admin.cgiÍÑ]
+	local(*FOUT) = shift;  # å‡ºåŠ›å…ˆãƒ•ã‚¡ã‚¤ãƒ«ãƒãƒ³ãƒ‰ãƒ«
+	my $thread   = shift;  # ã‚¹ãƒ¬ãƒƒãƒ‰æƒ…å ±[å‚ç…§]
+	my $dat      = shift;  # datè¡Œãã®æƒ…å ±ã‚‚å‡ºåŠ›ã™ã‚‹ã‹ã©ã†ã‹/ç®¡ç†ãƒ¢ãƒ¼ãƒ‰[admin.cgiç”¨]
 
-	# age½ç¡Ê¹ß½ç¡Ë¤Ë¥½¡¼¥È¤¹¤ë
+	# ageé †ï¼ˆé™é †ï¼‰ã«ã‚½ãƒ¼ãƒˆã™ã‚‹
 	@$thread = sort { $$b{'AGE_TIME'} <=> $$a{'AGE_TIME'} } @$thread;
 
-	# ¥¹¥ì¥Ã¥É°ìÍ÷¤ò½ĞÎÏ¤¹¤ë¡ÁÍ­¸ú¤Ê¥¹¥ì¥Ã¥É¤¬¤Ê¤¤¾ì¹ç
+	# ã‚¹ãƒ¬ãƒƒãƒ‰ä¸€è¦§ã‚’å‡ºåŠ›ã™ã‚‹ï½æœ‰åŠ¹ãªã‚¹ãƒ¬ãƒƒãƒ‰ãŒãªã„å ´åˆ
 	print FOUT "<div class='thread-list'>\n\n";
 	unless (@$thread > 0){
-		print FOUT "<p>¥¹¥ì¥Ã¥É¤Ï¤Ş¤Àºî¤é¤ì¤Æ¤¤¤Ê¤¤¤«¡¢Í­¸ú¤Ê¥¹¥ì¥Ã¥É¤¬¤¢¤ê¤Ş¤»¤ó¡£</p>\n\n</div>\n\n";
+		print FOUT "<p>ã‚¹ãƒ¬ãƒƒãƒ‰ã¯ã¾ã ä½œã‚‰ã‚Œã¦ã„ãªã„ã‹ã€æœ‰åŠ¹ãªã‚¹ãƒ¬ãƒƒãƒ‰ãŒã‚ã‚Šã¾ã›ã‚“ã€‚</p>\n\n</div>\n\n";
 		return;
 	}
 
-	# ¥¹¥ì¥Ã¥É°ìÍ÷¤ò½ĞÎÏ¤¹¤ë¡ÊËÜ¥Ç¡¼¥¿¡Ë
+	# ã‚¹ãƒ¬ãƒƒãƒ‰ä¸€è¦§ã‚’å‡ºåŠ›ã™ã‚‹ï¼ˆæœ¬ãƒ‡ãƒ¼ã‚¿ï¼‰
 	print FOUT "<table class='thread-list'><tbody>\n\n";
 	foreach my $t(@$thread){
 
-		next if ($$t{'DAT'});    # DAT¹Ô¤­¥Ç¡¼¥¿¤Î»ş¤Ï½èÍı¤·¤Ê¤¤
+		next if ($$t{'DAT'});    # DATè¡Œããƒ‡ãƒ¼ã‚¿ã®æ™‚ã¯å‡¦ç†ã—ãªã„
 
 		print FOUT "<tr><td class='no'>$$t{'THREAD_NO'}.</td><td class='thread'>";
 		print FOUT "<a href='./$file::READ_SCRIPT?no=$$t{'THREAD_NO'};ls=$main::CONF{'DISPLAY_LAST'};tree=1;sub=1' ";
-		print FOUT "class='thread' title='ºÇ¿·$main::CONF{'DISPLAY_LAST'}¥ì¥¹¤òÉ½¼¨'>";
+		print FOUT "class='thread' title='æœ€æ–°$main::CONF{'DISPLAY_LAST'}ãƒ¬ã‚¹ã‚’è¡¨ç¤º'>";
 
 		my $thread_name = $$t{'THREAD_TITLE'};
 		my $thread_short = short_string($thread_name, $main::CONF{'THREAD_LENGTH_MAX'});
@@ -663,9 +663,9 @@ sub thread_list{
 		print FOUT "<span title='$thread_name'>$thread_short</span></a>";
 		print FOUT "($$t{'POST'})</td><td class='date'>" . std::time_format($$t{'AGE_TIME'}) . "</td>";
 		print FOUT "<td class='all'><a href='./$file::READ_SCRIPT?no=$$t{'THREAD_NO'}' ";
-		print FOUT "title='¥¹¥ì¥Ã¥É$$t{'THREAD_NO'}ÈÖ¡¢ÈÖ¹æ½ç'>Á´È¯¸ÀÉ½¼¨</a></td>";
+		print FOUT "title='ã‚¹ãƒ¬ãƒƒãƒ‰$$t{'THREAD_NO'}ç•ªã€ç•ªå·é †'>å…¨ç™ºè¨€è¡¨ç¤º</a></td>";
 		print FOUT "<td class='titleonly'><a href='./$file::READ_SCRIPT?no=$$t{'THREAD_NO'};sub=1;mes=0;tree=1' ";
-		print FOUT "title='¥¹¥ì¥Ã¥É$$t{'THREAD_NO'}ÈÖ¡¢¥³¥á¥ó¥È½ç'>Á´ÂêÌ¾É½¼¨</a></td></tr>\n";
+		print FOUT "title='ã‚¹ãƒ¬ãƒƒãƒ‰$$t{'THREAD_NO'}ç•ªã€ã‚³ãƒ¡ãƒ³ãƒˆé †'>å…¨é¡Œåè¡¨ç¤º</a></td></tr>\n";
 	}
 	print FOUT "\n</tbody></table>\n\n";
 	print FOUT "</div>\n\n";
@@ -675,12 +675,12 @@ sub thread_list{
 
 
 ###########################################################################
-#                                 email¥ê¥ó¥¯                             #
+#                                 emailãƒªãƒ³ã‚¯                             #
 ###########################################################################
 sub link_email{
-	local(*FOUT) = shift; # ½ĞÎÏÀè¥Õ¥¡¥¤¥ë¥Ï¥ó¥É¥ë
-	my $email    = shift; # email¥¢¥É¥ì¥¹
-	my $name     = shift; # Ì¾Á°
+	local(*FOUT) = shift; # å‡ºåŠ›å…ˆãƒ•ã‚¡ã‚¤ãƒ«ãƒãƒ³ãƒ‰ãƒ«
+	my $email    = shift; # emailã‚¢ãƒ‰ãƒ¬ã‚¹
+	my $name     = shift; # åå‰
 
 	$email = std::shredder("mailto:$email");
 	print FOUT "<a href='$email' title='$name'>";
@@ -689,18 +689,18 @@ sub link_email{
 	}else{
 		print FOUT '<small>email</small>';
 	}
-	print FOUT '</a>¡¡';
+	print FOUT '</a>ã€€';
 }
 
 
 
 ###########################################################################
-#                                Web¥Ú¡¼¥¸¥ê¥ó¥¯                          #
+#                                Webãƒšãƒ¼ã‚¸ãƒªãƒ³ã‚¯                          #
 ###########################################################################
 sub link_webpage{
-	local(*FOUT) = shift; # ½ĞÎÏÀè¥Õ¥¡¥¤¥ë¥Ï¥ó¥É¥ë
+	local(*FOUT) = shift; # å‡ºåŠ›å…ˆãƒ•ã‚¡ã‚¤ãƒ«ãƒãƒ³ãƒ‰ãƒ«
 	my $webpage  = shift; # webpage http
-	my $name     = shift; # Ì¾Á°
+	my $name     = shift; # åå‰
 
 	$webpage = std::shredder($webpage);
 	print FOUT "<a href='http://$webpage' title='$name'>";
@@ -709,98 +709,98 @@ sub link_webpage{
 	}else{
 		print FOUT '<small>webpage</small>';
 	}
-	print FOUT '</a>¡¡';
+	print FOUT '</a>ã€€';
 
 }
 
 
 
 ###########################################################################
-#                          ¥¹¥ì¥Ã¥É°ìÍ÷É½¼¨¤Ø¤Î¥ê¥ó¥¯                     #
+#                          ã‚¹ãƒ¬ãƒƒãƒ‰ä¸€è¦§è¡¨ç¤ºã¸ã®ãƒªãƒ³ã‚¯                     #
 ###########################################################################
 sub link_top{
-	local(*FOUT) = shift; # ½ĞÎÏÀè¥Õ¥¡¥¤¥ë¥Ï¥ó¥É¥ë
-	print FOUT "<a href='./$file::BBS_TOP_PAGE_FILE'>¥¹¥ì¥Ã¥É°ìÍ÷</a>¡¡";
+	local(*FOUT) = shift; # å‡ºåŠ›å…ˆãƒ•ã‚¡ã‚¤ãƒ«ãƒãƒ³ãƒ‰ãƒ«
+	print FOUT "<a href='./$file::BBS_TOP_PAGE_FILE'>ã‚¹ãƒ¬ãƒƒãƒ‰ä¸€è¦§</a>ã€€";
 }
 
 
 
 ###########################################################################
-#                            ·Ç¼¨ÈÄ¤«¤éÈ´¤±¤ë¥ê¥ó¥¯                       #
+#                            æ²ç¤ºæ¿ã‹ã‚‰æŠœã‘ã‚‹ãƒªãƒ³ã‚¯                       #
 ###########################################################################
 sub link_exit{
-	local(*FOUT) = shift; # ½ĞÎÏÀè¥Õ¥¡¥¤¥ë¥Ï¥ó¥É¥ë
-	print FOUT "<a href='$main::CONF{'EXIT_TO'}'>¥È¥Ã¥×¥Ú¡¼¥¸</a>¡¡";
+	local(*FOUT) = shift; # å‡ºåŠ›å…ˆãƒ•ã‚¡ã‚¤ãƒ«ãƒãƒ³ãƒ‰ãƒ«
+	print FOUT "<a href='$main::CONF{'EXIT_TO'}'>ãƒˆãƒƒãƒ—ãƒšãƒ¼ã‚¸</a>ã€€";
 }
 
 
 
 ###########################################################################
-#                             Á´È¯¸ÀÉ½¼¨¤Ø¤Î¥ê¥ó¥¯                        #
+#                             å…¨ç™ºè¨€è¡¨ç¤ºã¸ã®ãƒªãƒ³ã‚¯                        #
 ###########################################################################
 sub link_all{
-	local(*FOUT) = shift; # ½ĞÎÏÀè¥Õ¥¡¥¤¥ë¥Ï¥ó¥É¥ë
-	my $no       = shift; # ¥¹¥ì¥Ã¥ÉÈÖ¹æ
-	print FOUT "<a href='./$file::READ_SCRIPT?no=$no' title='¥¹¥ì¥Ã¥É$noÈÖ¡¢ÈÖ¹æ½ç'>Á´È¯¸ÀÉ½¼¨</a>¡¡";
+	local(*FOUT) = shift; # å‡ºåŠ›å…ˆãƒ•ã‚¡ã‚¤ãƒ«ãƒãƒ³ãƒ‰ãƒ«
+	my $no       = shift; # ã‚¹ãƒ¬ãƒƒãƒ‰ç•ªå·
+	print FOUT "<a href='./$file::READ_SCRIPT?no=$no' title='ã‚¹ãƒ¬ãƒƒãƒ‰$noç•ªã€ç•ªå·é †'>å…¨ç™ºè¨€è¡¨ç¤º</a>ã€€";
 }
 
 
 
 ###########################################################################
-#                              Á´ÂêÌ¾É½¼¨¤Ø¤Î¥ê¥ó¥¯                       #
+#                              å…¨é¡Œåè¡¨ç¤ºã¸ã®ãƒªãƒ³ã‚¯                       #
 ###########################################################################
 sub link_title{
-	local(*FOUT) = shift; # ½ĞÎÏÀè¥Õ¥¡¥¤¥ë¥Ï¥ó¥É¥ë
-	my $no       = shift; # ¥¹¥ì¥Ã¥ÉÈÖ¹æ
-	print FOUT "<a href='./$file::READ_SCRIPT?no=$no;sub=1;mes=0;tree=1' title='¥¹¥ì¥Ã¥É$noÈÖ¡¢¥³¥á¥ó¥È½ç'>Á´ÂêÌ¾É½¼¨</a>¡¡";
+	local(*FOUT) = shift; # å‡ºåŠ›å…ˆãƒ•ã‚¡ã‚¤ãƒ«ãƒãƒ³ãƒ‰ãƒ«
+	my $no       = shift; # ã‚¹ãƒ¬ãƒƒãƒ‰ç•ªå·
+	print FOUT "<a href='./$file::READ_SCRIPT?no=$no;sub=1;mes=0;tree=1' title='ã‚¹ãƒ¬ãƒƒãƒ‰$noç•ªã€ã‚³ãƒ¡ãƒ³ãƒˆé †'>å…¨é¡Œåè¡¨ç¤º</a>ã€€";
 }
 
 
 
 ###########################################################################
-#                             ºÇ¿·¥ì¥¹É½¼¨¤Ø¤Î¥ê¥ó¥¯                      #
+#                             æœ€æ–°ãƒ¬ã‚¹è¡¨ç¤ºã¸ã®ãƒªãƒ³ã‚¯                      #
 ###########################################################################
 sub link_new{
 	link_new100(@_);
 }
 sub link_new100{
-	local(*FOUT) = shift; # ½ĞÎÏÀè¥Õ¥¡¥¤¥ë¥Ï¥ó¥É¥ë
-	my $no       = shift; # ¥¹¥ì¥Ã¥ÉÈÖ¹æ
-	print FOUT "<a href='./$file::READ_SCRIPT?no=$no;ls=$main::CONF{'DISPLAY_LAST'};sub=1;tree=1'>ºÇ¿·$main::CONF{'DISPLAY_LAST'}¥ì¥¹É½¼¨</a>¡¡";
+	local(*FOUT) = shift; # å‡ºåŠ›å…ˆãƒ•ã‚¡ã‚¤ãƒ«ãƒãƒ³ãƒ‰ãƒ«
+	my $no       = shift; # ã‚¹ãƒ¬ãƒƒãƒ‰ç•ªå·
+	print FOUT "<a href='./$file::READ_SCRIPT?no=$no;ls=$main::CONF{'DISPLAY_LAST'};sub=1;tree=1'>æœ€æ–°$main::CONF{'DISPLAY_LAST'}ãƒ¬ã‚¹è¡¨ç¤º</a>ã€€";
 }
 
 
 
 ###########################################################################
-#                             ´ÉÍı¼Ô¥â¡¼¥É¤Ø¤Î¥ê¥ó¥¯                      #
+#                             ç®¡ç†è€…ãƒ¢ãƒ¼ãƒ‰ã¸ã®ãƒªãƒ³ã‚¯                      #
 ###########################################################################
 sub link_adminmode{
-	local(*FOUT) = shift; # ½ĞÎÏÀè¥Õ¥¡¥¤¥ë¥Ï¥ó¥É¥ë
-	print FOUT "<a href='./$ADMIN_PAGE'>´ÉÍı¥â¡¼¥É</a>¡¡";
+	local(*FOUT) = shift; # å‡ºåŠ›å…ˆãƒ•ã‚¡ã‚¤ãƒ«ãƒãƒ³ãƒ‰ãƒ«
+	print FOUT "<a href='./$ADMIN_PAGE'>ç®¡ç†ãƒ¢ãƒ¼ãƒ‰</a>ã€€";
 }
 
 
 
 ###########################################################################
-#                             ´ÉÍı¼Ô°¸¥á¡¼¥ë¤Ø¤Î¥ê¥ó¥¯                    #
+#                             ç®¡ç†è€…å®›ãƒ¡ãƒ¼ãƒ«ã¸ã®ãƒªãƒ³ã‚¯                    #
 ###########################################################################
 sub link_adminmail{
-	local(*FOUT) = shift; # ½ĞÎÏÀè¥Õ¥¡¥¤¥ë¥Ï¥ó¥É¥ë
-	print FOUT "<a href='mailto:$main::CONF{'ADMIN_MAIL'}'>´ÉÍı¼Ô°¸¥á¡¼¥ë</a>¡¡";
+	local(*FOUT) = shift; # å‡ºåŠ›å…ˆãƒ•ã‚¡ã‚¤ãƒ«ãƒãƒ³ãƒ‰ãƒ«
+	print FOUT "<a href='mailto:$main::CONF{'ADMIN_MAIL'}'>ç®¡ç†è€…å®›ãƒ¡ãƒ¼ãƒ«</a>ã€€";
 }
 
 
 
 ###########################################################################
-#                      ¥¹¥ì¥Ã¥É°ìÍ÷É½¼¨¡¢Á´È¯¸ÀÉ½¼¨¡¢                     #
-#                   Á´ÂêÌ¾É½¼¨ºÇ¿·100¥ì¥¹É½¼¨¡¢¤Î¥»¥Ã¥È                   #
+#                      ã‚¹ãƒ¬ãƒƒãƒ‰ä¸€è¦§è¡¨ç¤ºã€å…¨ç™ºè¨€è¡¨ç¤ºã€                     #
+#                   å…¨é¡Œåè¡¨ç¤ºæœ€æ–°100ãƒ¬ã‚¹è¡¨ç¤ºã€ã®ã‚»ãƒƒãƒˆ                   #
 ###########################################################################
 sub link_set{
 	link_3set(@_);
 }
-sub link_3set{   # ¸ß´¹¤Î¤¿¤á¡Ê´Ø¿ôÌ¿Ì¾¤ËÂç¼ºÇÔ¡Ë
-	local(*FOUT) = shift; # ½ĞÎÏÀè¥Õ¥¡¥¤¥ë¥Ï¥ó¥É¥ë
-	my $no       = shift; # ¥¹¥ì¥Ã¥ÉÈÖ¹æ
+sub link_3set{   # äº’æ›ã®ãŸã‚ï¼ˆé–¢æ•°å‘½åã«å¤§å¤±æ•—ï¼‰
+	local(*FOUT) = shift; # å‡ºåŠ›å…ˆãƒ•ã‚¡ã‚¤ãƒ«ãƒãƒ³ãƒ‰ãƒ«
+	my $no       = shift; # ã‚¹ãƒ¬ãƒƒãƒ‰ç•ªå·
 	print FOUT '<div class="link">';
 	link_top(*FOUT);
 	link_all(*FOUT, $no);
@@ -810,15 +810,15 @@ sub link_3set{   # ¸ß´¹¤Î¤¿¤á¡Ê´Ø¿ôÌ¿Ì¾¤ËÂç¼ºÇÔ¡Ë
 
 
 ###########################################################################
-#                ¥¹¥ì¥Ã¥É°ìÍ÷É½¼¨¡¢Á´È¯¸ÀÉ½¼¨¡¢Á´ÂêÌ¾É½¼¨¡¢               #
-#              ºÇ¿·100¥ì¥¹É½¼¨¡¢´ÉÍı¼Ô°¸¥á¡¼¥ë¤Î¥»¥Ã¥È¡ÊÊÄ¤¸¡Ë            #
+#                ã‚¹ãƒ¬ãƒƒãƒ‰ä¸€è¦§è¡¨ç¤ºã€å…¨ç™ºè¨€è¡¨ç¤ºã€å…¨é¡Œåè¡¨ç¤ºã€               #
+#              æœ€æ–°100ãƒ¬ã‚¹è¡¨ç¤ºã€ç®¡ç†è€…å®›ãƒ¡ãƒ¼ãƒ«ã®ã‚»ãƒƒãƒˆï¼ˆé–‰ã˜ï¼‰            #
 ###########################################################################
 sub link_set_close{
 	link_3set_close(@_);
 }
-sub link_3set_close{  # ¸ß´¹¤Î¤¿¤á¡Ê´Ø¿ôÌ¿Ì¾¤ËÂç¼ºÇÔ¡Ë
-	local(*FOUT) = shift; # ½ĞÎÏÀè¥Õ¥¡¥¤¥ë¥Ï¥ó¥É¥ë
-	my $no       = shift; # ¥¹¥ì¥Ã¥ÉÈÖ¹æ
+sub link_3set_close{  # äº’æ›ã®ãŸã‚ï¼ˆé–¢æ•°å‘½åã«å¤§å¤±æ•—ï¼‰
+	local(*FOUT) = shift; # å‡ºåŠ›å…ˆãƒ•ã‚¡ã‚¤ãƒ«ãƒãƒ³ãƒ‰ãƒ«
+	my $no       = shift; # ã‚¹ãƒ¬ãƒƒãƒ‰ç•ªå·
 	link_set(*FOUT, $no);
 	link_adminmail(*FOUT);
 	print "</div>\n\n";
@@ -827,7 +827,7 @@ sub link_3set_close{  # ¸ß´¹¤Î¤¿¤á¡Ê´Ø¿ôÌ¿Ì¾¤ËÂç¼ºÇÔ¡Ë
 
 
 ###########################################################################
-#                        ¥Ñ¥¹¥ï¡¼¥ÉÆşÎÏÊ¸»úÎóÀ¸À®                         #
+#                        ãƒ‘ã‚¹ãƒ¯ãƒ¼ãƒ‰å…¥åŠ›æ–‡å­—åˆ—ç”Ÿæˆ                         #
 ###########################################################################
 sub pass_message{
 	return sprintf($PASS_MESSAGE, $writecgi::PASS_LENGTH_MIN, $main::CONF{'PASSWORD_LENGTH'});
@@ -836,17 +836,17 @@ sub pass_message{
 
 
 ###########################################################################
-#                          HTML¥Ø¥Ã¥ÀÉôÊ¬¤ò½ĞÎÏ                           #
+#                          HTMLãƒ˜ãƒƒãƒ€éƒ¨åˆ†ã‚’å‡ºåŠ›                           #
 ###########################################################################
 sub header{
-	local(*FOUT) = shift;  # ½ĞÎÏÀè
-	my $title    = shift;  # ¥Ú¡¼¥¸¥¿¥¤¥È¥ë
-	my $base     = shift;  # <base>Í×ÁÇ¤òÍøÍÑ¤¹¤ë¤«¡© [»ö¼Â¾åÌ¤»ÈÍÑ]
-	my $cookie   = shift;  # cookieÆâÍÆ¡Ê¥Ï¥Ã¥·¥åref¡Ë
-	my $expires  = shift;  # cookieÍ­¸ú´ü¸Â
-	my $outhtml  = shift;  # html²½¤Î»ş¤Î¥Ø¥Ã¥À½ĞÎÏ¡©
+	local(*FOUT) = shift;  # å‡ºåŠ›å…ˆ
+	my $title    = shift;  # ãƒšãƒ¼ã‚¸ã‚¿ã‚¤ãƒˆãƒ«
+	my $base     = shift;  # <base>è¦ç´ ã‚’åˆ©ç”¨ã™ã‚‹ã‹ï¼Ÿ [äº‹å®Ÿä¸Šæœªä½¿ç”¨]
+	my $cookie   = shift;  # cookieå†…å®¹ï¼ˆãƒãƒƒã‚·ãƒ¥refï¼‰
+	my $expires  = shift;  # cookieæœ‰åŠ¹æœŸé™
+	my $outhtml  = shift;  # htmlåŒ–ã®æ™‚ã®ãƒ˜ãƒƒãƒ€å‡ºåŠ›ï¼Ÿ
 
-	# XMLÀë¸À¡¢DOCTYPEÀë¸À¤ò½ĞÎÏ
+	# XMLå®£è¨€ã€DOCTYPEå®£è¨€ã‚’å‡ºåŠ›
 	print FOUT << "HEADER";
 <?xml version="1.0" encoding="EUC-JP" ?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
@@ -858,12 +858,12 @@ sub header{
 
 HEADER
 
-	# ¥¿¥¤¥È¥ë¡¢baseÍ×ÁÇ¡¢¥¹¥¿¥¤¥ë¥·¡¼¥È¡¢´ğËÜjavascript¤ò½ĞÎÏ
+	# ã‚¿ã‚¤ãƒˆãƒ«ã€baseè¦ç´ ã€ã‚¹ã‚¿ã‚¤ãƒ«ã‚·ãƒ¼ãƒˆã€åŸºæœ¬javascriptã‚’å‡ºåŠ›
 	print FOUT "<base href='$main::CONF{'BASE_HTTP'}' />\n" if ($base);
 	print FOUT "<link rel='stylesheet' type='text/css' href='./$STYLESHEET' />\n";
 	print FOUT "<script type='text/javascript' src='./$JAVA_SCRIPT'></script>\n" if(!$outhtml);
 
-	# cookieÀßÄêjavascript¤ò½ĞÎÏ
+	# cookieè¨­å®šjavascriptã‚’å‡ºåŠ›
 	if ($cookie){
 		print FOUT "<script type='text/javascript'>\n";
 		foreach my $key(keys %$cookie){
@@ -873,7 +873,7 @@ HEADER
 	}
 	print FOUT "<title>$title - $main::CONF{'BBS_NAME'}</title>\n\n";
 
-	# ¥¿¥¤¥È¥ëÉôÊ¬½ĞÎÏ
+	# ã‚¿ã‚¤ãƒˆãƒ«éƒ¨åˆ†å‡ºåŠ›
 	print FOUT << "TITLE";
 </head>
 
@@ -890,15 +890,15 @@ TITLE
 
 
 ###########################################################################
-#                             HTML¥Õ¥Ã¥¿ÉôÊ¬¤ò½ĞÎÏ                        #
+#                             HTMLãƒ•ãƒƒã‚¿éƒ¨åˆ†ã‚’å‡ºåŠ›                        #
 ###########################################################################
 sub footer{
-	local(*FOUT) = shift;  # ½ĞÎÏÀè
+	local(*FOUT) = shift;  # å‡ºåŠ›å…ˆ
 
-	# ¥Ğ¡¼¥¸¥ç¥óÈÖ¹æ¤ò·×»»
+	# ãƒãƒ¼ã‚¸ãƒ§ãƒ³ç•ªå·ã‚’è¨ˆç®—
 	my $ver=sprintf("%1.2f",$main::CONF{'VERSION'} / 100);
 
-	# ¥Õ¥Ã¥¿ÉôÊ¬½ĞÎÏ
+	# ãƒ•ãƒƒã‚¿éƒ¨åˆ†å‡ºåŠ›
 	print FOUT '<div class="version" xml:lang="en">';
 	print FOUT "Double Thread BBS version $ver - programed by ";
 	print FOUT "<a href='$PROGRAMMER_WEBPAGE'>";
@@ -908,78 +908,78 @@ sub footer{
 
 
 ###########################################################################
-#                              ¿åÊ¿Àş¤Î¥³¥á¥ó¥È                           #
+#                              æ°´å¹³ç·šã®ã‚³ãƒ¡ãƒ³ãƒˆ                           #
 ###########################################################################
 sub hr{
-	local(*FOUT) = shift;  # ½ĞÎÏÀè
+	local(*FOUT) = shift;  # å‡ºåŠ›å…ˆ
 	print FOUT "<!--======================================================================-->\n\n";
 }
 
 
 
 ###########################################################################
-#                              Á÷¿®¥Õ¥©¡¼¥à³Æ¼ï                           #
+#                              é€ä¿¡ãƒ•ã‚©ãƒ¼ãƒ å„ç¨®                           #
 ###########################################################################
 
-# È¯¸ÀÉ½¼¨¥Õ¥©¡¼¥à
+# ç™ºè¨€è¡¨ç¤ºãƒ•ã‚©ãƒ¼ãƒ 
 sub form_read{
 	local(*FOUT) = shift;
-	my $no     = shift;  # ¥¹¥ì¥Ã¥ÉÈÖ¹æ
-	my $last   = shift;  # ºÇ¸å¤ÎÈ¯¸ÀÈÖ¹æ
-	my $target = shift;  # Ã±ÂÎÉ½¼¨ÈÖ¹æ
-	my $kind   = shift;  # Ã±ÂÎÈ¯¸À¤ò¤¹¤ëÍıÍ³
+	my $no     = shift;  # ã‚¹ãƒ¬ãƒƒãƒ‰ç•ªå·
+	my $last   = shift;  # æœ€å¾Œã®ç™ºè¨€ç•ªå·
+	my $target = shift;  # å˜ä½“è¡¨ç¤ºç•ªå·
+	my $kind   = shift;  # å˜ä½“ç™ºè¨€ã‚’ã™ã‚‹ç†ç”±
 
-	my $span = $target ? 4 : 3;  # rowspan¤Î¿ô¤òÄ´À°¤¹¤ë
+	my $span = $target ? 4 : 3;  # rowspanã®æ•°ã‚’èª¿æ•´ã™ã‚‹
 	print FOUT << "FORM";
-<h3 id='change-mode'>É½¼¨·ÁÂÖÀÚ¤êÂØ¤¨</h3>
+<h3 id='change-mode'>è¡¨ç¤ºå½¢æ…‹åˆ‡ã‚Šæ›¿ãˆ</h3>
 
 <form method='get' action='./$file::READ_SCRIPT' class='read' id='read' name='read' onsubmit='return check_read_form(this, $last);'>
 <table class="change-mode">
 
 <tbody>
 
-<!-- ÈÖ¹æÅù¤ò»ØÄê¤·¤Æ°ÜÆ°¤¹¤ë¥Õ¥©¡¼¥àÉôÊ¬ -->
+<!-- ç•ªå·ç­‰ã‚’æŒ‡å®šã—ã¦ç§»å‹•ã™ã‚‹ãƒ•ã‚©ãƒ¼ãƒ éƒ¨åˆ† -->
 <tr><td rowspan='$span'>
-È¯¸ÀÈÖ¹æ <input type='hidden' name='no' value='$no' />
-         <input type='text' name='st' size='5' value='0' />¤«¤é
-         <input type='text' name='en' size='5' value='$last' />¤Ş¤Ç
+ç™ºè¨€ç•ªå· <input type='hidden' name='no' value='$no' />
+         <input type='text' name='st' size='5' value='0' />ã‹ã‚‰
+         <input type='text' name='en' size='5' value='$last' />ã¾ã§
 <br />
 
-É½¼¨½ç½ø <select name='tree' size='1'>
-           <option value='1' selected='selected'>¥Ä¥ê¡¼</option>
-           <option value='0' >È¯¸ÀÈÖ¹æ</option>
-         </select>½ç
+è¡¨ç¤ºé †åº <select name='tree' size='1'>
+           <option value='1' selected='selected'>ãƒ„ãƒªãƒ¼</option>
+           <option value='0' >ç™ºè¨€ç•ªå·</option>
+         </select>é †
 <br />
 
-É½¼¨·ÁÂÖ <input type='checkbox' name='sub' value='1' />ÂêÌ¾É½¼¨
-         <input type='checkbox' name='mes' value='1' checked='checked' />È¯¸ÀÉ½¼¨
+è¡¨ç¤ºå½¢æ…‹ <input type='checkbox' name='sub' value='1' />é¡Œåè¡¨ç¤º
+         <input type='checkbox' name='mes' value='1' checked='checked' />ç™ºè¨€è¡¨ç¤º
 
 <br />
-<input type='submit' value='·èÄê' />
+<input type='submit' value='æ±ºå®š' />
 </td>
 
-<!-- ´Ê°×Åª¥ê¥ó¥¯ -->
+<!-- ç°¡æ˜“çš„ãƒªãƒ³ã‚¯ -->
 FORM
 
-	# Á´È¯¸ÀÉ½¼¨¤Ø¤Î¥ê¥ó¥¯
+	# å…¨ç™ºè¨€è¡¨ç¤ºã¸ã®ãƒªãƒ³ã‚¯
 	print FOUT '<td class="or">or</td> <td>';
 	link_all(*FOUT, $no);
 	print FOUT "</td></tr>\n";
 
-	# Á´ÂêÌ¾É½¼¨¤Ø¤Î¥ê¥ó¥¯
+	# å…¨é¡Œåè¡¨ç¤ºã¸ã®ãƒªãƒ³ã‚¯
 	print FOUT '<tr><td class="or">or</td> <td>';
 	link_title(*FOUT, $no);
 	print FOUT "</td></tr>\n";
 
-	# ºÇ¿·100¥ì¥¹É½¼¨¤Ø¤Î¥ê¥ó¥¯
+	# æœ€æ–°100ãƒ¬ã‚¹è¡¨ç¤ºã¸ã®ãƒªãƒ³ã‚¯
 	print FOUT '<tr><td class="or">or</td> <td>';
 	link_new100(*FOUT, $no);
 	print FOUT "</td></tr>\n";
 
-	# Ã±ÂÎÈ¯¸ÀÉ½¼¨¤Ø¤Î¥ê¥ó¥¯
+	# å˜ä½“ç™ºè¨€è¡¨ç¤ºã¸ã®ãƒªãƒ³ã‚¯
 	if ($target){
 		print FOUT "<tr><td class='or'>or</td> <td>";
-		print FOUT "<a href='./$file::READ_SCRIPT?no=$no;at=$target'>$kindÈ¯¸À¤ÎÃ±ÂÎÉ½¼¨</a></td></tr>\n";
+		print FOUT "<a href='./$file::READ_SCRIPT?no=$no;at=$target'>$kindç™ºè¨€ã®å˜ä½“è¡¨ç¤º</a></td></tr>\n";
 	}
 
 	print FOUT "\n</tbody>\n\n</table>\n\n</form>\n\n";
@@ -989,7 +989,7 @@ FORM
 
 
 
-# ½ñ¤­¹ş¤ß¥Õ¥©¡¼¥àËÁÆ¬ÉôÊ¬¡Ê°Ê²¼¤¹¤Ù¤Æ½ñ¤­¹ş¤ß¡Ë
+# æ›¸ãè¾¼ã¿ãƒ•ã‚©ãƒ¼ãƒ å†’é ­éƒ¨åˆ†ï¼ˆä»¥ä¸‹ã™ã¹ã¦æ›¸ãè¾¼ã¿ï¼‰
 sub formparts_head{
 	local(*FOUT) = shift;
 	print FOUT << "HTML";
@@ -1002,12 +1002,12 @@ HTML
 }
 
 
-# ¿·¥¹¥ì¥Ã¥ÉºîÀ®ÀìÍÑ
+# æ–°ã‚¹ãƒ¬ãƒƒãƒ‰ä½œæˆå°‚ç”¨
 sub formparts_createthread{
 	local(*FOUT) = shift;
 	print FOUT << "HTML";
 <tr class="thread">
-<th>¥¹¥ì¥Ã¥ÉÌ¾</th>
+<th>ã‚¹ãƒ¬ãƒƒãƒ‰å</th>
 <td>
   <input type='text' name='thread' size='40' value='' />
 </td>
@@ -1017,7 +1017,7 @@ HTML
 }
 
 
-# Ì¾Á°¡Á¥¦¥§¥Ö¥Ú¡¼¥¸
+# åå‰ï½ã‚¦ã‚§ãƒ–ãƒšãƒ¼ã‚¸
 sub formparts_name{
 	local(*FOUT) = shift;
 	my ($user, $title, $body, $email, $webpage) = @_;
@@ -1026,9 +1026,9 @@ sub formparts_name{
 	#$body  = std::html_unescape($body);
 
 	#
-	# Ì¾Á°ÉôÊ¬
+	# åå‰éƒ¨åˆ†
 	#
-	print FOUT "<tr class='name'>\n<th>Ì¾Á°</th>\n<td>\n";
+	print FOUT "<tr class='name'>\n<th>åå‰</th>\n<td>\n";
 	print FOUT "  <input type='text' name='name' size='20' ";
 	if (defined($user)){
 		print FOUT "value='$user' />\n";
@@ -1044,18 +1044,18 @@ HTML0
 	print FOUT "</td>\n</tr>\n\n";
 
 	#
-	# ¥¿¥¤¥È¥ëÉôÊ¬¡ÁwebpageÉôÊ¬
+	# ã‚¿ã‚¤ãƒˆãƒ«éƒ¨åˆ†ï½webpageéƒ¨åˆ†
 	#
 	print FOUT << "HTML1";
 <tr class="title">
-<th>¥¿¥¤¥È¥ë</th>
+<th>ã‚¿ã‚¤ãƒˆãƒ«</th>
 <td>
   <input type='text' name='title' size='40' value='$title' />
 </td>
 </tr>
 
 <tr class="body">
-<th>ËÜÊ¸</th>
+<th>æœ¬æ–‡</th>
 HTML1
 	print FOUT "<!--===========-->" if ($body);
 	print FOUT "<td><textarea cols='60' rows='10' name='body'>";
@@ -1101,7 +1101,7 @@ HTML5
 
 
 
-# ¥È¥ê¥Ã¥×¡õ¥Ñ¥¹¥ï¡¼¥É
+# ãƒˆãƒªãƒƒãƒ—ï¼†ãƒ‘ã‚¹ãƒ¯ãƒ¼ãƒ‰
 sub formparts_password{
 	local(*FOUT) = shift;
 	my $trip     = shift;
@@ -1111,7 +1111,7 @@ sub formparts_password{
 		my $trip_mes = sprintf($TRIP_MES, $main::CONF{'TRIP_INPUT_LENGTH'});
 		print FOUT << "TRIP";
 <tr class="trip">
-<th>¥È¥ê¥Ã¥×</th>
+<th>ãƒˆãƒªãƒƒãƒ—</th>
 <td>
   <input type='text' name='trip' size='$main::CONF{'TRIP_INPUT_LENGTH'}' maxlength='$main::CONF{'TRIP_INPUT_LENGTH'}' />
   <small>$trip_mes</small>
@@ -1126,7 +1126,7 @@ TRIP
 
 	print FOUT << "PASS";
 <tr class="pass">
-<th>¥Ñ¥¹¥ï¡¼¥É</th>
+<th>ãƒ‘ã‚¹ãƒ¯ãƒ¼ãƒ‰</th>
 <td>
   <input type='password'
          name='pass'
@@ -1151,9 +1151,9 @@ sub formparts_age{
 
 	print FOUT << "COOKIE";
 <tr class='other'>
-<th>¤½¤ÎÂ¾</th>
+<th>ãã®ä»–</th>
 <td>
-  <input type='checkbox' name='cookie' value='1' /> cookie¤òÊİÂ¸¤¹¤ë.
+  <input type='checkbox' name='cookie' value='1' /> cookieã‚’ä¿å­˜ã™ã‚‹.
   <script type='text/javascript'>
     var cookie = getCookie("COOKIE");
     if (cookie == 1)
@@ -1166,7 +1166,7 @@ COOKIE
 	if ($agesage){
 		print FOUT << "SAGE";
 
-  <input type='checkbox' name='sage' value='1' /> È¯¸À¤ò¤¢¤²¤Ê¤¤.
+  <input type='checkbox' name='sage' value='1' /> ç™ºè¨€ã‚’ã‚ã’ãªã„.
   <script type='text/javascript'>
     var sage = getCookie("SAGE");
     if (sage == 1)
@@ -1180,7 +1180,7 @@ SAGE
 	if ($tomato){
 		print FOUT << "TOMATO";
 
-  <input type='checkbox' name='tomato' value='1' /> IP¥¢¥É¥ì¥¹¶¯À©É½¼¨.
+  <input type='checkbox' name='tomato' value='1' /> IPã‚¢ãƒ‰ãƒ¬ã‚¹å¼·åˆ¶è¡¨ç¤º.
   <script type='text/javascript'>
     var tomato = getCookie("TOMATO");
     if (tomato == 1)
@@ -1196,20 +1196,20 @@ TOMATO
 }
 
 
-# ËöÈøÉôÊ¬¡Ê¥Ü¥¿¥ó¡Ë
+# æœ«å°¾éƒ¨åˆ†ï¼ˆãƒœã‚¿ãƒ³ï¼‰
 sub formparts_foot{
 	local(*FOUT) = shift;
-	my $post     = shift;  # Á÷¿®¥Ü¥¿¥ó¤ÎÊ¸»ú
-	my $mode     = shift;  # Åê¹Æ¥â¡¼¥É CREATE | REVISE | POST
-	my $t_no     = shift;  # ¥¹¥ì¥Ã¥ÉÈÖ¹æ
-	my $target   = shift;  # ¥ì¥¹Àè¡¿½¤ÀµÀè
+	my $post     = shift;  # é€ä¿¡ãƒœã‚¿ãƒ³ã®æ–‡å­—
+	my $mode     = shift;  # æŠ•ç¨¿ãƒ¢ãƒ¼ãƒ‰ CREATE | REVISE | POST
+	my $t_no     = shift;  # ã‚¹ãƒ¬ãƒƒãƒ‰ç•ªå·
+	my $target   = shift;  # ãƒ¬ã‚¹å…ˆï¼ä¿®æ­£å…ˆ
 
 	print FOUT << "HTML0";
 <tr class="post">
-<th>¥Õ¥©¡¼¥àÁ÷¿®</th>
+<th>ãƒ•ã‚©ãƒ¼ãƒ é€ä¿¡</th>
 <td>
   <input type='submit' value='$post' />
-  <input type='reset' value='¥ê¥»¥Ã¥È'
+  <input type='reset' value='ãƒªã‚»ãƒƒãƒˆ'
          onclick='return reset_form();'
          onkeypress='return reset_form();'  />
   <input type='hidden' name='mode' value='$mode' />
@@ -1236,7 +1236,7 @@ HTML1
 }
 
 
-# ¥Ç¡¼¥¿ºï½ü¥Õ¥©¡¼¥à
+# ãƒ‡ãƒ¼ã‚¿å‰Šé™¤ãƒ•ã‚©ãƒ¼ãƒ 
 sub formparts_delete{
 	my ($no, $target) = @_;
 	print << "DEL";
@@ -1246,7 +1246,7 @@ sub formparts_delete{
   <input type="hidden"   name="target" value="$target" />
   <input type="hidden"   name="mode" value="$writecgi::DELETE" />
   <input type='password' name='pass' size="$main::CONF{'PASSWORD_LENGTH'}" maxlength="$main::CONF{'PASSWORD_LENGTH'}" />
-  <input type='submit'   size='8' value='È¯¸Àºï½ü' />
+  <input type='submit'   size='8' value='ç™ºè¨€å‰Šé™¤' />
   <small>$PASS_REINPUT</small>
   <script type='text/javascript'>
     document.d_post.pass.value = getCookie("PASSWORD");
@@ -1260,7 +1260,7 @@ DEL
 }
 
 ###########################################################################
-#                              »î¸³ÍÑÎÎ°è                                 #
+#                              è©¦é¨“ç”¨é ˜åŸŸ                                 #
 ###########################################################################
 
 
