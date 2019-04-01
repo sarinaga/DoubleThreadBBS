@@ -7,21 +7,27 @@
 #                                          2002.10.23 さゆりん先生
 #
 use strict;
-use lib '/home/sarinaga/perllib/';
 use CGI;
+
+BEGIN{
+	if ($ENV{'HTTP_HOST'}){
+		use CGI::Carp qw(carpout);
+		open(LOG, ">../log/error.log") or die "Unable to append to 'error.log': $!\n.";
+		carpout(*LOG);
+	    my $tm = localtime;
+		print LOG strftime("[%Y/%m/%d %H:%M:%S] read.cgi log start.\n", $tm);
+	}
+}
+END{
+    my $tm = localtime;
+	print LOG strftime("[%Y/%m/%d %H:%M:%S] read.cgi log end.\n", $tm);
+}
+
 require './html.pl';
 require './file.pl';
 require './std.pl';
 require './write.pl';
 
-BEGIN{
-	if ($ENV{'HTTP_HOST'}){
-		use CGI::Carp qw(carpout);
-		open(LOG, ">./error.log") or die "Unable to append to 'error.log': $!\n.";
-		carpout(*LOG);
-		print LOG "-read.cgi-\n";
-	}
-}
 unless($ENV{'HTTP_HOST'}){
 	print "このプログラムはCGI用です. コマンドラインからの実行はできません. \n";
 	exit;

@@ -7,17 +7,25 @@
 #                                          2002.10.23 さゆりん先生
 #
 use strict;
-use lib '/home/sarinaga/perllib/';
+use utf8;
 use CGI;
-use Crypt::PasswdMD5;
+use Digest::SHA 'sha512';
+use Time::localtime;
+use POSIX qw(strftime);
+
 BEGIN{
 	if ($ENV{'HTTP_HOST'}){
 		use CGI::Carp qw(carpout);
-		open(LOG, ">./error.log") or die "Unable to append to 'error.log': $!\n.";
+		open(LOG, ">../log/error.log") or die "Unable to append to 'error.log': $!\n.";
 		carpout(*LOG);
-		print LOG "-write.cgi-\n";
+	print LOG strftime("[%Y/%m/%d %H:%M:%S] write.cgi log start.\n", $tm);
 	}
 }
+END{
+    my $tm = localtime;
+	print LOG strftime("[%Y/%m/%d %H:%M:%S] write.cgi log end.\n", $tm);
+}
+
 require './html.pl';
 require './file.pl';
 require './std.pl';
@@ -139,15 +147,12 @@ if ($title=~m/^[\w\s]+$/){
 }
 
 
-# 改行コード統一＆文字コード変換
+# 改行文字修正
 my $trans = join('<>', $thread, $title, $name, $body);
 $trans=~s/\x0D\x0A/\n/g;
 $trans=~tr/\x0D\x0A/\n\n/;
 $trans=~s/\n{4,}/\n\n\n/g;
 $trans=~s/\n*$//;
-
-$trans = std::encodeEUC($trans);
-cant_encode_guess() unless(defined($trans));   # 文字コード推測に失敗した場合はエラー
 ($thread, $title, $name, $body) = split(/<>/, $trans);
 
 

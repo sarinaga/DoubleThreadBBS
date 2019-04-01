@@ -7,14 +7,22 @@
 #                                          2003.01.14 さゆりん先生
 #
 use strict;
-use lib '/home/sarinaga/perllib/';
+use utf8;
 use CGI;
-use Crypt::PasswdMD5;
+use Digest::SHA 'sha512';
+use Time::localtime;
+use POSIX qw(strftime);
+
 BEGIN{
 	use CGI::Carp qw(carpout);
-	open(LOG, ">./error.log") or die "Unable to append to 'error.log': $!\n.";
+	open(LOG, ">../log/error.log") or die "Unable to append to 'error.log': $!\n.";
 	carpout(*LOG);
-	print LOG "-admin.cgi-\n";
+    my $tm = localtime;
+	print LOG strftime("[%Y/%m/%d %H:%M:%S] admin.cgi log start.\n", $tm);
+}
+END{
+    my $tm = localtime;
+	print LOG strftime("[%Y/%m/%d %H:%M:%S] admin.cgi log end.\n", $tm);
 }
 unless($ENV{'HTTP_HOST'}){
 	print "このプログラムはCGI用です. コマンドラインからの実行はできません. \n";

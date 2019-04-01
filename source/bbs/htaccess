@@ -3,12 +3,12 @@
 #
 #                                                 2004.10.15 さゆりん先生
 #
-#Options +ExecCGI -Indexes
-#AddHandler cgi-script .cgi
+Options +ExecCGI -Indexes
+AddHandler cgi-script .cgi
 DirectoryIndex index.html
 
 AddType "text/javascript; charset=euc-jp" js
-AddType "text/html; charset=euc-jp" html
+AddType "text/html; charset=utf-8" html
 
 # アクセス制限の基本設定
 Order allow,deny 
@@ -25,6 +25,7 @@ Allow from all
   deny from all
 </Files>
 
+# UAにキャッシュを保存させない
 <Files "^(bbs|admin).html$">
   <IfModule mod_headers>
     Header Set Pragma "no-cache"
@@ -33,27 +34,4 @@ Allow from all
 </Files>
 
 
-# 以下、アクセス制限
-
-#日本人以外書込み禁止
-<Limit POST>
-order deny,allow
-deny from all
-allow from .jp
-</Limit>
-
-Deny from .ap.yournet.ne.jp
-Deny from .zf187084.ppp.dion.ne.jp
-Deny from .osk6-p234.flets.hi-ho.ne.jp
-Deny from .hkid.nt.adsl.ppp.infoweb.ne.jp
-Deny from .nttpc.ne.jp
-Deny from .zf187084.ppp.dion.ne.jp
-Deny from .ap.gmo-access.jp
-Deny from .kagoya.net
-#Deny from .odn.ad.jp
-Deny from .mesh.ad.jp
-Deny from .fbb.reset.jp
-Deny from .ap125.ftth.ucom.ne.jp
-
-
-
+# 以下、必要に応じて掲示板設置者が設定
