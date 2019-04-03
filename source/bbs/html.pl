@@ -70,18 +70,8 @@ $REVISE = '発言訂正';
 ###########################################################################
 sub http_response_header{
 
-	# content-typeの選択
-	my $content_type = 'text/html; charset=EUC-JP';
-	if ($main::ENV{'HTTP_ACCEPT'}=~m/application\/xhtml\+xml/){
-		$content_type='application/xhtml+xml';
-	}elsif($main::ENV{'HTTP_ACCEPT'}=~m/application\/xml/){
-		$content_type='application/xml';
-	}
-	$content_type = 'text/html; charset=EUC-JP';
-
-	# http-response-headerの出力
 	print << "RES";
-Content-Type: $content_type
+Content-Type: text/html; charset=UTF-8
 Content-Language: ja
 Content-Style-Type: text/css
 Content-Script-Type: text/javascript

@@ -13,6 +13,12 @@ use Digest::SHA 'sha512';
 use Time::localtime;
 use POSIX qw(strftime);
 
+require './html.pl';
+require './file.pl';
+require './std.pl';
+require './write.pl';
+
+# ログ出力のヘッダとフッタ
 BEGIN{
 	if ($ENV{'HTTP_HOST'}){
 		use CGI::Carp qw(carpout);
@@ -24,14 +30,10 @@ BEGIN{
 END{
     my $tm = localtime;
 	print LOG strftime("[%Y/%m/%d %H:%M:%S] write.cgi log end.\n", $tm);
+	close(LOG);
 }
 
-require './html.pl';
-require './file.pl';
-require './std.pl';
-require './write.pl';
-
-
+# CGI以外の場合は動作させない(簡易的なもの)
 unless($ENV{'HTTP_HOST'}){
 	print "このプログラムはCGI用です. コマンドラインからの実行はできません. \n";
 	exit;

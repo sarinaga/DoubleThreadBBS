@@ -11,14 +11,14 @@ use utf8;
 use CGI;
 use Digest::SHA 'sha512';
 use Time::localtime;
-use POSIX qw(strftime);
+use POSIX qw(strftime);n
 
 BEGIN{
 	use CGI::Carp qw(carpout);
 	open(LOG, ">../log/error.log") or die "Unable to append to 'error.log': $!\n.";
 	carpout(*LOG);
     my $tm = localtime;
-	print LOG strftime("[%Y/%m/%d %H:%M:%S] admin.cgi log start.\n", $tm);
+	print LOG strftimepy("[%Y/%m/%d %H:%M:%S] admin.cgi log start.\n", $tm);
 }
 END{
     my $tm = localtime;
