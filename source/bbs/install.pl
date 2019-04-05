@@ -1,14 +1,21 @@
+#!/usr/bin/perl
+
 use strict;
 use File::Path;
+use lib '/home/sarinaga/perl/lib/perl5/site_perl/5.14';
 use Crypt::PasswdMD5;
+use utf8;
 
 require './configReader.pl';
-require './connstants.pl';
-require './bbsFile.pl';
+require './constants.pl';
+require './std.pl';
+require './file.pl';
+require './html.pl';
 
 use vars qw($CONF);
 $CONF = configReader::readConfig();
 $file::CONF = $CONF;
+$html::CONF = $CONF;
 
 ##########################################################################
 #                   ファイル、ディレクトリの初期化                       #
@@ -16,33 +23,33 @@ $file::CONF = $CONF;
 sub createDirectory{
 
 	# ディレクトリを作る
-	my %dirs = {
-	  $CONF->{'log'}->{'public'} => $constants::PUBLIC_DIR_PERMISSION,
-	  $CONF->{'log'}->{'secret'} => $constants::SECRET_DIR_PERMISSION,
- 	  $CONF->{'log'}->{'html'}   => $constants::PUBLIC_DIR_PERMISSION,
-	};
+	my %dirs = (
+	  "$CONF->{'system'}->{'log'}->{'public'}" => $constants::PUBLIC_DIR_PERMISSION,
+	  "$CONF->{'system'}->{'log'}->{'secret'}" => $constants::PUBLIC_DIR_PERMISSION,
+#	  "$CONF->{'system'}->{'log'}->{'secret'}" => $constants::SECRET_DIR_PERMISSION,
+ 	  "$CONF->{'system'}->{'log'}->{'html'}"   => $constants::PUBLIC_DIR_PERMISSION,
+	);
 
 	foreach my $dir(keys %dirs){
-
 		chop($dir);
 		if (-e $dir){
 			if (-d $dir){
 				rmtree($dir);
+				print "ディレクトリ'${dir}'があったので削除します.\n";
 			}else{
 				unlink($dir);
+				print "ファイル'${dir}'があったので削除します.\n";
 			}
-			print "ディレクトリまたはファイルで'${dir}'があったので削除します.\n";
 		}
 
 		if (-e $dir){
 			die "ディレクトリまたはファイル'${dir}'を削除できませんでした. ";
 		}
-
 		unless (mkdir($dir, $dirs{$dir})){
 			die "ディレクトリ'${dir}'を作成できませんでした. ";
 		}
 
-		print "ディレクトリ'${dir}'を作成しました.";
+		print "ディレクトリ'${dir}'を作成しました.\n";
 	}
 
 }
@@ -51,15 +58,16 @@ sub createDirectory{
 #                       ポインタファイルの作成                           #
 ##########################################################################
 sub createPointer(){
-	my $pointer_file = pointer_name();
-	unless(open(FOUT, ">$pointer_file")){
-		die "ポインタファイルを初期化できませんでした.";
+	my $pointer_file = file::pointer_name();
+	unless(open(FOUT, ">${pointer_file}")){
+		die "ポインタファイル'${pointer_file}'を初期化できませんでした.";
 	}
 	print FOUT "0\n";
 	close(FOUT);
 	unless(chmod($constants::SECRET_FILE_PERMISSION, $pointer_file)){
-		die "ポインタファイルにパーミッションが設定できませんでした.";
+		die "ポインタファイル'${pointer_file}'にパーミッションが設定できませんでした.";
 	}
+	print "ポインタファイル'${pointer_file}'を作成しました.\n";
 }
 
 ##########################################################################
@@ -67,31 +75,34 @@ sub createPointer(){
 ##########################################################################
 sub createBlacklist(){
 
-	my $blacklist_file = blacklist_name();
-	#system("touch $blacklist_file");
-	unless(open(FOUT, ">$blacklist_file")){
-		die "ブラックリストファイルを初期化できませんでした.";
+	my $blacklist_file = file::blacklist_name();
+	#system("touch ${blacklist_file}");
+	unless(open(FOUT, ">${blacklist_file}")){
+		die "ブラックリストファイル'${blacklist_file}'を初期化できませんでした.";
 	}
 	close(FOUT);
 	unless(chmod($constants::SECRET_FILE_PERMISSION, $blacklist_file)){
-		die "ブラックリストファイルにパーミッションが設定できませんでした.";
+		die "ブラックリストファイル'${blacklist_file}'にパーミッションが設定できませんでした.";
 	}
+	print "ブラックリストファイル'${blacklist_file}'を作成しました.\n";
+
 }
 
 ##########################################################################
 #                   管理者パスワードファイルの作成                       #
 ##########################################################################
 sub createAdminPassword(){
-	my $password_file = adminpass_name();
+	my $password_file = file::adminpass_name();
 	unless(open(FOUT, ">$password_file")){
-		die "管理者パスワードファイルを初期化できませんでした.";
+		die "管理者パスワードファイル'${password_file}'を初期化できませんでした.";
 	}
 	my $cpassword = apache_md5_crypt('admin', std::salt());
-	print FOUT "admin:$cpassword";
+	print FOUT "admin:$cpassword\n";
 	close(FOUT);
 	unless(chmod($constants::SECRET_FILE_PERMISSION, $password_file)){
-		die "管理者パスワードファイルにパーミッションが設定できませんでした.";
+		die "管理者パスワードファイル'${password_file}'にパーミッションが設定できませんでした.";
 	}
+	print "管理者パスワードファイル'${password_file}'を作成しました.\n";
 
 }
 
@@ -102,21 +113,22 @@ sub createPage{
 
 
 	# bbs.htmlの作成
-	my @thread = [];
-	unless (file::create_bbshtml(\@thread)){
-		die "bbs.htmlが作成できませんでした.";
+	my @thread;
+	unless (html::create_bbshtml(\@thread)){
+		die "トップページ'bbs.html'が作成できませんでした.";
 	}
+	print "トップページ'bbs.html'を作成しました.\n";
 
 	# admin.htmlの作成
-	unless (file::create_adminpage()){
-		die "admin.htmlが作成できませんでした.";
+	unless (html::create_adminpage()){
+		die "管理者ページ'admin.html'が作成できませんでした.";
 	}
-
+	print "管理者ページ'admin.html'を作成しました.\n";
 }
 
 createDirectory();
 createPointer();
-createBlackList();
+createBlacklist();
 createAdminPassword();
 createPage();
-
+print "インストールが正しく終了しました. 'bbs.html'からアクセスできます.";

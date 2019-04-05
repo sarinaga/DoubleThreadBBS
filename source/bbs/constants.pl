@@ -1,4 +1,6 @@
 use strict;
+use utf8;
+
 package constants;
 
 use vars qw($VERSION);
@@ -44,8 +46,8 @@ $EMAIL       = 'EMAIL';
 $WEB         = 'WEB';
 
 use vars qw($THREADLIST_INFO $ADMIN_INFO);
-$THREADLIST_INFO = 'template.bbs.html';
-$ADMIN_INFO      = 'template.admin.html';
+$THREADLIST_INFO = './setting/templete.bbs.html';
+$ADMIN_INFO      = './setting/templete.admin.html';
 
 use vars qw($PROGRAMMER_WEBPAGE $MANUAL_PAGE $ADMIN_PAGE $JAVA_SCRIPT $STYLESHEET);
 $PROGRAMMER_WEBPAGE = 'http://www.sarinaga.com/';  # スクリプト作者のページ
@@ -53,8 +55,6 @@ $MANUAL_PAGE  = 'index.html';                      # インデックスページ
 $ADMIN_PAGE   = 'admin.html';                      # 管理者用ページ
 $JAVA_SCRIPT  = 'bbs.js';                          # javascript
 $STYLESHEET   = 'bbs.css';                         # スタイルシート
-
-
 
 
 

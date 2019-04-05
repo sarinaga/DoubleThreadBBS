@@ -8,11 +8,13 @@
 package file;
 use strict;
 
+use lib '/home/sarinaga/perl/lib/perl5/site_perl/5.14';
 use File::Copy;
 use File::Basename;
 use Time::HiRes qw(sleep);
 use Crypt::PasswdMD5;
 use Digest::SHA 'sha1_hex';
+use utf8;
 
 require './constants.pl';
 
@@ -645,45 +647,6 @@ sub compress{
 }
 
 
-###########################################################################
-#                      admin.html 管理ページを更新する                    #
-###########################################################################
-#
-#  このサブルーチンは本来ならwrite.cgiに置かれるべき物ですが、
-#  admin.cgiとの共通利用となるため、file.plに置かれることになります。
-#
-sub create_adminpage{
-
-	# 情報整理
-	my $version      = sprintf("%1.2f",$main::CONF{'VERSION'} / 100);
-	my $bbs_top      = "./$file::BBS_TOP_PAGE_FILE";
-	my $stylesheet   = "./$html::STYLESHEET";
-	my $admin_mail   = $main::CONF{'ADMIN_MAIL'};
-	my $admin_script = "./$file::ADMIN_SCRIPT";
-	my $programmer   = $html::PROGRAMMER_WEBPAGE;
-
-	# admin.infoの読み込み
-	return 0 unless(open(FIN, $writecgi::ADMIN_INFO));
-	my $info = '';
-	until(eof(FIN)){
-		$info .= <FIN>;
-	}
-	$info = std::encodeEUC($info);
-	$info =~ s/(\$\w+)/$1/gee;
-
-	# admin.htmlの書き出し
-	my $admin_html = "./$html::ADMIN_PAGE";
-	return 0 unless (filelock($admin_html));
-	my $tempfile = temp_name($admin_html);
-	return 0 unless(open(FOUT, ">$tempfile"));
-	print FOUT $info;
-	close(FOUT);
-
-	# テンポラリファイルから正式ファイルに変換
-	return renew($admin_html);
-
-
-}
 
 
 ##########################################################################

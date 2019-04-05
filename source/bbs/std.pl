@@ -4,9 +4,10 @@
 #                                          2002.10.23 さゆりん先生
 #
 use strict;
-package std;
 use Digest::SHA1 qw(sha1_base64);
+use utf8;
 
+package std;
 
 
 

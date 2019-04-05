@@ -8,6 +8,7 @@
 #
 use strict;
 use CGI;
+use utf8;
 
 BEGIN{
 	if ($ENV{'HTTP_HOST'}){
@@ -262,7 +263,7 @@ sub res{
 
 <h3 id='howto'>レス投稿</h3>
 
-<p>スレッド名「$thread」(スレッド番号$no)の発言$target番へのレス投稿フォームを表示しています(→<a href='./bbs.html'>詳しい説明</a>)。</p>
+<p>スレッド名「${thread}」(スレッド番号${no})の発言${target}番へのレス投稿フォームを表示しています(→<a href='./bbs.html'>詳しい説明</a>)。</p>
 
 </div>
 
@@ -314,7 +315,7 @@ sub rev{
 
 <h3 id='howto'>発言の削除、修正</h3>
 
-<p>このフォームから<em class="thread">スレッド名「$thread」(スレッド番号$no番)の$target番発言</em>の修正、削除ができます。発言修正、削除を行うには投稿時に指定したパスワードが必要です。</p>
+<p>このフォームから<em class="thread">スレッド名「$thread」(スレッド番号${no}番)の${target}番発言</em>の修正、削除ができます。発言修正、削除を行うには投稿時に指定したパスワードが必要です。</p>
 
 <p>パスワードを忘れてしまった発言の削除、中傷発言の削除、消してしまった発言を復活させたい場合などは<a href="mailto:$CONF{'ADMIN_MAIL'}">管理者</a>にご連絡ください。</p>
 
@@ -604,7 +605,7 @@ sub form_rev{
 
 		if (defined($$log[$target]{'CORRECT_TIME'})){
 			my $limit = $CONF{'CHANGE_LIMIT'} - @{$$log[$target]{'CORRECT_TIME'}};
-			print "<p>あと$limit回発言を修正できます。</p>\n\n";
+			print "<p>あと${limit}回発言を修正できます。</p>\n\n";
 		}
 		my $body = $$log[$target]{'BODY'};
 		html::formparts_head(*STDOUT);
@@ -697,15 +698,15 @@ sub error_fail_read{
 	error_head();
 	print '<p>';
 	if(-f $html){
-		print "スレッド番号$noでの議論は終了しました。";
+		print "スレッド番号${no}での議論は終了しました。";
 		print "<a href='$html'>過去ログ</a>を参照してください。";
 
 	}elsif(-f $gz_log){
-		print "スレッド番号$noでの議論は終了しました。";
+		print "スレッド番号${no}での議論は終了しました。";
 		print "ログがHTML化されるまでしばらくお待ちください。";
 
 	}else{
-		print "スレッド番号$noは存在しません。";
+		print "スレッド番号${no}は存在しません。";
 
 	}
 	print "</p>\n\n";

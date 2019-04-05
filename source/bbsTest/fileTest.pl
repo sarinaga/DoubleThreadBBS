@@ -66,20 +66,29 @@ chdir '../bbsTest/';
 {
 	$file::CONF->{'system'}->{'log'}->{'public'} = './testLogPublic/';
 	$file::CONF->{'system'}->{'log'}->{'secret'} = './testLogSecret/';
-	$file::CONF->{'system'}->{'tmp'} = 'C:/Users/micro/AppData/Local/Temp/';
 
 	my @log0;
 	print "read_log:その1:\n";
 	print file::read_log(0, \@log0, 1, 0, 0) . "\n";
 	print @log0 . "\n";
+	print $log0[0]{'THREAD_TITLE'} . "\n";
+	print $log0[0]{'POST'} . "\n";
+	print $log0[0]{'AGE_TIME'} . "\n";
+	print $log0[0]{'DAT'} . "\n";
+	print $log0[0]{'BUILDER_IP_ADDR'} . "\n";
+	print $log0[0]{'BUILDER_IP_HOST'} . "\n";
+	print $log0[0]{'USER_NAME'} . "\n";
+	print $log0[0]{'USER_EMAIL'} . "\n";
+	print $log0[0]{'USER_WEBPAGE'} . "\n";
+	print $log0[0]{'USER_ID'} . "\n";
+	print $log0[0]{'TOMATO'} . "\n";
+	print $log0[0]{'POST_TIME'} . "\n";
+	print $log0[0]{'BODY'} . "\n";
+	print "#タイトル連続[0-3]\n";
+	print $log0[0]{'TITLE'} . "\n";
 	print $log0[1]{'TITLE'} . "\n";
-	print $log0[1]{'USER_NAME'} . "\n";
-	print $log0[1]{'USER_EMAIL'} . "\n";
-	print $log0[1]{'USER_WEBPAGE'} . "\n";
-	print $log0[1]{'USER_ID'} . "\n";
-	print $log0[1]{'TOMATO'} . "\n";
-	print $log0[1]{'POST_TIME'} . "\n";
-	print $log0[1]{'BODY'} . "\n";
+	print $log0[2]{'TITLE'} . "\n";
+	print $log0[3]{'TITLE'} . "\n";
 
 	my @log1;
 	print "read_log:その2:\n";
