@@ -11,18 +11,20 @@ use utf8;
 use CGI;
 use Digest::SHA 'sha512';
 use Time::localtime;
-use POSIX qw(strftime);n
+use POSIX qw(strftime);
 
 BEGIN{
-	use CGI::Carp qw(carpout);
-	open(LOG, ">../log/error.log") or die "Unable to append to 'error.log': $!\n.";
-	carpout(*LOG);
+	if ($ENV{'HTTP_HOST'}){
+		use CGI::Carp qw(carpout);
+		open(LOG, ">../log/error.log");
+		carpout(*LOG);
     my $tm = localtime;
-	print LOG strftimepy("[%Y/%m/%d %H:%M:%S] admin.cgi log start.\n", $tm);
+	print LOG strftime("write.cgi log start.\n", $tm);
+	}
 }
 END{
     my $tm = localtime;
-	print LOG strftime("[%Y/%m/%d %H:%M:%S] admin.cgi log end.\n", $tm);
+	print LOG strftime("admin.cgi log end.\n", $tm);
 }
 unless($ENV{'HTTP_HOST'}){
 	print "このプログラムはCGI用です. コマンドラインからの実行はできません. \n";
@@ -316,7 +318,7 @@ sub write_command{
 
 	# 処理を行う発言をピックアウト
 	my @nums;
-	if ($c eq 'DEL' or $c eq 'UNDEL' or 
+	if ($c eq 'DEL' or $c eq 'UNDEL' or
 		$c eq 'TOMATO' or $c eq 'UNTOMATO'){
 		@nums = read_number($num, @log-1);
 

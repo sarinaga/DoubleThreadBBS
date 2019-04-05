@@ -8,361 +8,122 @@
 package file;
 use strict;
 
-use lib '/home/sarinaga/lib/i386-freebsd';
-
 use File::Copy;
-use Digest::SHA1 qw(sha1 sha1_hex sha1_base64);
-
-require './html.pl';    # create_bbshtml用
-require './write.pl';   # create_bbshtml用
-
-BEGIN{
-	use vars qw($TIME_HIRES_OK);
-	$TIME_HIRES_OK = 1;
-	eval "use Time::HiRes qw(sleep);";
-	$TIME_HIRES_OK = 0 if ($@);
-}
+use File::Basename;
+use Time::HiRes qw(sleep);
+use Crypt::PasswdMD5;
+use Digest::SHA 'sha1_hex';
 
 
-use vars qw($CONFIG_FILE $CONFIG_DIR $POINTER_FILE $BLACKLIST_FILE $BBS_TOP_PAGE_FILE $PASSWORD_FILE);
-$CONFIG_FILE         = 'bbs.conf';   # コンフィグファイル
-$CONFIG_DIR          = './';         # コンフィグファイルが置かれているディレクトリ
-$POINTER_FILE        = 'pointer';    # ポインタファイル
-$BLACKLIST_FILE      = 'blacklist';  # スレ建て制限に引っかかっているIPアドレス、IPホストを格納
-$BBS_TOP_PAGE_FILE   = 'bbs.html';   # トップページファイル/スレッド一覧表示
-$PASSWORD_FILE       = 'passwd';     # パスワードファイル
+require './constants.pl';
+#require './html.pl';    # create_bbshtml用
+#require './write.pl';   # create_bbshtml用
 
-
-use vars qw($READ_SCRIPT $WRITE_SCRIPT $ADMIN_SCRIPT);
-$READ_SCRIPT  = 'read.cgi';
-$WRITE_SCRIPT = 'write.cgi';
-$ADMIN_SCRIPT = 'admin.cgi';
-
-use vars qw($PUBLIC_DIR_PERMISSION $SECRET_DIR_PERMISSION 
-            $PUBLIC_FILE_PERMISSION $SECRET_FILE_PERMISSION);
-$PUBLIC_DIR_PERMISSION  = 0755;
-$SECRET_DIR_PERMISSION  = 0700;
-$PUBLIC_FILE_PERMISSION = 0644;
-$SECRET_FILE_PERMISSION = 0600;
-
-
-use vars qw($EXT_LOG $EXT_PUBLIC $EXT_SECRET $EXT_GZIP $EXT_TEMP $EXT_LOCK);
-
-$EXT_LOG      = 'log';     # 発言ログであることをあらわす拡張子
-$EXT_PUBLIC   = 'pub';     # 公開されていることをあらわす拡張子
-$EXT_SECRET   = 'sec';     # 非公開であることをあらわす拡張子
-$EXT_GZIP     = 'gz';      # gzip圧縮の拡張子
-$EXT_TEMP     = $$;        # 一時ファイル拡張子
-$EXT_LOCK     = 'lock';    # ロックファイル拡張子
+# bbs.conf.json設定値(外部からこのグローバル変数に値をセットすること)
+use vars qw($CONF);
 
 
 #
 # ・プログラム設計上の重大注意
 #
-#  ファイルをロック／アンロックするとき、以下のように順番を守ること
+#  ファイルをロックするとき、以下のように順番を守ること
+#  (アンロックの場合は順番逆).
 #
 #  1. ポインタファイル
 #  2. ログファイル公開部
 #  3. ログファイル非公開部
 #
-#  この順番を守らない場合、処理時間が長くなったり
-#  デッドロックを起こす可能性があります.
+#  この順番を守らない場合, デッドロックを起こす可能性がある.
 #
 
-
-
-##########################################################################
-#                       環境設定ファイルを読み込む                       #
-##########################################################################
-sub config_read{
-	my $conf = shift;   # （参照）環境設定保存用ハッシュ
-
-	# デフォルト値をセットする
-	%$conf = config_default();
-
-	# 環境設定ファイルをオープンする
-	my $config_file = config_name();
-	open(FIN, $config_file) || return 0;
-
-	# １行ずつ環境設定ファイルを読み取り、解析していく
-	until(eof(FIN)){
-		my $read = <FIN>;
-		chomp($read);
-
-		$read=~s/\s+\#.*$//;     # 先行空白～'#'～コメント文を削除
-		$read=~s/\s*$//;         # 行末空白文字削除
-		next if ($read eq '');   # 空白行だけの場合は処理しない
-		next if ($read=~m/^\#/); # コメント行は処理しない
-
-		my ($elements, $contents) = split(/\s*=\s*/, $read ,2);  # 分離
-		$elements =~tr/a-z/A-Z/;                                 # 環境設定名を大文字変換
-		$$conf{$elements} = $contents;                           # 格納
-
-	}
-	close(FIN);
-
-	return 0 unless(config_check($conf));  # 環境設定が不正ならエラーを返す
-	return 1;
-}
-
-
-##########################################################################
-#                      環境のデフォルト値を設定する                      #
-##########################################################################
-sub config_default{
-
-	# デフォルト値を設定：一般的な設定
-	my %conf;
-	#$conf{'BASE_HTTP'}         = (なし)                   # 掲示板起点となるURI
-	#$conf{'ADMIN_MAIL'}        = (なし)                   # 管理者メールアドレス
-	$conf{'BBS_NAME'}           = 'ダブルスレッド掲示板';  # 掲示板の名前
-	$conf{'NO_NAME'}            = '無名';                  # 投稿時に名前が入力されなかったときに入れられる名前
-	$conf{'NO_TITLE'}           = '無題';                  # 投稿時に題名が入力されなかったときに入れられる題名
-	$conf{"THREAD_LENGTH_MAX"}  = 30;                      # スレッド名が長すぎるときにどこでちょん切るか？
-	$conf{'TITLE_LENGTH_MAX'}   = 20;                      # タイトルが長すぎるときにどこでちょん切るか？
-	$conf{'NAME_LENGTH_MAX'}    = 10;                      # 名前が長すぎるときにどこでちょん切るか？
-	$conf{'KILL_TITLE'}         = '削除されました';        # 削除された発言を表わす表示（タイトル）
-	$conf{'KILL_NAME'}          = '削除されました';        # 削除された発言を表わす表示（名前）
-	$conf{'EXIT_TO'}            = '/';                     # 掲示板から抜けるとき、その先のリンク
-	$conf{'FORCE_TOMATO'}       = 0;                       # 投稿者のIPアドレスを強制表示
-	$conf{'CREATE_ID'}          = 1;                       # 投稿者固有IDを生成する
-
-	$conf{'ACCEPT_CHANGE'}      = 1;                       # 発言の変更、削除、復活を認めるか
-	$conf{'COOKIE_EXPIRES'}     = 7;                       # cookie有効日数
-	$conf{'ID_LENGTH'}          = 5;                       # IDの長さ
-	$conf{'DISPLAY_LAST'}       = 100;                     # 最新レス表示をいくつまで表示するか
-	$conf{'TRIP_INPUT_LENGTH'}  = 10;                      # トリップの長さ（入力）
-	$conf{'TRIP_OUTPUT_LENGTH'} = 10;                      # トリップの長さ（出力）
-	$conf{'TRIP_KEY'}           = 'aa';                    # トリップ鍵
-	$conf{'PASSWORD_LENGTH'}    = 20;                      # 入力パスワードの最大長さ（最小は8）
-
-	# デフォルト値を設定：リソース設定
-	$conf{'THREAD_SAVE'}    = 20;      # スレッドをいくつまで保存するか
-	$conf{'THREAD_MAX'}     = 5;       # １人あたりスレッドをいくつ作成できるか 
-	$conf{'BUFFER_LIMIT'}   = 5000;    # １発言の大きさ制限（バイト数）
-
-	                                    # スレッドへの書き込み制限（バイト数）
-	$conf{'FILE_LIMIT'}     = 1000000;  # 書込み禁止
-	$conf{'FILE_WARNING'}   = 900000;   # 警告表示
-	$conf{'FILE_CAUTION'}   = 800000;   # 注意勧告
-
-	                                    # スレッドへの書き込み制限（発言数）
-	$conf{'THREAD_LIMIT'}   = 1000;     # 書込み禁止
-	$conf{'THREAD_WARNING'} = 950;      # 警告表示
-	$conf{'THREAD_CAUTION'} = 900;      # 注意勧告
-
-	$conf{'CHANGE_LIMIT'}   = 5;        # 発言修正ができる回数
-	$conf{'DUPE_BACK'}      = 5;        # 二重投稿の判断を何発言まで遡って見るか
-	$conf{'CHAIN_POST'}     = 1;        # 連続投稿荒らし防止機構／数制限
-	$conf{'CHAIN_TIME'}     = 30;       # 連続投稿荒らし防止機構／監視時間
-
-	# デフォルト値を設定：システム設定
-	$conf{'LOG_DIR_PUBLIC'} = './public_log/';       # 掲示板のログのうち、公開されるものを保存するディレクトリ
-	$conf{'LOG_DIR_SECRET'} = './secret_log/';       # 掲示板のログのうち、公開されないものを保存するディレクトリ
-	$conf{'LOG_DIR_HTML'}   = './';                  # 掲示板のログのうち、HTML化したものを保存するディレクトリ
-	$conf{'TEMP_DIR'}       = '/tmp/';               # テンポラリ(一時）ファイルを作るディレクトリ
-	$conf{'FILE_LOCK'}      = 0;                     # ファイルロックの方法(0:なし／1:symlink／2:mkdir)
-
-	# その他の環境値
-	$conf{'VERSION'} = 70;      # バージョン番号 x 100
-
-	return %conf;
-}
-
-
-##########################################################################
-#                環境が正しく設定されているかチェックする                #
-##########################################################################
-sub config_check{
-	my $conf = shift;   # （参照）環境設定保存用ハッシュ
-
-	# 必須入力確認
-	return 0 unless(defined($$conf{'BASE_HTTP'}));
-	return 0 unless(defined($$conf{'ADMIN_MAIL'}));
-
-	# 必須入力正当性確認
-	return 0 unless (std::uri_valid($$conf{'BASE_HTTP'}));
-	return 0 unless (std::email_valid($$conf{'ADMIN_MAIL'}));
-
-	# 数値を入れるものに文字列を入れた場合は不正
-	my @number_only = (
-	                    'THREAD_LENGTH_MAX',
-	                    'TITLE_LENGTH_MAX',
-	                    'NAME_LENGTH_MAX',
-	                    'FORCE_TOMATO',
-	                    'CREATE_ID',
-	                    'ACCEPT_CHANGE',
-	                    'COOKIE_EXPIRES',
-	                    'ID_LENGTH',
-	                    'DISPLAY_LAST',
-	                    'TRIP_INPUT_LENGTH',
-	                    'TRIP_OUTPUT_LENGTH',
-	                    'PASSWORD_LENGTH',
-	                    'THREAD_SAVE',
-	                    'THREAD_MAX',
-	                    'BUFFER_LIMIT',
-	                    'FILE_LIMIT',
-	                    'FILE_WARNING',
-	                    'FILE_CAUTION',
-	                    'THREAD_LIMIT',
-	                    'THREAD_WARNING',
-	                    'THREAD_CAUTION',
-	                    'CHANGE_LIMIT',
-	                    'DUPE_BACK',
-	                    'CHAIN_POST',
-	                    'CHAIN_TIME',
-	                    'FILE_LOCK',
-	                   );
-
-	foreach my $item(@number_only){
-		return 0 unless($$conf{$item}=~m/^\d+$/);
-	}
-
-	# 代入系チェック
-	return 0 if ($$conf{'BBS_NAME'}   eq '');
-	return 0 if ($$conf{'NO_NAME'}    eq '');
-	return 0 if ($$conf{'NO_TITLE'}   eq '');
-	return 0 if ($$conf{'KILL_NAME'}  eq '');
-	return 0 if ($$conf{'KILL_TITLE'} eq '');
-	return 0 if ($$conf{'TRIP_KEY'}   eq '');
-
-	# 飽和系チェック
-	$$conf{'THREAD_LENGTH_MAX'}  = 5   if ($$conf{'THREAD_LENGTH_MAX'}  <   5);
-	$$conf{'TITLE_LENGTH_MAX'}   = 5   if ($$conf{'TITLE_LENGTH_MAX'}   <   5);
-	$$conf{'NAME_LENGTH_MAX'}    = 5   if ($$conf{'NAME_LENGTH_MAX'}    <   5);
-	$$conf{'DISPLAY_LAST'}       = 10  if ($$conf{'DISPLAY_LAST'}       <  10);
-	$$conf{'TRIP_INPUT_LENGTH'}  = 5   if ($$conf{'TRIP_INPUT_LENGTH'}  <   5);
-	$$conf{'TRIP_OUTPUT_LENGTH'} = 5   if ($$conf{'TRIP_OUTPUT_LENGTH'} <   5);
-	$$conf{'THREAD_SAVE'}        = 5   if ($$conf{'THREAD_SAVE'}        <   5);
-	$$conf{'BUFFER_LIMIT'}       = 500 if ($$conf{'BUFFER_LIMIT'}       < 500);
-
-	# 整合性チェック
-	return 0 if ($$conf{'FILE_LIMIT'}   <= $$conf{'FILE_WARNING'} or
-	             $$conf{'FILE_WARNING'} <= $$conf{'FILE_CAUTION'}  );
-
-	return 0 if ($$conf{'THREAD_LIMIT'}   <= $$conf{'THREAD_WARNING'} or
-	             $$conf{'THREAD_WARNING'} <= $$conf{'THREAD_CAUTION'}  );
-
-
-	# symlinkファイルロックが利用できないときはロックしない
-	if ($$conf{'FILE_LOCK'} == 1){
-		eval {   symlink("","");   };
-		$$conf{'FILE_LOCK'} = 0 if ($@);
-	}
-
-	return 1;
-}
-
-
-
-##########################################################################
-#                   ファイル、ディレクトリの初期化                       #
-##########################################################################
-sub init{
-
-	# ディレクトリを作る
-	my @directorys = ($main::CONF{'LOG_DIR_PUBLIC'},
-	                  $main::CONF{'LOG_DIR_SECRET'},
-	                  $main::CONF{'LOG_DIR_HTML'}  ,
-	                  $main::CONF{'TEMP_DIR'}      , 
-	                 );
-
-	# 公開用ログと非公開ログを同じディレクトリに保存する場合は
-	# 公開用ログディレクトリを作らない
-	shift(@directorys) if($main::CONF{'LOG_DIR_PUBLIC'} eq $main::CONF{'LOG_DIR_SECRET'});
-
-	# ディレクトリを生成する
-	foreach my $directory(@directorys){
-		my $permission;
-		if ($directory eq $main::CONF{'LOG_DIR_SECRET'}){  $permission = $SECRET_DIR_PERMISSION;  }
-		else {  $permission = $PUBLIC_DIR_PERMISSION;  }
-		chop($directory);
-		unless(mkdir($directory, $permission)){
-			return 0 unless (-d $directory);
-		}
-	}
-
-
-	# ポインタファイルを作る
-	my $pointer_file = pointer_name();
-	unless(-e $pointer_file){
-		return 0 unless(open(FOUT, ">$pointer_file"));
-		print FOUT "0\n";
-		close(FIN);
-	}
-	return 0 unless(chmod($SECRET_FILE_PERMISSION, $pointer_file));
-
-	# スレッド建てすぎブラックリストファイルを作る
-	my $blacklist_file = blacklist_name();
-	#system("touch $blacklist_file");
-	unless(-e $blacklist_file){
-		return 0 unless(open(FOUT, ">$blacklist_file"));
-		close(FOUT);
-	}
-	return 0 unless(chmod($SECRET_FILE_PERMISSION, $blacklist_file));
-
-	# 管理者用パスワードファイルを作る
-	my $password_file = adminpass_name();
-	unless(-e $password_file){
-		return 0 unless(open(FOUT, ">$password_file"));
-		print FOUT "admin:\$1\$fdah\$eEx833FHr9nM6dMvboVou1\n";  # admin/admin
-		close(FOUT);
-	}
-	return 0 unless(chmod($SECRET_FILE_PERMISSION, $password_file));
-
-	# すべて正常終了
-	return 1;
-
-}
-
-
-
+#
+# ログ@logの構造
+#   @log =
+#     [
+#       {
+#         // 以下は配列添字[0]にのみ存在する.
+#         // * 公開ログに出力. ファイル名やファイル情報の値を利用. 添字[0]にしか存在しない
+#         // + 公開ログに出力
+#         // - 非公開ログに出力
+#         // # 通常は公開, 削除されると非公開に出力
+#         // $ 通常は非公開, TOMATOされると公開に出力
+#
+#         THREAD_NO       : * スレッド番号,
+#         SIZE            : * ファイルサイズ(公開ログファイル+秘密ログファイルのバイト数),
+#         LAST_MODIFIED   : * 最終更新時間(epoc),
+#         DAT             : * gzip圧縮されたものかどうか,
+#         THREAD_TITLE    : + スレッド名,
+#         POST            : + 投稿数,
+#         AGE_TIME        : + スレッドがageられた時間(epoc),
+#
+#         BUILDER_IP_ADDR : - スレッドを建てた人のIPアドレス,
+#         BUILDER_IP_HOST : - スレッドを建てた人のホスト名,
+#
+#         DELETE_TIME     : + 削除された時間(epoc),
+#         DELETE_ADMIN    : + 発言を削除した管理者,
+#         TITLE           : # 発言タイトル,
+#         USER_NAME       : # 投稿者氏名,
+#         USER_EMAIL      : # 投稿者e-mail,
+#         USER_WEBPAGE    : # 投稿者webpage,
+#         USER_ID         : # 投稿者固有ID,
+#         TRIP            : # トリップ,
+#         POST_TIME       : # 投稿時間(epoc),
+#         CORRECT_TIME    : # 修正時間(epoc),
+#         BODY            : # 発言本文,
+#
+#         TOMATO          : + IPアドレス表示可否,
+#         IP_ADDR         : $ 投稿者IPアドレス,
+#         IP_HOST         : $ 投稿者ホスト名,
+#         USER_AGENT      : $ 投稿者ユーザエージェント,
+#       },
+#     ]
 
 ##########################################################################
 #                        ログファイルを読み取る                          #
 ##########################################################################
 sub read_log{
-	my $no     = shift(@_); # スレッド番号（純粋に番号のみ）
-	my $log    = shift(@_); # [参照]ログ内容を返す
-	my $all    = shift(@_); # この値が偽の時、スレッド情報だけを読み取る[$lockの値は常に偽とする]
-	my $lock   = shift(@_); # この値が真の時、読み込んだあとファイルロックをかけっぱなしにする。
-	my $gzip   = shift(@_); # この値が真の時、gzip圧縮がかかっているログファイルも読む。
+	my $no     = shift; # スレッド番号
+	my $log    = shift; # [参照]ログ内容(これに読み取った内容が反映される)
+	my $all    = shift; # この値が偽の時、スレッド情報だけを読み取る[このとき$lockの値は無視される]
+	my $lock   = shift; # この値が真の時、読み込んだあとファイルロックをかけっぱなしにする
+	my $gzip   = shift; # この値が真の時、gzip圧縮がかかっているログファイルも読む
 
-	# ログファイルが保存されているディレクトリを取得
-	my ($log_public, $log_secret, $lock_public, $lock_secret);
-	$log_public = $lock_public = public_name($no);    # ログ[公開部]
-	$log_secret = $lock_secret = secret_name($no);    # ログ[非公開部]
+	# ログファイルを作成.
+	my ($log_public, $log_secret);
+	$log_public = public_name($no);    # ログ[公開部]
+	$log_secret = secret_name($no);    # ログ[非公開部]
 
-
-	# ログファイルを探索する
-	# ログファイルがないときはgzip圧縮されたログファイル名を取得
-	unless(-f $log_public and -f $log_secret){
-		return 0 unless($gzip);                # gzip処理をしない場合は終了
-		$lock_public .= ".$EXT_GZIP";
-		$lock_secret .= ".$EXT_GZIP";
-		return 0 unless(-f $lock_public and -f $lock_secret);
+	# ログファイルが見つかった時は, gunzip処理はしなくてよい.
+	# ログファイルが見つからず, gunzip処理をしないときは終了.
+	if(-f $log_public and -f $log_secret){
+		$gzip = 0;
 	}else{
-		$gzip = 0;	# 通常のファイルが見つかった時はgzip処理はしなくていい
+		return 0 unless($gzip);
 	}
+
+	# gzip展開をし, その展開されたログファイルを処理するようにする
+	if ($gzip){
+
+		# 過去ログをgzip展開
+		gunzip($no);
+
+		# gzipに失敗したときは終了
+		$log_public = gunzip_public_name($no);
+		$log_secret = gunzip_secret_name($no);
+		return 0 unless(-f $log_public and -f $log_secret);
+
+	}
+
 
 	# ログ[公開部／非公開部]をロックする
-	return 0 unless(filelock($lock_public));
-	unless(filelock($lock_secret)){
-		clear($no);   return 0;
-	}
-
-
-	# gzip展開をし展開されたログファイル名を取得
-	if ($gzip){
-		gunzip($no);                                # gzip展開
-		$log_public = gz_public_name($no);          # gzip展開した時のログ[公開部]
-		$log_secret = gz_secret_name($no);          # gzip展開した時のログ[非公開部]
-		unless(-f $log_public and -f $log_secret){  # gzip展開されていない時は終了
+	#   ・gzip展開したときはロックなし
+	unless ($gzip){
+		return 0 unless(filelock($log_public));
+		unless(filelock($log_secret)){
+			clear($no);
 			return 0;
-			clear($no);  return 0;
 		}
 	}
-
 
 	# ファイル情報を入手
 	my @stat_public = stat($log_public);
@@ -370,7 +131,9 @@ sub read_log{
 	$$log[0]{'THREAD_NO'}     = $no;                                    # スレッド番号
 	$$log[0]{'SIZE'}          = $stat_public[7] + $stat_secret[7];      # ファイルサイズ
 	$$log[0]{'LAST_MODIFIED'} = $stat_public[9];                        # 最終更新時間
-	$$log[0]{'DAT'}           = ($log_public eq $lock_public) ? 0 : 1;  # gzipのログかどうか
+	$$log[0]{'DAT'}           = $gzip;                                  # gzipのログかどうか
+
+
 
 
 	# ログ[公開部／非公開部]を開く
@@ -397,8 +160,8 @@ sub read_log{
 	unless($all){
 		close(FIN_S);
 		close(FIN_P);
-		clear($no, 0);  # スレッド情報だけを読む場合は必ずロックを
-		return 1;       # 解除することに注意[上書きをしないため]
+		clear($no, 0);  # ロック解除
+		return 1;
 	}
 
 
@@ -442,9 +205,11 @@ sub read_log{
 	}
 	close(FIN_S);
 
+
 	# ログファイル整合性チェック
 	$error_flag = 1 unless($count_public == $count_secret and $count_secret == $$log[0]{'POST'});
 	if($error_flag){
+		print "AA\n";
 		clear($no); return 0;
 	}
 
@@ -498,10 +263,10 @@ sub read_log{
 
 				# 記録されている発言番号と読み出している発言の数が
 				# あっているかチェックする
-				return undef unless ($count == $value);                    # 不正
+				return undef unless ($count == $value);                    # ログが正常なら未到達
 				if (defined($$log[$count]{'NO'})){
-					return undef unless ($$log[$count]{'NO'} == $value);   # 不正
-					$$log[$count]{'NO'} = $value;                          # or $count ; あまり意味がない
+					return undef unless ($$log[$count]{'NO'} == $value);   # ログが正常なら未到達
+					$$log[$count]{'NO'} = $value;
 				}
 				next loop;
 			}
@@ -526,14 +291,14 @@ sub read_log{
 
 		my $body = '';
 		for(;;){
-			return undef if(eof(FIN));        # ゴルア！
+			return undef if(eof(FIN));        # ログが正常なら未到達
 			my $read = <FIN>;
 			chomp($read);
 			if ($read eq '&&'){               # 区切り記号まで読んだ
 				chomp($body);
 				return $body;
 			}
-			return undef if ($read eq '&');   # ゴルア！
+			return undef if ($read eq '&');   # ログが正常なら未到達
 			$body .= "$read\n";
 		}
 	}
@@ -551,64 +316,39 @@ sub gunzip{
 	my $no   = shift;
 	my $lock = shift;  # 真の時、ロックをかける
 
-	# コピー元フルパス
-	my $gzip_log_public_from = public_name($no) . ".$EXT_GZIP";
-	my $gzip_log_secret_from = secret_name($no) . ".$EXT_GZIP";
+	# コピー元
+	my $g_pub_from = gzip_public_name($no);
+	my $g_sec_from = gzip_secret_name($no);
 
-	# ファイルロック
-	if ($lock){
-		return 0 unless(filelock($gzip_log_public_from) and
-		                filelock($gzip_log_secret_from)      );
-	}
+	# コピー先
+	my $t_pub = tmp_public_name($no);
+	my $t_sec = tmp_secret_name($no) ;
 
-	# コピー先ディレクトリ
-	my $gzip_log_public_to = gz_public_name($no) . ".$EXT_GZIP";
-	my $gzip_log_secret_to = gz_secret_name($no) . ".$EXT_GZIP";
+	# コピー先をgunzipしたもの
+	my $g_pub_to = gunzip_public_name($no) ;
+	my $g_sec_to = gunzip_secret_name($no) ;
+
+	# ファイルがない場合は処理しない
+	return unless (-f $g_pub_from and -f $g_sec_from);
 
 	# テンポラリ用ディレクトリにコピー
-	copy($gzip_log_public_from, $gzip_log_public_to);
-	copy($gzip_log_secret_from, $gzip_log_secret_to);
-####	system("cp $gzip_log_public_from $gzip_log_public_to");
-####	system("cp $gzip_log_secret_from $gzip_log_secret_to");
-
-	# ファイルロック解除
-	unlock($gzip_log_public_from);
-	unlock($gzip_log_secret_from);
+	copy($g_pub_from, $t_pub);
+	copy($g_sec_from, $t_sec);
 
 	# gzip展開
-####	system("gunzip $gzip_log_public_to");
-####	system("gunzip $gzip_log_secret_to");
-	rename($gzip_log_public_to, gz_public_name($no));
-	rename($gzip_log_secret_to, gz_secret_name($no));
+	#   Unixの場合のみ, Windowsの場合はファイル名を変えるだけ
+	if ($ENV{'SERVER_SOFTWARE'} =~m/Unix/){
+		system("gunzip $t_pub");
+		system("gunzip $t_sec");
+	}else{
+		rename($t_pub, $g_sec_to);
+		rename($t_sec, $g_sec_to);
+	}
+
 
 }
 
 
-#
-#   gzip圧縮されているログファイルを展開する
-#
-sub gunzip_only{
-	my $no = shift;
-
-	# 展開するログファイル
-	my $gzip_log_public = public_name($no) . ".$EXT_GZIP";
-	my $gzip_log_secret = secret_name($no) . ".$EXT_GZIP";
-
-	# ファイルロック
-	return 0 unless(filelock($gzip_log_public) and filelock($gzip_log_secret));
-
-	# gzip展開
-####	system("gunzip $gzip_log_public");
-####	system("gunzip $gzip_log_secret");
-	rename($gzip_log_public, public_name($no));
-	rename($gzip_log_secret, secret_name($no));
-
-	# ファイルロック解除
-	unlock($gzip_log_public);
-	unlock($gzip_log_secret);
-
-	return 1;
-}
 
 
 #
@@ -616,17 +356,33 @@ sub gunzip_only{
 #
 sub gzip{
 	my $no = shift;
+
+	# gzipするファイル
 	my $log_public = public_name($no);
 	my $log_secret = secret_name($no);
 
+	# gzipされたあとのファイル名
+	my $gz_public = gzip_public_name($no);
+	my $gz_secret = gzip_secret_name($no);
+
+	# ファイルロックする
 	return 0 unless(filelock($log_public) and filelock($log_secret));
 
-####	system('gzip $log_public');
-####	system('gzip $log_secret');
-	rename($log_public, "$log_public.$EXT_GZIP") or return 0;
-	rename($log_secret, "$log_secret.$EXT_GZIP") or return 0;
-	unlock($log_public) or return 0;
-	unlock($log_secret) or return 0;
+	# gzip圧縮
+	#   Unixの場合のみ, Windowsの場合はファイル名を変えるだけ
+	if ($ENV{'SERVER_SOFTWARE'} =~m/Unix/){
+		system("gzip $log_public");
+		system("gzip $log_secret");
+	}else{
+		rename($log_public, $gz_public);
+		rename($log_secret, $gz_secret);
+	}
+
+	return 0 unless(-f $gz_public and -f $gz_secret);
+
+	# ロック解除
+	clear($no);
+
 	return 1;
 }
 
@@ -638,21 +394,17 @@ sub gzip{
 #   ロックファイルを削除する
 #
 sub clear{
-	my $no   = shift;  # 発言番号
-	my $lock = shift;  # ロックを解除するかどうか？
-	                   #（偽なら解除；デフォルト動作をロック解除とするため）
+	my $no   = shift;      # スレッド番号
+	my $contLock = shift;  # ロックは削除しない
 
-	# ロックを解除する
-	unless($lock){
+	unless ($contLock){
 		unlock(public_name($no));
 		unlock(secret_name($no));
-		unlock(public_name($no) . ".$EXT_GZIP");
-		unlock(secret_name($no) . ".$EXT_GZIP");
 	}
-
-	# gzip展開したログファイルを削除する
-	unlink(gz_public_name($no));
-	unlink(gz_secret_name($no));
+	unlink(tmp_public_name($no));
+	unlink(tmp_secret_name($no));
+	unlink(gunzip_public_name($no));
+	unlink(gunzip_secret_name($no));
 
 }
 
@@ -667,23 +419,23 @@ sub thread_read{
 	my $lock   = shift;   # 未使用
 
 	# （公開）ログディレクトリからログファイル名一覧を読み込む
-	return undef unless(opendir (DIR, $main::CONF{'LOG_DIR_PUBLIC'}));
+	return undef unless(opendir (DIR, $CONF->{'system'}->{'log'}->{'public'}));
 	my @filenames = readdir(DIR);
 	closedir(DIR);
-	my @logfiles = grep(/^\d+\.$EXT_PUBLIC\.$EXT_LOG$/, @filenames);
+
+	my @logfiles = grep(/^\d+\.${constants::EXT_PUBLIC}\.${constants::EXT_LOG}$/, @filenames);
 	if ($gzip){
-		push(@logfiles, grep(/^\d+\.$EXT_PUBLIC\.$EXT_LOG\.$EXT_GZIP$/, @filenames));
+		push(@logfiles, grep(/^\d+\.${constants::EXT_PUBLIC}\.${constants::EXT_LOG}\.${constants::EXT_GZIP}$/, @filenames));
 	}
 
 	# それをスレッド番号に変換する
 	my @thread_no = map { $_=~s/^(\d+).*/$1/; $_=$1; } @logfiles;
 
-
 	# データを全部読み込む
 	my $c = 0;    # $c is counter.
 	foreach my $no(@thread_no){
 		my @log;
-		next unless(file::read_log($no, \@log, 0, 0, 1));
+		next unless(read_log($no, \@log, 0, 0, 1));
 		        # ロックをかけない、ヘッダ部分だけを読む、gz圧縮対応をする
 		push(@$thread, $log[0]);
 		$c++;
@@ -735,7 +487,7 @@ sub write_log{
 			print FOUT "USER_NAME<>$$log{'USER_NAME'}\n";                             # 投稿者氏名
 			print FOUT "USER_EMAIL<>$$log{'USER_EMAIL'}\n";                           # 投稿者e-mail
 			print FOUT "USER_WEBPAGE<>$$log{'USER_WEBPAGE'}\n";                       # 投稿者webpage
-			print FOUT "USER_ID<>$$log{'USER_ID'}\n" if (defined($$log{'USER_ID'})); # 投稿者固有ID
+			print FOUT "USER_ID<>$$log{'USER_ID'}\n" if (defined($$log{'USER_ID'}));  # 投稿者固有ID
 			print FOUT "TRIP<>$$log{'TRIP'}\n" if (defined($$log{'TRIP'}));           # トリップ
 		}
 
@@ -809,8 +561,8 @@ sub write_log{
 	close(TEMP);
 
 	# ログファイル更新
-	chmod($PUBLIC_FILE_PERMISSION, $temp_public);
-	chmod($SECRET_FILE_PERMISSION, $temp_secret);
+	chmod($constants::PUBLIC_FILE_PERMISSION, $temp_public);
+	chmod($constants::SECRET_FILE_PERMISSION, $temp_secret);
 	return 1 if (renew($log_public) and renew($log_secret));
 
 	# 更新失敗
@@ -833,7 +585,7 @@ sub create_bbshtml{
 	my $thread      = shift;   # スレッド情報[参照]
 
 	# bbs.html をロックする
-	my $bbs_html = "./$BBS_TOP_PAGE_FILE";
+	my $bbs_html = "./$constants::BBS_TOP_PAGE_FILE";
 	return 0 unless (filelock($bbs_html));
 
 	# bbs.htmlヘッダ作成
@@ -1029,7 +781,7 @@ sub write_pointer{
 	}
 	print TEMP "$pointer\n";
 	close(TEMP);
-	chmod($SECRET_FILE_PERMISSION, $pointer_temp);
+	chmod($constants::SECRET_FILE_PERMISSION, $pointer_temp);
 	return renew($pointer_file);
 }
 
@@ -1072,7 +824,7 @@ sub write_overbuilder{
 		print TEMP "$line\n";
 	}
 	close(TEMP);
-	chmod($SECRET_FILE_PERMISSION, $tempfile);
+	chmod($constants::SECRET_FILE_PERMISSION, $tempfile);
 	return renew($filename);
 }
 
@@ -1116,7 +868,7 @@ sub write_adminpass{
 		print TEMP "$user:$pass\n";
 	}
 	close(TEMP);
-	chmod($file::SECRET_FILE_PERMISSION, $pass_temp);
+	chmod($constants::SECRET_FILE_PERMISSION, $pass_temp);
 	return renew($pass_file);
 
 }
@@ -1129,14 +881,14 @@ sub filelock{
 	my $filename = shift;                  # ロックするファイル名
 
 	return 0 unless(-f $filename);
-	return 1 if ($main::CONF{'FILE_LOCK'} == 0);            # ファイルロックなし
+	return 1 if ($CONF->{'system'}->{'fileLock'} == 0);            # ファイルロックなし
 
 	my $lockfile = lock_name($filename);
 	foreach (1..10){
 
 		unless(lock_check($filename)){
 
-			if ($main::CONF{'FILE_LOCK'} == 1){     # symlinkロック
+			if ($CONF->{'system'}->{'fileLock'} == 1){     # symlinkロック
 				my $lock_ok;
 				eval "$lock_ok = symlink($filename, $lockfile)";
 				return 0 if ($@);
@@ -1147,11 +899,9 @@ sub filelock{
 
 			}
 		}
-		if ($TIME_HIRES_OK){
-			sleep(0.1);	# 0.1秒待つ(Time::Hires利用)
-		}else{
-			sleep(1);	# 1秒待つ(通常)
-		}
+
+		# 0.1秒待つ(Time::Hires利用)
+		sleep(0.1);
 	}
 	return 0;
 }
@@ -1162,10 +912,10 @@ sub filelock{
 ##########################################################################
 sub lock_check{
 
-	if ($main::CONF{'FILE_LOCK'} == 0){      # ファイルロックなし
+	if ($CONF->{'system'}->{'fileLock'} == 0){      # ファイルロックなし
 		return 1;
 
-	}elsif ($main::CONF{'FILE_LOCK'} == 1){  # symlinkロック
+	}elsif ($CONF->{'system'}->{'fileLock'} == 1){  # symlinkロック
 		return (-l lock_name(shift));
 
 	}else{                                   # mkdirロック
@@ -1179,10 +929,10 @@ sub lock_check{
 #                       ファイルのロックを解除する                       #
 ##########################################################################
 sub unlock{
-	if ($main::CONF{'FILE_LOCK'} == 0){      # ファイルロックなし
+	if ($CONF->{'system'}->{'fileLock'} == 0){      # ファイルロックなし
 		return 1;
 
-	}elsif ($main::CONF{'FILE_LOCK'} == 1){  # symlinkロック
+	}elsif ($CONF->{'system'}->{'fileLock'} == 1){  # symlinkロック
 		return unlink(lock_name(shift));
 
 	}else{                                   # rmdirロック
@@ -1204,13 +954,11 @@ sub renew{
 	# 更新に必要なファイルがそろっているかチェックする
 	return 0 unless (-e $filename);
 	return 0 unless (-e $tempfile);
-#	return 0 unless (lock_check($filename));
 
 	# 変換
 	move($tempfile, $filename);    # 更新
-#	rename($tempfile, $filename);  
 
-	if ($main::CONF{'FILE_LOCK'} == 2){   # ロック解除（rmdir利用の場合）
+	if ($CONF->{'system'}->{'fileLock'} == 2){   # ロック解除（rmdir利用の場合）
 		rmdir($lockfile);
 	}else{                                # ロック解除（その他）
 		unlink($lockfile);
@@ -1233,7 +981,10 @@ sub renew{
 #
 sub public_name{
 	my $no = shift;
-	return "$main::CONF{'LOG_DIR_PUBLIC'}$no.$EXT_PUBLIC.$EXT_LOG";
+	return sprintf("%s%d.%s.%s",
+		$CONF->{'system'}->{'log'}->{'public'}, $no,
+		$constants::EXT_PUBLIC, $constants::EXT_LOG
+	);
 }
 
 
@@ -1242,26 +993,63 @@ sub public_name{
 #
 sub secret_name{
 	my $no = shift;
-	return "$main::CONF{'LOG_DIR_SECRET'}$no.$EXT_SECRET.$EXT_LOG";
+	return sprintf("%s%d.%s.%s",
+		$CONF->{'system'}->{'log'}->{'secret'}, $no,
+		$constants::EXT_SECRET, $constants::EXT_LOG
+	);
 }
 
+#
+# gzip圧縮した公開ログファイル名を生成する
+#
+sub gzip_public_name{
+	return public_name(shift) . '.' . $constants::EXT_GZIP;
+}
+#
+# gzip圧縮した非公開ログファイル名を生成する
+#
+sub gzip_secret_name{
+	return secret_name(shift) . '.' . $constants::EXT_GZIP;
+}
 
 #
-# gzip圧縮を解除した公開ログファイル名を生成する
+# gzip圧縮を解除して*テンポラリに展開した*公開ログファイル名を生成する
 #
-sub gz_public_name{
+sub gunzip_public_name{
 	my $no = shift;
-	return "$main::CONF{'TEMP_DIR'}$no.$EXT_PUBLIC.$EXT_LOG";
+	return sprintf("%s%d.%s.%d.%s",
+		$CONF->{'system'}->{'tmp'}, $no,
+		$constants::EXT_PUBLIC, $$, $constants::EXT_LOG
+	);
 }
 
 
 #
-# gzip圧縮を解除した非公開ログファイル名を生成する
+# gzip圧縮を解除して*テンポラリに展開した*非公開ログファイル名を生成する
 #
-sub gz_secret_name{
+sub gunzip_secret_name{
 	my $no = shift;
-	return "$main::CONF{'TEMP_DIR'}$no.$EXT_SECRET.$EXT_LOG";
+	return sprintf("%s%d.%s.%d.%s",
+		$CONF->{'system'}->{'tmp'}, $no,
+		$constants::EXT_SECRET, $$, $constants::EXT_LOG
+	);
 }
+
+
+#
+# *テンポラリにコピーされた*gzip圧縮の公開ログファイル名を生成する
+#
+sub tmp_public_name{
+	return gunzip_public_name(shift) . '.' . $constants::EXT_GZIP;
+}
+#
+# *テンポラリにコピーされた*gzip圧縮の非公開ログファイル名を生成する
+#
+sub tmp_secret_name{
+	return gunzip_secret_name(shift) . '.' . $constants::EXT_GZIP;
+}
+
+
 
 
 #
@@ -1269,7 +1057,11 @@ sub gz_secret_name{
 #
 sub lock_name{
 	my $filename = shift;
-	return $main::CONF{'TEMP_DIR'} . sha1_hex($filename) . ".$EXT_LOCK";
+	return sprintf("%s%s.%s",
+		$CONF->{'system'}->{'tmp'},
+		sha1_hex($filename),
+		$constants::EXT_LOCK
+	);
 }
 
 
@@ -1278,7 +1070,11 @@ sub lock_name{
 #
 sub temp_name{
 	my $filename = shift;
-	return $main::CONF{'TEMP_DIR'} . sha1_hex($filename) .  ".$EXT_TEMP";
+	return sprintf("%s%s.%s",
+		$CONF->{'system'}->{'tmp'},
+		sha1_hex($filename),
+		$constants::EXT_TEMP
+	);
 }
 
 
@@ -1286,7 +1082,7 @@ sub temp_name{
 # ポインタファイル名を生成する
 #
 sub pointer_name{
-	return $main::CONF{'LOG_DIR_SECRET'} . $POINTER_FILE;
+	return $CONF->{'system'}->{'log'}->{'secret'} . $constants::POINTER_FILE;
 }
 
 
@@ -1294,15 +1090,7 @@ sub pointer_name{
 # スレッド建てすぎブラックリストファイル名を生成する
 #
 sub blacklist_name{
-	return $main::CONF{'LOG_DIR_SECRET'} . $BLACKLIST_FILE;
-}
-
-
-#
-# コンフィグファイル名を生成する
-#
-sub config_name{
-	return $CONFIG_DIR . $CONFIG_FILE;
+	return $CONF->{'system'}->{'log'}->{'secret'} . $constants::BLACKLIST_FILE;
 }
 
 
@@ -1310,7 +1098,10 @@ sub config_name{
 # HTML化済みのログファイル名を作成する
 #
 sub html_name{
-	return $main::CONF{'LOG_DIR_HTML'} . shift() . '.html';
+	return sprintf("%s%d.%s",
+		$CONF->{'system'}->{'log'}->{'html'} ,
+		shift , $constants::EXT_HTML
+	);
 }
 
 
@@ -1318,13 +1109,8 @@ sub html_name{
 # 管理者パスワードファイル名を生成する
 #
 sub adminpass_name{
-	return "$main::CONF{'LOG_DIR_SECRET'}$PASSWORD_FILE";
+	return $CONF->{'system'}->{'log'}->{'secret'} . $constants::ADMIN_PASSWORD_FILE;
 }
-
-##########################################################################
-#                               試験用領域                               #
-##########################################################################
-
 
 
 1;

@@ -5,24 +5,8 @@
 #
 use strict;
 package std;
+use Digest::SHA1 qw(sha1_base64);
 
-
-use lib '/home/sarinaga/lib/i386-freebsd';
-use Digest::SHA1 qw(sha1 sha1_hex sha1_base64);
-BEGIN{
-	use vars qw($ENCODE_OK);
-	eval "use Encode qw(from_to);";
-	eval "use Encode::Guess qw(euc-jp shiftjis 7bit-jis);" if (!$@);
-	if (!$@){
-		$ENCODE_OK = 1;
-
-	}else{
-		$ENCODE_OK = 0;
-		require './jcode.pl';
-	}
-}
-use vars qw($REMOTE_HOST);
-$REMOTE_HOST = undef;
 
 
 
@@ -32,11 +16,15 @@ $REMOTE_HOST = undef;
 #  このプログラムは http://www.futomi.com/subroutine/ の               #
 #  サブ・ルーチン集のソースを改良したものを利用しています              #
 ########################################################################
-sub gethost{
+use vars qw($REMOTE_HOST);
+$REMOTE_HOST = undef;
+sub getHostname{
 
+	# 一度取得したら二度と問い合わせをしない(処理コストが高いため)
 	return $REMOTE_HOST if (defined($REMOTE_HOST));
 
-	if ($ENV{'REMOTE_HOST'} eq '' or
+	if (defined($ENV{'REMOTE_HOST'})  or
+	    $ENV{'REMOTE_HOST'} eq '' or
 	    $ENV{'REMOTE_HOST'} eq $ENV{'REMOTE_ADDR'} ){
 
 		my $ip_address = $ENV{'REMOTE_ADDR'};
@@ -68,7 +56,8 @@ sub html_escape{
 	$data =~s/&/&amp;/g;
 	$data =~s/</&lt;/g;
 	$data =~s/>/&gt;/g;
-	$data =~s/'/&#39;/g;
+	$data =~s/"/&quot;/g;
+	$data =~s/'/&apos;/g;
 	return $data;
 }
 
@@ -81,16 +70,19 @@ sub html_unescape{
 	$data =~s/&lt;/</g;
 	$data =~s/&gt;/>/g;
 	$data =~s/&amp;/&/g;
+	$data =~s/&quot;/"/g;
+	$data =~s/&apos;/'/g;
 	return $data;
 }
 
 
 ########################################################################
 #                               シュレッダー                           #
-#                         多バイトコートには未対応                     #
-#                        html_escape との併用不可能                    #
+#                                                                      #
+# ・文字列の一部を数値文字参照にします.                                #
+# ・html_escape 後との併用できないので注意.                            #
 ########################################################################
-sub shredder{
+	sub shredder{
 	my $data = shift;           # 変換したい文字列
 
 	my $len = length($data);
@@ -135,35 +127,16 @@ sub uri_escape{
 #                           URIエスケープ解除                          #
 ########################################################################
 sub uri_unescape{
-	return un_uri_escape(shift);
-}
-sub un_uri_escape{
 	my $arg = shift;	# エスケープを解除したい文字列
 	$arg =~s/%([0-9A-Fa-f][0-9A-Fa-f])/pack("C", hex($1))/eg;
 	return $arg;
 }
 
 
-#########################################################################
-#                            文字コード変換                             #
-#########################################################################
-sub encodeEUC{
-	my $trans = shift;
-	if ($ENCODE_OK){
-		my $encode_type	= guess_encoding($trans);
-		return undef unless(ref($encode_type));
-		my $from = $encode_type->name;
-		my $to = "euc-jp";
-		from_to($trans, $from, $to);
-	}else{
-		jcode::convert(\$trans, "euc");
-	}
-	return $trans;
-}
-
-
 ########################################################################
 #                          暗号種を生成する                            #
+#                                                                      #
+# ・unix_md5_cryptで利用する乱数種を作成する                           #
 ########################################################################
 sub salt{
 	my $salt;
@@ -173,8 +146,9 @@ sub salt{
 	for(my $i=0;$i<$salt_length;++$i){
 		$salt .= $seed[rand(scalar @seed)];
 	}
-	return "\$1\$$salt\$";
+	return $salt;
 }
+
 
 
 ########################################################################
@@ -191,47 +165,6 @@ sub trans_bool{
 
 
 
-
-########################################################################
-#                      文字列数制限(HTML-EUC用)                        #
-########################################################################
-sub strnum_limit_html{
-	my $data   = shift;
-	my $limit = shift;
-	$data = html_unescape($data);
-	$data = strnum_limit_euc($data, $limit);
-	$data = html_escape($data);
-	return $data;
-}
-
-
-########################################################################
-#                          文字列数制限(EUC用)                         #
-#                                                                      #
-# このプログラムは http://www2u.biglobe.ne.jp/%7EMAS/index.html の     #
-# 「Perlで書く」のソースをそのまま利用しています。                     #
-########################################################################
-sub strnum_limit_euc{
-	my $str = shift;	# 文字列
-	my $limit = shift;	# 最大数
-	
-	my $limited_str = '';
-	my $cnt = 0;
-	
-	while( $str =~ m/(
-		[\x00-\x7F]|
-		[\x8E\xA1-\xFE][\xA1-\xFE]|
-		\x8F[\xA1-\xFE][\xA1-\xFE]
-		)/gx
-	) {
-		$cnt++;
-		$limited_str .= $1;
-		if ($limit <= $cnt) {
-			last;
-		}
-	}
-	return $limited_str;
-}
 
 ##########################################################################
 #                        正当なURIかどうか調べる                         #
@@ -349,45 +282,17 @@ sub gtime_format{
 
 
 ##########################################################################
-#                             不規則文字列の作成                         #
+#                    トリップキー作成(write.cgiに移動？)                 #
 ##########################################################################
-sub scramble{
+sub createTripe{
 	my $str  = shift;   # ハッシュ化したい文字列
 	my $salt = shift;   # ハッシュ化キー
-
-	# SALTが指定されなかった場合は乱数で決める
-	$salt = salt() unless(defined($salt));
-
-	# SHA1ハッシュbase64化
-	my $crypted = sha1_base64("$salt$str");
-
-	# 英数文字だけにする
-	$crypted=~s/\W//g;
+	my $crypted = sha1_base64("$salt\$str");
 	return $crypted;
 }
 
 
 
-##########################################################################
-#                           ２進数→１０進数変換                         #
-#                          (Perl5.6.1以前の対応用)                       #
-#                                                                        #
-#  このプログラムは「Perlで書く」                                        #
-#  http://www2u.biglobe.ne.jp/~MAS/perl/waza/210.html のソースを         #
-#  そのまま利用しています。                                              #
-##########################################################################
-sub bin2dec{
-	my $val = shift;
-	my $ret = 0;
-	my $i = 1;
-	foreach my $num (reverse split //, $val) {
-		if ($num == 1) {
-			$ret = $ret + $i;
-		}
-		$i = $i * 2;
-	}
-	return $ret;
-}
 
 
 ##########################################################################
@@ -398,15 +303,18 @@ sub goto404{
 	print << "EOF";
 Content-Type: text/html;
 
-<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
-<HTML><HEAD>
+<!DOCTYPE HTML">
+<HTML>
+<HEAD>
 <TITLE>404 Not Found</TITLE>
-</HEAD><BODY>
+</HEAD>
+<BODY>
 <H1>Not Found</H1>
-The requested URL /bbs/write.cgi was not found on this server.<P>
+The requested URL $ENV{'REQUEST_URI'} was not found on this server.<P>
 <HR>
-<ADDRESS>Apache/1.3.37 Server at www.sarinaga.com Port 80</ADDRESS>
-</BODY></HTML>
+<ADDRESS>$ENV{'SERVER_SOFTWARE'} Server at www.sarinaga.com Port 80</ADDRESS>
+</BODY>
+</HTML>
 EOF
 }
 

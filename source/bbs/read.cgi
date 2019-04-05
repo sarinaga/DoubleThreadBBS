@@ -12,7 +12,7 @@ use CGI;
 BEGIN{
 	if ($ENV{'HTTP_HOST'}){
 		use CGI::Carp qw(carpout);
-		open(LOG, ">../log/error.log") or die "Unable to append to 'error.log': $!\n.";
+		open(LOG, ">../log/error.log");
 		carpout(*LOG);
 	    my $tm = localtime;
 		print LOG strftime("[%Y/%m/%d %H:%M:%S] read.cgi log start.\n", $tm);
@@ -125,11 +125,11 @@ $param{'mode'} |= $html::TITLE   if (std::trans_bool($cgi->param('sub'), 0));
 error_complex() if ( $param{'mode'} & $html::TREE & $html::MESSAGE == 0);
 
 # パラメーター矛盾していたら不正(at, res, rev, tree, mes, sub)
-if ($param{'mode'} & $html::ATONE or 
-    $param{'mode'} & $html::RES   or 
+if ($param{'mode'} & $html::ATONE or
+    $param{'mode'} & $html::RES   or
     $param{'mode'} & $html::REV      ){
-	error_complex() if (defined($cgi->param('tree'))  or 
-	                    defined($cgi->param('mes'))   or 
+	error_complex() if (defined($cgi->param('tree'))  or
+	                    defined($cgi->param('mes'))   or
 	                    defined($cgi->param('sub'))      );
 }
 
@@ -421,7 +421,7 @@ sub mes{
 		if (($mode & $html::TREE) != 0){
 			html::tree(*STDOUT, $log, $param)
 		}else{
-			html::list(*STDOUT, $log, $param) 
+			html::list(*STDOUT, $log, $param)
 		}
 		print "</div>\n\n";
 	}

@@ -9,29 +9,31 @@
 use strict;
 use utf8;
 use CGI;
-use Digest::SHA 'sha512';
+use Crypt::PasswdMD5;
+use Digest::SHA 'sha1';
 use Time::localtime;
 use POSIX qw(strftime);
+
+# ログ出力のヘッダとフッタ
+BEGIN{
+	if ($ENV{'HTTP_HOST'}){
+	    my $tm = localtime;
+		use CGI::Carp qw(carpout);
+		open(LOG, strftime(">../log/error%Y%m.log", $tm));
+		carpout(*LOG);
+	}
+	print LOG "write.cgi log start.\n";
+}
+END{
+	print LOG "write.cgi log end.\n";
+	close(LOG);
+}
 
 require './html.pl';
 require './file.pl';
 require './std.pl';
 require './write.pl';
 
-# ログ出力のヘッダとフッタ
-BEGIN{
-	if ($ENV{'HTTP_HOST'}){
-		use CGI::Carp qw(carpout);
-		open(LOG, ">../log/error.log") or die "Unable to append to 'error.log': $!\n.";
-		carpout(*LOG);
-	print LOG strftime("[%Y/%m/%d %H:%M:%S] write.cgi log start.\n", $tm);
-	}
-}
-END{
-    my $tm = localtime;
-	print LOG strftime("[%Y/%m/%d %H:%M:%S] write.cgi log end.\n", $tm);
-	close(LOG);
-}
 
 # CGI以外の場合は動作させない(簡易的なもの)
 unless($ENV{'HTTP_HOST'}){
@@ -125,7 +127,7 @@ illigal_form() unless($mode eq $writecgi::CREATE or $mode eq $writecgi::REVISE o
                       $mode eq $writecgi::DELETE or $mode eq $writecgi::POST);
 
 
-# 発言修正ができない設定なのにrevise, deleteの要求が来ていたらエラー 
+# 発言修正ができない設定なのにrevise, deleteの要求が来ていたらエラー
 no_change() if (($mode eq $writecgi::DELETE or $mode eq $writecgi::REVISE) and !$CONF{'ACCEPT_CHANGE'});
 
 
@@ -664,7 +666,7 @@ sub check_chain_post{
 	my $ip_host = std::gethost($ip_addr);    # 投稿者IP_HOST
 
 	my $count = 0;  # 自分のIPアドレスがどのくらい出てきたかを数える
-	for(my $i=@$log-1;$i>=0 and 
+	for(my $i=@$log-1;$i>=0 and
 	                  $$log[$i]{'POST_TIME'} >=time() - $CONF{'CHAIN_TIME'} * 60 ;--$i){
 
 		my $last_addr = @{$log[$i]{'IP_ADDR'}} - 1;
