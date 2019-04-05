@@ -9,14 +9,10 @@ use strict;
 
 require './std.pl';
 require './file.pl';
-require './write.pl';
+require './constants.pl';
 
-use vars qw($PROGRAMMER_WEBPAGE $MANUAL_PAGE $ADMIN_PAGE $JAVA_SCRIPT $STYLESHEET);
-$PROGRAMMER_WEBPAGE = 'http://www.sarinaga.com/';  # スクリプト作者のページ
-$MANUAL_PAGE  = 'index.html';                      # インデックスページ
-$ADMIN_PAGE   = 'admin.html';                      # 管理者用ページ
-$JAVA_SCRIPT  = 'bbs.js';                          # javascript
-$STYLESHEET   = 'bbs.css';                         # スタイルシート
+# bbs.conf.json設定値(外部からこのグローバル変数に値をセットすること)
+use vars qw($CONF);
 
 
 use vars qw($TRIP_SEPARETE  $TREE_SPACE  $TREE_BRANCH  $TREE_BRANCH_END  $TREE_NODE);
@@ -36,22 +32,22 @@ $TREE_NODE       = '┣';  # ツリー表示用記号4
 #
 use vars qw($COMPLETE $NO_REVISE $ATONE $RES $REV $TOMATO $TITLE $ADMIN
             $MESSAGE $TREE $IGNORE_KILL $HTML $FINAL $CONST);
-$COMPLETE    = std::bin2dec('0000000000000001');  #「新規投稿」ができない状態（発言数オーバー）
-$NO_REVISE   = std::bin2dec('0000000000000010');  #「発言修正」ができない状態（容量オーバー）
+$COMPLETE    = 0B0000000000000001;  #「新規投稿」ができない状態（発言数オーバー）
+$NO_REVISE   = 0B0000000000000010;  #「発言修正」ができない状態（容量オーバー）
 
-$ATONE       = std::bin2dec('0000000000000100');  # １発言単体表示モードでの発言出力
-$RES         = std::bin2dec('0000000000001000');  # レス発言投稿フォーム用発言出力
-$REV         = std::bin2dec('0000000000010000');  # 発言修正フォーム用発言出力
+$ATONE       = 0B0000000000000100;  # １発言単体表示モードでの発言出力
+$RES         = 0B0000000000001000;  # レス発言投稿フォーム用発言出力
+$REV         = 0B0000000000010000;  # 発言修正フォーム用発言出力
 
-$TOMATO      = std::bin2dec('0000000000100000');  # 強制トマト表示
+$TOMATO      = 0B0000000000100000;  # 強制トマト表示
 
-$TITLE       = std::bin2dec('1000000000000000');  # 通常表示モードでタイトルを表示する
-$MESSAGE     = std::bin2dec('0100000000000000');  # 通常表示モードで発言を表示する
-$TREE        = std::bin2dec('0010000000000000');  # コメントリンクツリー形式で表示する
+$TITLE       = 0B1000000000000000;  # 通常表示モードでタイトルを表示する
+$MESSAGE     = 0B0100000000000000;  # 通常表示モードで発言を表示する
+$TREE        = 0B0010000000000000;  # コメントリンクツリー形式で表示する
 
-$IGNORE_KILL = std::bin2dec('0001000000000000');  # （管理用）強制表示（キルマーク無視、ID、IPアドレスが常に表示される）
-$ADMIN       = std::bin2dec('0001000000000000');  # （管理用）上と同じ
-$HTML        = std::bin2dec('0000100000000000');  # （管理用）HTML用出力
+$IGNORE_KILL = 0B0001000000000000;  # （管理用）強制表示（キルマーク無視、ID、IPアドレスが常に表示される）
+$ADMIN       = 0B0001000000000000;  # （管理用）上と同じ
+$HTML        = 0B0000100000000000;  # （管理用）HTML用出力
 
 $FINAL       = $COMPLETE | $NO_REVISE;  # 一切の変更ができない状態である
 $CONST       = $FINAL;                  # 同上
@@ -264,13 +260,13 @@ sub mes_one{
 	if ($ctrl){
 		print FOUT "<span class='ctrl'>";
 		unless(($mode & $ATONE) !=0){
-			print FOUT "<a href='./$file::READ_SCRIPT?no=$t_no;at=$no'>単発言表示</a>　";
+			print FOUT "<a href='./$constants::READ_CGI?no=$t_no;at=$no'>単発言表示</a>　";
 		}
 		unless(($mode & $COMPLETE) !=0 or ($mode & $RES) !=0){
-			print FOUT "<a href='./$file::READ_SCRIPT?no=$t_no;res=$no'>レスをつける</a>　";
+			print FOUT "<a href='./$constants::READ_CGI?no=$t_no;res=$no'>レスをつける</a>　";
 		}
 		unless(($mode & $REV) !=0){
-			print FOUT "<a href='./$file::READ_SCRIPT?no=$t_no;rev=$no'>発言修正</a>";
+			print FOUT "<a href='./$constants::READ_CGI?no=$t_no;rev=$no'>発言修正</a>";
 		}
 		print FOUT "</span><br />\n";
 	}
@@ -338,7 +334,7 @@ sub message_header{
 		if($mode & $ADMIN){
 			print FOUT "$res番";
 		}elsif ($$param{'st'} > $res){
-			print FOUT "<a href='./$file::READ_SCRIPT?no=$$param{'no'};at=$res'>$res番</a>";
+			print FOUT "<a href='./$constants::READ_CGI?no=$$param{'no'};at=$res'>$res番</a>";
 		}else{
 			print FOUT "<a href='#s$res'>$res番</a>";
 		}
@@ -428,7 +424,7 @@ sub list_header{
 	}elsif((($mode & $TITLE) != 0 and ($mode & $MESSAGE) == 0) or ($mode & $ATONE) != 0 ){
 	                                              # タイトルだけを表示される場合と
 	                                              # 上記、現在表示されている発言以外の場合
-		print FOUT "<a href='./$file::READ_SCRIPT?$$log[0]{'THREAD_NO'};at=$target' class='sub' title='$title'>";
+		print FOUT "<a href='./$constants::READ_CGI?$$log[0]{'THREAD_NO'};at=$target' class='sub' title='$title'>";
 
 	}else{                                        # その他の場合
 		print FOUT "<a href='#s$target' class='sub' title='$title'>";
@@ -458,7 +454,7 @@ sub list_header{
 	print FOUT ' <td class="response">';
 	if (defined($res)){
 		if ($$param{'st'} > $res){
-			print FOUT "<a href='./$file::READ_SCRIPT?no=$$param{'no'};at=$res'>$res番</a>";
+			print FOUT "<a href='./$constants::READ_CGI?no=$$param{'no'};at=$res'>$res番</a>";
 		}else{
 			print FOUT "<a href='#d$res'>$res番</a>";
 		}
@@ -566,7 +562,7 @@ sub title{
 	}elsif((($mode & $TITLE) != 0 and ($mode & $MESSAGE) == 0) or ($mode & $ATONE) != 0 ){
 	                                            # タイトルだけを表示する場合と
 	                                            # 上記、現在表示されている発言以外の場合
-		print FOUT "<a href='./$file::READ_SCRIPT?no=$no;at=$num' class='sub' title='$title'>";
+		print FOUT "<a href='./$constants::READ_CGI?no=$no;at=$num' class='sub' title='$title'>";
 
 	}else{                                      # その他の場合
 		print FOUT "<a href='#s$num' class='sub' title='$title'>";
@@ -644,7 +640,7 @@ sub thread_list{
 		next if ($$t{'DAT'});    # DAT行きデータの時は処理しない
 
 		print FOUT "<tr><td class='no'>$$t{'THREAD_NO'}.</td><td class='thread'>";
-		print FOUT "<a href='./$file::READ_SCRIPT?no=$$t{'THREAD_NO'};ls=$main::CONF{'DISPLAY_LAST'};tree=1;sub=1' ";
+		print FOUT "<a href='./$constants::READ_CGI?no=$$t{'THREAD_NO'};ls=$main::CONF{'DISPLAY_LAST'};tree=1;sub=1' ";
 		print FOUT "class='thread' title='最新$main::CONF{'DISPLAY_LAST'}レスを表示'>";
 
 		my $thread_name = $$t{'THREAD_TITLE'};
@@ -652,9 +648,9 @@ sub thread_list{
 
 		print FOUT "<span title='$thread_name'>$thread_short</span></a>";
 		print FOUT "($$t{'POST'})</td><td class='date'>" . std::time_format($$t{'AGE_TIME'}) . "</td>";
-		print FOUT "<td class='all'><a href='./$file::READ_SCRIPT?no=$$t{'THREAD_NO'}' ";
+		print FOUT "<td class='all'><a href='./$constants::READ_CGI?no=$$t{'THREAD_NO'}' ";
 		print FOUT "title='スレッド$$t{'THREAD_NO'}番、番号順'>全発言表示</a></td>";
-		print FOUT "<td class='titleonly'><a href='./$file::READ_SCRIPT?no=$$t{'THREAD_NO'};sub=1;mes=0;tree=1' ";
+		print FOUT "<td class='titleonly'><a href='./$constants::READ_CGI?no=$$t{'THREAD_NO'};sub=1;mes=0;tree=1' ";
 		print FOUT "title='スレッド$$t{'THREAD_NO'}番、コメント順'>全題名表示</a></td></tr>\n";
 	}
 	print FOUT "\n</tbody></table>\n\n";
@@ -710,7 +706,7 @@ sub link_webpage{
 ###########################################################################
 sub link_top{
 	local(*FOUT) = shift; # 出力先ファイルハンドル
-	print FOUT "<a href='./$file::BBS_TOP_PAGE_FILE'>スレッド一覧</a>　";
+	print FOUT "<a href='./$constants::BBS_TOP'>スレッド一覧</a>　";
 }
 
 
@@ -720,7 +716,7 @@ sub link_top{
 ###########################################################################
 sub link_exit{
 	local(*FOUT) = shift; # 出力先ファイルハンドル
-	print FOUT "<a href='$main::CONF{'EXIT_TO'}'>トップページ</a>　";
+	print FOUT "<a href='$CONF->{'general'}->{'exitTo'}>トップページ</a>　";
 }
 
 
@@ -731,7 +727,7 @@ sub link_exit{
 sub link_all{
 	local(*FOUT) = shift; # 出力先ファイルハンドル
 	my $no       = shift; # スレッド番号
-	print FOUT "<a href='./$file::READ_SCRIPT?no=$no' title='スレッド$no番、番号順'>全発言表示</a>　";
+	print FOUT "<a href='./$constants::READ_CGI?no=$no' title='スレッド$no番、番号順'>全発言表示</a>　";
 }
 
 
@@ -742,7 +738,7 @@ sub link_all{
 sub link_title{
 	local(*FOUT) = shift; # 出力先ファイルハンドル
 	my $no       = shift; # スレッド番号
-	print FOUT "<a href='./$file::READ_SCRIPT?no=$no;sub=1;mes=0;tree=1' title='スレッド$no番、コメント順'>全題名表示</a>　";
+	print FOUT "<a href='./$constants::READ_CGI?no=$no;sub=1;mes=0;tree=1' title='スレッド$no番、コメント順'>全題名表示</a>　";
 }
 
 
@@ -756,7 +752,7 @@ sub link_new{
 sub link_new100{
 	local(*FOUT) = shift; # 出力先ファイルハンドル
 	my $no       = shift; # スレッド番号
-	print FOUT "<a href='./$file::READ_SCRIPT?no=$no;ls=$main::CONF{'DISPLAY_LAST'};sub=1;tree=1'>最新$main::CONF{'DISPLAY_LAST'}レス表示</a>　";
+	print FOUT "<a href='./$constants::READ_CGI?no=$no;ls=$CONF->{'general'}->{'displayLast'};sub=1;tree=1'>最新$CONF->{'general'}->{'displayLast'}レス表示</a>　";
 }
 
 
@@ -766,7 +762,7 @@ sub link_new100{
 ###########################################################################
 sub link_adminmode{
 	local(*FOUT) = shift; # 出力先ファイルハンドル
-	print FOUT "<a href='./$ADMIN_PAGE'>管理モード</a>　";
+	print FOUT "<a href='./$constants::ADMIN_CGI'>管理モード</a>　";
 }
 
 
@@ -776,7 +772,7 @@ sub link_adminmode{
 ###########################################################################
 sub link_adminmail{
 	local(*FOUT) = shift; # 出力先ファイルハンドル
-	print FOUT "<a href='mailto:$main::CONF{'ADMIN_MAIL'}'>管理者宛メール</a>　";
+	print FOUT "<a href='mailto:$CONF->['general']->{'adminMail'}'>管理者宛メール</a>　";
 }
 
 
@@ -820,7 +816,7 @@ sub link_3set_close{  # 互換のため（関数命名に大失敗）
 #                        パスワード入力文字列生成                         #
 ###########################################################################
 sub pass_message{
-	return sprintf($PASS_MESSAGE, $writecgi::PASS_LENGTH_MIN, $main::CONF{'PASSWORD_LENGTH'});
+	return sprintf($PASS_MESSAGE, $CONF->{'general'}->{'passwordLength'}, 100);
 }
 
 
@@ -850,8 +846,8 @@ HEADER
 
 	# タイトル、base要素、スタイルシート、基本javascriptを出力
 	print FOUT "<base href='$main::CONF{'BASE_HTTP'}' />\n" if ($base);
-	print FOUT "<link rel='stylesheet' type='text/css' href='./$STYLESHEET' />\n";
-	print FOUT "<script type='text/javascript' src='./$JAVA_SCRIPT'></script>\n" if(!$outhtml);
+	print FOUT "<link rel='stylesheet' type='text/css' href='./$constants::STYLESHEET' />\n";
+	print FOUT "<script type='text/javascript' src='./$constants::JAVA_SCRIPT'></script>\n" if(!$outhtml);
 
 	# cookie設定javascriptを出力
 	if ($cookie){
@@ -891,7 +887,7 @@ sub footer{
 	# フッタ部分出力
 	print FOUT '<div class="version" xml:lang="en">';
 	print FOUT "Double Thread BBS version $ver - programed by ";
-	print FOUT "<a href='$PROGRAMMER_WEBPAGE'>";
+	print FOUT "<a href='$constants::PROGRAMMER_WEBPAGE'>";
 	print FOUT "SAYURIN-SENSEI</a></div>\n\n</body>\n\n</html>\n";
 }
 
@@ -923,7 +919,7 @@ sub form_read{
 	print FOUT << "FORM";
 <h3 id='change-mode'>表示形態切り替え</h3>
 
-<form method='get' action='./$file::READ_SCRIPT' class='read' id='read' name='read' onsubmit='return check_read_form(this, $last);'>
+<form method='get' action='./$constants::READ_CGI' class='read' id='read' name='read' onsubmit='return check_read_form(this, $last);'>
 <table class="change-mode">
 
 <tbody>
@@ -969,7 +965,7 @@ FORM
 	# 単体発言表示へのリンク
 	if ($target){
 		print FOUT "<tr><td class='or'>or</td> <td>";
-		print FOUT "<a href='./$file::READ_SCRIPT?no=$no;at=$target'>$kind発言の単体表示</a></td></tr>\n";
+		print FOUT "<a href='./$constants::READ_CGI?no=$no;at=$target'>$kind発言の単体表示</a></td></tr>\n";
 	}
 
 	print FOUT "\n</tbody>\n\n</table>\n\n</form>\n\n";
@@ -983,7 +979,7 @@ FORM
 sub formparts_head{
 	local(*FOUT) = shift;
 	print FOUT << "HTML";
-<form method='post' action='./$file::WRITE_SCRIPT' class='post' id='post' name='post' onsubmit='return check_write_form(this);'>
+<form method='post' action='./$constants::WRITE_CGI' class='post' id='post' name='post' onsubmit='return check_write_form(this);'>
 
 <table class="post">
 <tbody>
@@ -1011,9 +1007,6 @@ HTML
 sub formparts_name{
 	local(*FOUT) = shift;
 	my ($user, $title, $body, $email, $webpage) = @_;
-	#$user  = std::html_unescape($user) if (defined($user));
-	#$title = std::html_unescape($title);
-	#$body  = std::html_unescape($body);
 
 	#
 	# 名前部分
@@ -1230,7 +1223,7 @@ HTML1
 sub formparts_delete{
 	my ($no, $target) = @_;
 	print << "DEL";
-<form method='post' action='./$file::WRITE_SCRIPT' id='d_post' name='d_post' onSubmit='return check_password(document.d_post.pass.value);'>
+<form method='post' action='./$constants::WRITE_CGI' id='d_post' name='d_post' onSubmit='return check_password(document.d_post.pass.value);'>
 <p class="delete">
   <input type="hidden"   name="no" value="$no" />
   <input type="hidden"   name="target" value="$target" />
@@ -1248,6 +1241,90 @@ sub formparts_delete{
 
 DEL
 }
+
+
+###########################################################################
+#                    スレッド情報からbbs.htmlを作成する                   #
+###########################################################################
+sub create_bbshtml{
+	my $thread      = shift;   # スレッド情報[参照]
+
+	# bbs.html をロックする
+	my $bbs_html = "./$constants::BBS_TOP_PAGE_FILE";
+	return 0 unless (filelock($bbs_html));
+
+	# bbs.htmlヘッダ作成
+	my $tempfile = temp_name($bbs_html);
+	return 0 unless(open(FOUT, ">$tempfile"));
+	html::header(*FOUT, 'スレッド一覧表示');
+
+	# bbs.html冒頭説明文出力
+	my $info = '';
+	open(FIN, $writecgi::THREADLIST_INFO);
+	until(eof(FIN)){
+		$info .= <FIN>;
+	}
+	$info = std::encodeEUC($info);
+	print FOUT "<div class='info'>\n\n";
+	print FOUT "$info\n";
+	print FOUT "</div>\n\n";
+	html::hr(*FOUT);
+
+	# リンクバー出力
+	print FOUT "<div class='link'>";
+	print FOUT '<a href="#create-thread">新規スレッド作成</a>　';
+	html::link_exit(*FOUT);
+	html::link_adminmode(*FOUT);
+	html::link_adminmail(*FOUT);
+	print FOUT "</div>\n\n";
+	html::hr(*FOUT);
+
+	# スレッド一覧部分出力
+	print FOUT "<div class='thread'>\n\n";
+	print FOUT "<h3 id='thread'>スレッド一覧</h3>\n\n";
+	html::thread_list(*FOUT, $thread);
+	print FOUT "</div>\n\n";
+	html::hr(*FOUT);
+
+	# リンクバー
+	print FOUT "<div class='link'>";
+	html::link_exit(*FOUT);
+	html::link_adminmode(*FOUT);
+	html::link_adminmail(*FOUT);
+	print FOUT "</div>\n\n";
+	html::hr(*FOUT);
+
+	# 新規スレッド作成フォーム作成
+	print FOUT "<div class='create-thread'>\n\n";
+	print FOUT "<h3 id='create-thread'>新規スレッド作成</h3>\n\n";
+	html::formparts_head(*FOUT);
+	html::formparts_createthread(*FOUT);
+	html::formparts_name(*FOUT, undef, '', '', undef, undef);
+	html::formparts_password(*FOUT, 1, html::pass_message() );
+	html::formparts_age(*FOUT, 0, 1);
+	html::formparts_foot(*FOUT, $html::CREATE, $writecgi::CREATE);
+	print FOUT "</div>\n\n";
+
+	# リンクバー
+	print FOUT "<div class='link'>";
+	html::link_exit(*FOUT);
+	html::link_adminmode(*FOUT);
+	html::link_adminmail(*FOUT);
+	print FOUT "</div>\n\n";
+	html::hr(*FOUT);
+
+	# 末尾部分
+	html::footer(*FOUT);
+	close(FOUT);
+
+	# テンポラリファイルから正式ファイルに変換
+	return renew($bbs_html);
+}
+
+
+
+
+
 
 ###########################################################################
 #                              試験用領域                                 #

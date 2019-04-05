@@ -33,6 +33,31 @@ $EXT_LOCK     = 'lock';    # ロックファイル拡張子
 $EXT_HTML     = 'html';    # 過去ログHTMLの拡張子
 
 
+use vars qw($CREATE $REVISE $DELETE $POST);
+$CREATE = 'create';  # 新規スレッド作成
+$REVISE = 'revise';  # 発言修正
+$DELETE = 'delete';  # 発言削除
+$POST   = 'post';    # 発言投稿
+
+use vars qw($EMAIL $WEB);
+$EMAIL       = 'EMAIL';
+$WEB         = 'WEB';
+
+use vars qw($THREADLIST_INFO $ADMIN_INFO);
+$THREADLIST_INFO = 'template.bbs.html';
+$ADMIN_INFO      = 'template.admin.html';
+
+use vars qw($PROGRAMMER_WEBPAGE $MANUAL_PAGE $ADMIN_PAGE $JAVA_SCRIPT $STYLESHEET);
+$PROGRAMMER_WEBPAGE = 'http://www.sarinaga.com/';  # スクリプト作者のページ
+$MANUAL_PAGE  = 'index.html';                      # インデックスページ(内容はマニュアル)
+$ADMIN_PAGE   = 'admin.html';                      # 管理者用ページ
+$JAVA_SCRIPT  = 'bbs.js';                          # javascript
+$STYLESHEET   = 'bbs.css';                         # スタイルシート
+
+
+
+
+
 
 1;
 

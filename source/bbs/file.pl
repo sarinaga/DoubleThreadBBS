@@ -14,10 +14,7 @@ use Time::HiRes qw(sleep);
 use Crypt::PasswdMD5;
 use Digest::SHA 'sha1_hex';
 
-
 require './constants.pl';
-#require './html.pl';    # create_bbshtml用
-#require './write.pl';   # create_bbshtml用
 
 # bbs.conf.json設定値(外部からこのグローバル変数に値をセットすること)
 use vars qw($CONF);
@@ -309,40 +306,70 @@ sub read_log{
 
 
 #
-#   gzip圧縮されているログファイルをテンポラリ用
-#   ディレクトリに展開する
+#   gzip圧縮されているログファイルを展開する
 #
 sub gunzip{
-	my $no   = shift;
-	my $lock = shift;  # 真の時、ロックをかける
+	my $no   = shift;  # スレッド番号
+	my $where= shift;  # 展開先 0:テンポラリディレクトリ, 1:ログディレクトリ
 
 	# コピー元
-	my $g_pub_from = gzip_public_name($no);
-	my $g_sec_from = gzip_secret_name($no);
+	my ($g_pub_from, $g_sec_from);
+	$g_pub_from = gzip_public_name($no);
+	$g_sec_from = gzip_secret_name($no);
 
-	# コピー先
-	my $t_pub = tmp_public_name($no);
-	my $t_sec = tmp_secret_name($no) ;
+	# コピー元ファイルがない場合は処理しない
+	return 0 unless (-f $g_pub_from or -f $g_sec_from);
 
-	# コピー先をgunzipしたもの
-	my $g_pub_to = gunzip_public_name($no) ;
-	my $g_sec_to = gunzip_secret_name($no) ;
+	# (テンポラリディレクトリへの)コピー先
+	my ($t_pub, $t_sec);
+	unless ($where){
+		$t_pub = gzip_public_name_in_temp($no);
+		$t_sec = gzip_secret_name_in_temp($no) ;
+	}
 
-	# ファイルがない場合は処理しない
-	return unless (-f $g_pub_from and -f $g_sec_from);
+	# gunzipしたログファイル
+	my ($g_pub_to, $g_sec_to);
+	unless ($where){
+		$g_pub_to = gunzip_public_name($no);
+		$g_sec_to = gunzip_secret_name($no);
+	}else{
+		$g_pub_to = public_name($no);
+		$g_sec_to = secret_name($no);
+	}
+
 
 	# テンポラリ用ディレクトリにコピー
-	copy($g_pub_from, $t_pub);
-	copy($g_sec_from, $t_sec);
+	unless ($where){
+		copy($g_pub_from, $t_pub);
+		copy($g_sec_from, $t_sec);
+	}
 
 	# gzip展開
 	#   Unixの場合のみ, Windowsの場合はファイル名を変えるだけ
-	if ($ENV{'SERVER_SOFTWARE'} =~m/Unix/){
-		system("gunzip $t_pub");
-		system("gunzip $t_sec");
+	my $isUnix = $ENV{'SERVER_SOFTWARE'} =~m/Unix/;
+	unless ($where){
+		if ($isUnix){
+			system("gunzip $t_pub");
+			system("gunzip $t_sec");
+		}else{
+			rename($t_pub, $g_pub_to);
+			rename($t_sec, $g_sec_to);
+		}
 	}else{
-		rename($t_pub, $g_sec_to);
-		rename($t_sec, $g_sec_to);
+		if ($isUnix){
+			system("gunzip $g_pub_from");
+			system("gunzip $g_sec_from");
+		}else{
+			rename($g_pub_from, $g_pub_to);
+			rename($g_sec_from, $g_sec_to);
+		}
+
+	}
+
+
+
+	if ($ENV{'SERVER_SOFTWARE'} =~m/Unix/){
+	}else{
 	}
 
 
@@ -401,8 +428,8 @@ sub clear{
 		unlock(public_name($no));
 		unlock(secret_name($no));
 	}
-	unlink(tmp_public_name($no));
-	unlink(tmp_secret_name($no));
+	unlink(gzip_public_name_in_temp($no));
+	unlink(gzip_secret_name_in_temp($no));
 	unlink(gunzip_public_name($no));
 	unlink(gunzip_secret_name($no));
 
@@ -416,7 +443,6 @@ sub clear{
 sub thread_read{
 	my $thread = shift;   # スレッド情報(参照)
 	my $gzip   = shift;   # この値が真のとき、dat化されたスレッドの情報も読み取る
-	my $lock   = shift;   # 未使用
 
 	# （公開）ログディレクトリからログファイル名一覧を読み込む
 	return undef unless(opendir (DIR, $CONF->{'system'}->{'log'}->{'public'}));
@@ -436,7 +462,7 @@ sub thread_read{
 	foreach my $no(@thread_no){
 		my @log;
 		next unless(read_log($no, \@log, 0, 0, 1));
-		        # ロックをかけない、ヘッダ部分だけを読む、gz圧縮対応をする
+		        # ロックをかけつづけない、ヘッダ部分だけを読む、gz圧縮も読む
 		push(@$thread, $log[0]);
 		$c++;
 	}
@@ -534,7 +560,6 @@ sub write_log{
 	unless(open(TEMP,">$temp_secret")){
 		unlock($log_public);
 		unlock($log_secret);
-		return 0;
 	}
 
 	# 非公開部スレッド情報を書き込む
@@ -574,87 +599,6 @@ sub write_log{
 
 
 
-###########################################################################
-#                    スレッド情報からbbs.htmlを作成する                   #
-###########################################################################
-#
-#  このサブルーチンは本来ならwrite.cgiに置かれるべき物ですが、
-#  admin.cgiとの共通利用となるため、file.plに置かれることになります。
-#
-sub create_bbshtml{
-	my $thread      = shift;   # スレッド情報[参照]
-
-	# bbs.html をロックする
-	my $bbs_html = "./$constants::BBS_TOP_PAGE_FILE";
-	return 0 unless (filelock($bbs_html));
-
-	# bbs.htmlヘッダ作成
-	my $tempfile = temp_name($bbs_html);
-	return 0 unless(open(FOUT, ">$tempfile"));
-	html::header(*FOUT, 'スレッド一覧表示');
-
-	# bbs.html冒頭説明文出力
-	my $info = '';
-	open(FIN, $writecgi::THREADLIST_INFO);
-	until(eof(FIN)){
-		$info .= <FIN>;
-	}
-	$info = std::encodeEUC($info);
-	print FOUT "<div class='info'>\n\n";
-	print FOUT "$info\n";
-	print FOUT "</div>\n\n";
-	html::hr(*FOUT);
-
-	# リンクバー出力
-	print FOUT "<div class='link'>";
-	print FOUT '<a href="#create-thread">新規スレッド作成</a>　';
-	html::link_exit(*FOUT);
-	html::link_adminmode(*FOUT);
-	html::link_adminmail(*FOUT);
-	print FOUT "</div>\n\n";
-	html::hr(*FOUT);
-
-	# スレッド一覧部分出力
-	print FOUT "<div class='thread'>\n\n";
-	print FOUT "<h3 id='thread'>スレッド一覧</h3>\n\n";
-	html::thread_list(*FOUT, $thread);
-	print FOUT "</div>\n\n";
-	html::hr(*FOUT);
-
-	# リンクバー
-	print FOUT "<div class='link'>";
-	html::link_exit(*FOUT);
-	html::link_adminmode(*FOUT);
-	html::link_adminmail(*FOUT);
-	print FOUT "</div>\n\n";
-	html::hr(*FOUT);
-
-	# 新規スレッド作成フォーム作成
-	print FOUT "<div class='create-thread'>\n\n";
-	print FOUT "<h3 id='create-thread'>新規スレッド作成</h3>\n\n";
-	html::formparts_head(*FOUT);
-	html::formparts_createthread(*FOUT);
-	html::formparts_name(*FOUT, undef, '', '', undef, undef);
-	html::formparts_password(*FOUT, 1, html::pass_message() );
-	html::formparts_age(*FOUT, 0, 1);
-	html::formparts_foot(*FOUT, $html::CREATE, $writecgi::CREATE);
-	print FOUT "</div>\n\n";
-
-	# リンクバー
-	print FOUT "<div class='link'>";
-	html::link_exit(*FOUT);
-	html::link_adminmode(*FOUT);
-	html::link_adminmail(*FOUT);
-	print FOUT "</div>\n\n";
-	html::hr(*FOUT);
-
-	# 末尾部分
-	html::footer(*FOUT);
-	close(FOUT);
-
-	# テンポラリファイルから正式ファイルに変換
-	return renew($bbs_html);
-}
 
 
 
@@ -951,16 +895,16 @@ sub renew{
 	my $lockfile = lock_name($filename);   # ロックファイル
 	my $tempfile = temp_name($filename);   # テンポラリファイル
 
-	# 更新に必要なファイルがそろっているかチェックする
-	return 0 unless (-e $filename);
+	# 更新元テンポラリファイルが存在しない場合は処理を行わない
 	return 0 unless (-e $tempfile);
 
-	# 変換
-	move($tempfile, $filename);    # 更新
+	# テンポラリファイル→実ファイル変換
+	move($tempfile, $filename);
 
-	if ($CONF->{'system'}->{'fileLock'} == 2){   # ロック解除（rmdir利用の場合）
+	# ロック解除
+	if ($CONF->{'system'}->{'fileLock'} == 2){
 		rmdir($lockfile);
-	}else{                                # ロック解除（その他）
+	}else{
 		unlink($lockfile);
 	}
 
@@ -1039,13 +983,13 @@ sub gunzip_secret_name{
 #
 # *テンポラリにコピーされた*gzip圧縮の公開ログファイル名を生成する
 #
-sub tmp_public_name{
+sub gzip_public_name_in_temp{
 	return gunzip_public_name(shift) . '.' . $constants::EXT_GZIP;
 }
 #
 # *テンポラリにコピーされた*gzip圧縮の非公開ログファイル名を生成する
 #
-sub tmp_secret_name{
+sub gzip_secret_name_in_temp{
 	return gunzip_secret_name(shift) . '.' . $constants::EXT_GZIP;
 }
 
