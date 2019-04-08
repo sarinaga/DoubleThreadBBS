@@ -1,5 +1,5 @@
+#!C:/Perl64/bin/perl -w
 #!/usr/bin/perl -w
-#!c:/Perl/bin/Perl.exe
 #
 #
 # マルチスレッド掲示板 - 書き込みスクリプト
@@ -11,20 +11,19 @@ use utf8;
 use CGI;
 use Digest::SHA 'sha512';
 use Time::localtime;
-use POSIX qw(strftime);
 
 BEGIN{
 	if ($ENV{'HTTP_HOST'}){
+		use POSIX qw(strftime);
 		use CGI::Carp qw(carpout);
-		open(LOG, ">../log/error.log");
+	    my @tm = localtime;
+		open(LOG, strftime(">error%Y%m%d.log", @tm));
 		carpout(*LOG);
-    my $tm = localtime;
-	print LOG strftime("write.cgi log start.\n", $tm);
+	warn "admin.cgi log start.\n";
 	}
 }
 END{
-    my $tm = localtime;
-	print LOG strftime("admin.cgi log end.\n", $tm);
+	warn "admin.cgi log end.\n";
 }
 unless($ENV{'HTTP_HOST'}){
 	print "このプログラムはCGI用です. コマンドラインからの実行はできません. \n";
@@ -34,7 +33,7 @@ unless($ENV{'HTTP_HOST'}){
 require './html.pl';
 require './std.pl';
 require './file.pl';
-require './write.pl';
+require './configReader.pl';
 
 
 #
@@ -88,7 +87,9 @@ $PASSWORD_LENGTH = 8;
 #--------------------------------------------------------------------------
 # コンフィグファイル読み込み
 use vars qw(%CONF);
-no_conf() unless(file::config_read(\%CONF));
+no_conf() unless(configReader::readConfig(\%CONF));
+%html::CONF = %CONF;
+%file::CONF = %CONF;
 
 #--------------------------------------------------------------------------
 #                                 フォーム取得

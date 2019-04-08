@@ -1,5 +1,5 @@
+#!C:/Perl64/bin/perl -w
 #!/usr/bin/perl -w
-#!C:/Perl/bin/perl -w
 #
 #
 # マルチスレッド掲示板 - 書き込みスクリプト
@@ -12,27 +12,26 @@ use CGI;
 use Crypt::PasswdMD5;
 use Digest::SHA 'sha1';
 use Time::localtime;
-use POSIX qw(strftime);
 
 # ログ出力のヘッダとフッタ
 BEGIN{
 	if ($ENV{'HTTP_HOST'}){
-	    my $tm = localtime;
+		use POSIX qw(strftime);
 		use CGI::Carp qw(carpout);
-		open(LOG, strftime(">../log/error%Y%m.log", $tm));
+	    my @tm = localtime;
+		open(LOG, strftime(">error%Y%m%d.log", @tm));
 		carpout(*LOG);
 	}
-	print LOG "write.cgi log start.\n";
+	warn "write.cgi log start.\n";
 }
 END{
-	print LOG "write.cgi log end.\n";
-	close(LOG);
+	warn "write.cgi log end.\n";
 }
 
 require './html.pl';
 require './file.pl';
 require './std.pl';
-require './write.pl';
+require './configReader.pl';
 
 
 # CGI以外の場合は動作させない(簡易的なもの)
@@ -41,15 +40,8 @@ unless($ENV{'HTTP_HOST'}){
 	exit;
 }
 
-
-#--------------------------------------------------------------------------
-#                                    共通変数
-#--------------------------------------------------------------------------
+# CGIクラス利用
 my $cgi = new CGI;
-use vars qw($INIT $INITBAK);
-$INIT    = './init.html';
-$INITBAK = './init.html.bak';
-
 
 #--------------------------------------------------------------------------
 #                             動作環境を読み込み
@@ -57,7 +49,9 @@ $INITBAK = './init.html.bak';
 
 # コンフィグファイル読み込み
 use vars qw(%CONF);
-other() unless(file::config_read(\%CONF));
+error_fail_conf() unless(configReader::readConfig(\%CONF));
+%html::CONF = %CONF;
+%file::CONF = %CONF;
 
 
 #--------------------------------------------------------------------------
@@ -108,12 +102,6 @@ my $title      = std::html_escape($cgi->param('title'));     # 題名
 my $name       = std::html_escape($cgi->param('name'));      # 投稿者名
 my $body       = std::html_escape($cgi->param('body'));      # 本文
 
-
-# 初めて掲示板を動作させるときの初期化処理
-if (std::trans_bool($build)){
-	build() if (-f $INIT);
-	bad_request();
-}
 
 # スレッド再構成以外の場合はPOSTで呼び出さなければいけない
 bad_request()  if ($ENV{'REQUEST_METHOD'} ne 'POST');
@@ -486,43 +474,6 @@ exit;
 
 
 
-
-###########################################################################
-#                    初回掲示板起動時の初期化プロセス                     #
-###########################################################################
-sub build{
-
-	# すでにビルドされているかどうかを判定する
-	my $pointer = file::read_pointer();
-
-	# すでに掲示板が働いている場合は処理を行わない
-	already_build() if (defined($pointer));
-
-	# ディレクトリ、ポインタファイルの作成（初期化）
-	fail_build() unless(file::init());
-
-	# スレッドをあげる操作を行うとbbs.htmlが生成される
-	fail_build() unless(age());
-
-	# admin.htmlファイルの更新を行う
-	fail_build() unless(file::create_adminpage());
-
-	# 終了メッセージ表示
-	html::http_response_header();
-	html::header(*STDOUT , '掲示板初期化処理終了');
-	print "<h2 id='complete-init'>初期化処理終了</h2>\n\n";
-	print "<p>掲示板を初期化しました。以後、掲示板を利用することができます。</p>\n\n";
-	print "<div class='link'>";
-	html::link_exit(*STDOUT);
-	html::link_top(*STDOUT);
-	html::link_adminmail(*STDOUT);
-	print "</div>\n\n";
-	html::footer(*STDOUT);
-
-	# 初期化ファイルの名前を変える
-	rename ($INIT, $INITBAK);
-	exit;
-}
 
 
 ##########################################################################

@@ -46,8 +46,8 @@ $EMAIL       = 'EMAIL';
 $WEB         = 'WEB';
 
 use vars qw($THREADLIST_INFO $ADMIN_INFO);
-$THREADLIST_INFO = './setting/templete.bbs.html';
-$ADMIN_INFO      = './setting/templete.admin.html';
+$THREADLIST_INFO = './setting/bbs.html.templete';
+$ADMIN_INFO      = './setting/admin.html.templete';
 
 use vars qw($PROGRAMMER_WEBPAGE $MANUAL_PAGE $ADMIN_PAGE $JAVA_SCRIPT $STYLESHEET);
 $PROGRAMMER_WEBPAGE = 'http://www.sarinaga.com/';  # スクリプト作者のページ

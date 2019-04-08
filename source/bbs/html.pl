@@ -249,7 +249,7 @@ sub mes_one{
 	# 発言番号～タイトル～ユーザ名～IPアドレス／ユーザID～時間～レス先を表示
 	print FOUT "<dt id='s$no' class='header'>\n";
 	message_header(*FOUT, $no, $log, $param);
-	print FOUT "<br />\n";
+	print FOUT "<br>\n";
 
 	# 単体表示～レスをつける～発言修正の各リンクを表示
 	my $kill = 0;
@@ -271,7 +271,7 @@ sub mes_one{
 		unless(($mode & $REV) !=0){
 			print FOUT "<a href='./$constants::READ_CGI?no=$t_no;rev=$no'>発言修正</a>";
 		}
-		print FOUT "</span><br />\n";
+		print FOUT "</span><br>\n";
 	}
 	print FOUT "</dt>\n\n";
 
@@ -287,7 +287,7 @@ sub mes_one{
 	if ($$log[$no]{'TOMATO'} or ($mode & $TOMATO) !=0 or ($mode & $ADMIN) !=0 ){
 		print FOUT "<dd class='tomato'>\n";
 		for(my $i=0;$i<@{$$log[$no]{'IP_HOST'}};++$i){
-			print FOUT "$$log[$no]{'IP_HOST'}[$i], $$log[$no]{'IP_ADDR'}[$i], $$log[$no]{'USER_AGENT'}[$i]<br />\n";
+			print FOUT "$$log[$no]{'IP_HOST'}[$i], $$log[$no]{'IP_ADDR'}[$i], $$log[$no]{'USER_AGENT'}[$i]<br>\n";
 		}
 		print FOUT "</dd>\n";
 	}
@@ -296,12 +296,12 @@ sub mes_one{
 	if (@correct_time > 0 or defined($dat{'DELETE_TIME'})){
 		print FOUT "<dd class='info'>\n";
 		foreach my $c_time(@correct_time){
-			print FOUT 'この発言は' . std::time_format($c_time) . "に修正されています。<br />\n";
+			print FOUT 'この発言は' . std::time_format($c_time) . "に修正されています。<br>\n";
 		}
 		if (defined($dat{'DELETE_TIME'})){
 			print FOUT 'この発言は' . std::time_format($dat{'DELETE_TIME'}) . 'に';
 			print FOUT "削除人「$dat{'DELETE_ADMIN'}」によって" if (defined($dat{'DELETE_ADMIN'}));
-			print FOUT "削除されています。<br />\n";
+			print FOUT "削除されています。<br>\n";
 		}
 		print FOUT "</dd>\n\n";
 	}
@@ -330,7 +330,7 @@ sub message_header{
 
 	title(*FOUT, $target, $log, $param);
 
-	print FOUT "<br />\n";
+	print FOUT "<br>\n";
 	print FOUT scalar std::time_format($$log[$target]{'POST_TIME'});
 	if (defined($res)){
 		print FOUT '　[';
@@ -348,7 +348,7 @@ sub message_header{
 
 
 #
-# 本文部分の装飾：改行を<br />に、行頭引用符に属性を付け、
+# 本文部分の装飾：改行を<br>に、行頭引用符に属性を付け、
 # 連続空白を&nbsp;に変換
 #
 sub body{
@@ -359,7 +359,7 @@ sub body{
 	$body=~s/\n(&gt;.*)/\n<q class="quote-gt">$1<\/q>/g;
 	$body=~s/\n(\#.*)/\n<q class="quote-sharp">$1<\/q>/g;
 	$body=substr($body,1);
-	$body=~s/\n/<br \/>\n/g;
+	$body=~s/\n/<br>\n/g;
 	return std::trans_space($body);
 }
 
@@ -394,7 +394,7 @@ sub list{
 			print FOUT "</tr>\n";
 		}
 		print FOUT "</tbody></table>\n\n";
-		print FOUT "<hr />\n\n" if ($i<$en_block);
+		print FOUT "<hr>\n\n" if ($i<$en_block);
 	}
 	print FOUT "</div>\n\n";
 
@@ -502,10 +502,10 @@ sub tree{
 	for(my $i=0;$i<@nums;++$i){
 
 		my ($num, $spc, $tree) = split(/:/, $nums[$i], 3);
-		print FOUT "<br />\n" if ($spc == 0 and $i > 0);
+		print FOUT "<br>\n" if ($spc == 0 and $i > 0);
 		print FOUT $tree;
 		title(*FOUT, $num, $log, $param);
-		print FOUT "<br />\n";
+		print FOUT "<br>\n";
 	}
 	print FOUT "</div>\n\n";
 }
@@ -668,7 +668,7 @@ sub link_email{
 	$email = std::shredder("mailto:$email");
 	print FOUT "<a href='$email' title='$name'>";
 	if ($CONF->{'icon'}->{'email'}){
-		print FOUT "<img src='$CONF->{'icon'}->{'email'}' alt='email' />";
+		print FOUT "<img src='$CONF->{'icon'}->{'email'}' alt='email'>";
 	}else{
 		print FOUT '<small>email</small>';
 	}
@@ -688,7 +688,7 @@ sub link_webpage{
 	$webpage = std::shredder($webpage);
 	print FOUT "<a href='http://$webpage' title='$name'>";
 	if ($CONF->{'icon'}->{'web'}){
-		print FOUT "<img src='$CONF->{'icon'}->{'web'}' alt='webpage' />";
+		print FOUT "<img src='$CONF->{'icon'}->{'web'}' alt='webpage'>";
 	}else{
 		print FOUT '<small>webpage</small>';
 	}
@@ -840,8 +840,9 @@ sub header{
 HEADER
 
 	# タイトル、base要素、スタイルシート、基本javascriptを出力
-	print FOUT "<base href='$CONF->{'general'}->{'baseHttp'}' />\n" if ($base);
-	print FOUT "<link rel='stylesheet' type='text/css' href='./$constants::STYLESHEET' />\n";
+	print FOUT "<meta charset='UTF-8'>\n";
+	print FOUT "<base href='$CONF->{'general'}->{'baseHttp'}'>\n" if ($base);
+	print FOUT "<link rel='stylesheet' type='text/css' href='./$constants::STYLESHEET'>\n";
 	print FOUT "<script type='text/javascript' src='./$constants::JAVA_SCRIPT'></script>\n" if(!$outhtml);
 
 	# cookie設定javascriptを出力
@@ -921,22 +922,22 @@ sub form_read{
 
 <!-- 番号等を指定して移動するフォーム部分 -->
 <tr><td rowspan='$span'>
-発言番号 <input type='hidden' name='no' value='$no' />
-         <input type='text' name='st' size='5' value='0' />から
-         <input type='text' name='en' size='5' value='$last' />まで
-<br />
+発言番号 <input type='hidden' name='no' value='$no'>
+         <input type='text' name='st' size='5' value='0'>から
+         <input type='text' name='en' size='5' value='$last'>まで
+<br>
 
 表示順序 <select name='tree' size='1'>
            <option value='1' selected='selected'>ツリー</option>
            <option value='0' >発言番号</option>
          </select>順
-<br />
+<br>
 
-表示形態 <input type='checkbox' name='sub' value='1' />題名表示
-         <input type='checkbox' name='mes' value='1' checked='checked' />発言表示
+表示形態 <input type='checkbox' name='sub' value='1'>題名表示
+         <input type='checkbox' name='mes' value='1' checked='checked'>発言表示
 
-<br />
-<input type='submit' value='決定' />
+<br>
+<input type='submit' value='決定'>
 </td>
 
 <!-- 簡易的リンク -->
@@ -990,7 +991,7 @@ sub formparts_createthread{
 <tr class="thread">
 <th>スレッド名</th>
 <td>
-  <input type='text' name='thread' size='40' value='' />
+  <input type='text' name='thread' size='40' value=''>
 </td>
 </tr>
 
@@ -1009,10 +1010,10 @@ sub formparts_name{
 	print FOUT "<tr class='name'>\n<th>名前</th>\n<td>\n";
 	print FOUT "  <input type='text' name='name' size='20' ";
 	if (defined($user)){
-		print FOUT "value='$user' />\n";
+		print FOUT "value='$user'>\n";
 
 	}else{
-		print FOUT "/>\n";
+		print FOUT ">\n";
 		print FOUT << "HTML0";
   <script type='text/javascript'>
     document.post.name.value = getCookie("USER_NAME");
@@ -1028,7 +1029,7 @@ HTML0
 <tr class="title">
 <th>タイトル</th>
 <td>
-  <input type='text' name='title' size='40' value='$title' />
+  <input type='text' name='title' size='40' value='$title'>
 </td>
 </tr>
 
@@ -1049,9 +1050,9 @@ HTML1
 	print FOUT "<tr class='email'>\n<th>email</th>\n<td>\n";
 	print FOUT "  mailto:<input type='text' name='email' size='30' ";
 	if (defined($email)){
-		print FOUT "value='$email' />\n";
+		print FOUT "value='$email'>\n";
 	}else{
-		print FOUT "/>\n";
+		print FOUT ">\n";
 		print FOUT << "HTML3";
   <script type='text/javascript'>
      document.post.email.value = getCookie("USER_EMAIL");
@@ -1063,10 +1064,10 @@ HTML3
 	print FOUT "<tr class='webpage'>\n<th>webpage</th>\n<td>\n";
 	print FOUT "  http://<input type='text' name='web' size='30' ";
 	if (defined($webpage)){
-		print FOUT "value='$webpage' />\n";
+		print FOUT "value='$webpage'>\n";
 
 	}else{
-		print FOUT "/>\n";
+		print FOUT ">\n";
 		print FOUT << "HTML5";
   <script type='text/javascript'>
     document.post.web.value = getCookie("USER_WEBPAGE");
@@ -1090,7 +1091,7 @@ sub formparts_password{
 <tr class="trip">
 <th>トリップ</th>
 <td>
-  <input type='text' name='trip' size='10'  />
+  <input type='text' name='trip' size='10'>
   <small>$TRIP_MES</small>
   <script type='text/javascript'>
     document.post.trip.value = getCookie("TRIP");
@@ -1109,7 +1110,7 @@ TRIP
          name='pass'
          size='10'
          required='required'
-         minlength='$CONF->{'general'}->{'passwordLength'}' />
+         minlength='$CONF->{'general'}->{'passwordLength'}'>
   <small>$form_mes</small>
   <script type='text/javascript'>
     document.post.pass.value = getCookie("PASSWORD");
@@ -1131,7 +1132,7 @@ sub formparts_age{
 <tr class='other'>
 <th>その他</th>
 <td>
-  <input type='checkbox' name='cookie' value='1' /> cookieを保存する.
+  <input type='checkbox' name='cookie' value='1'> cookieを保存する.
   <script type='text/javascript'>
     var cookie = getCookie("COOKIE");
     if (cookie == 1)
@@ -1144,7 +1145,7 @@ COOKIE
 	if ($agesage){
 		print FOUT << "SAGE";
 
-  <input type='checkbox' name='sage' value='1' /> 発言をあげない.
+  <input type='checkbox' name='sage' value='1'> 発言をあげない.
   <script type='text/javascript'>
     var sage = getCookie("SAGE");
     if (sage == 1)
@@ -1158,7 +1159,7 @@ SAGE
 	if ($tomato){
 		print FOUT << "TOMATO";
 
-  <input type='checkbox' name='tomato' value='1' /> IPアドレス強制表示.
+  <input type='checkbox' name='tomato' value='1'> IPアドレス強制表示.
   <script type='text/javascript'>
     var tomato = getCookie("TOMATO");
     if (tomato == 1)
@@ -1186,19 +1187,19 @@ sub formparts_foot{
 <tr class="post">
 <th>フォーム送信</th>
 <td>
-  <input type='submit' value='$post' />
+  <input type='submit' value='$post' >
   <input type='reset' value='リセット'
          onclick='return reset_form();'
-         onkeypress='return reset_form();'  />
-  <input type='hidden' name='mode' value='$mode' />
+         onkeypress='return reset_form();' >
+  <input type='hidden' name='mode' value='$mode'>
 HTML0
 
 	if($mode ne $constants::CREATE){
-		print FOUT "  <input type='hidden' name='no' value='$t_no' />\n";
+		print FOUT "  <input type='hidden' name='no' value='$t_no'>\n";
 		if ($mode eq $constants::REVISE){
-			print FOUT "  <input type='hidden' name='target' value='$target' />\n";
+			print FOUT "  <input type='hidden' name='target' value='$target'>\n";
 		}elsif($mode eq $constants::POST and defined($target)){
-			print FOUT "  <input type='hidden' name='res' value='$target' />\n";
+			print FOUT "  <input type='hidden' name='res' value='$target'>\n";
 		}
 	}
 	print FOUT << "HTML1";
@@ -1220,11 +1221,11 @@ sub formparts_delete{
 	print << "DEL";
 <form method='post' action='./$constants::WRITE_CGI' id='d_post' name='d_post' onSubmit='return check_password(document.d_post.pass.value);'>
 <p class="delete">
-  <input type="hidden"   name="no" value="$no" />
-  <input type="hidden"   name="target" value="$target" />
-  <input type="hidden"   name="mode" value="$constants::DELETE" />
-  <input type='password' name='pass' size="10" />
-  <input type='submit'   size='8' value='発言削除' />
+  <input type="hidden"   name="no" value="$no">
+  <input type="hidden"   name="target" value="$target">
+  <input type="hidden"   name="mode" value="$constants::DELETE">
+  <input type='password' name='pass' size="10">
+  <input type='submit'   size='8' value='発言削除'>
   <small>$PASS_REINPUT</small>
   <script type='text/javascript'>
     document.d_post.pass.value = getCookie("PASSWORD");

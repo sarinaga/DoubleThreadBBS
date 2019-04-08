@@ -1,5 +1,5 @@
+#!C:/Perl64/bin/perl -w
 #!/usr/bin/perl -w
-#!C:/Perl/bin/perl -w
 #
 #
 # マルチスレッド掲示板 - 発言表示スクリプト read.cgi
@@ -13,30 +13,33 @@ use utf8;
 BEGIN{
 	if ($ENV{'HTTP_HOST'}){
 		use CGI::Carp qw(carpout);
-		open(LOG, ">../log/error.log");
+		use POSIX qw(strftime);
+	    my @tm = localtime;
+		open(LOG, strftime(">error%Y%m%d.log", @tm));
 		carpout(*LOG);
-	    my $tm = localtime;
-		print LOG strftime("[%Y/%m/%d %H:%M:%S] read.cgi log start.\n", $tm);
+		warn "read.cgi log start.\n";
 	}
 }
 END{
-    my $tm = localtime;
-	print LOG strftime("[%Y/%m/%d %H:%M:%S] read.cgi log end.\n", $tm);
+	warn "read.cgi log end.\n";
 }
 
 require './html.pl';
 require './file.pl';
 require './std.pl';
-require './write.pl';
+require './configReader.pl';
 
 unless($ENV{'HTTP_HOST'}){
 	print "このプログラムはCGI用です. コマンドラインからの実行はできません. \n";
 	exit;
 }
 
+
 # 動作環境読み取り
 use vars qw(%CONF);
-error_fail_conf() unless(file::config_read(\%CONF));
+error_fail_conf() unless(configReader::readConfig(\%CONF));
+%html::CONF = %CONF;
+%file::CONF = %CONF;
 
 # CGIクラス利用
 my $cgi = new CGI;
@@ -137,8 +140,9 @@ if ($param{'mode'} & $html::ATONE or
 
 
 # ログを読み取る
+#   すべての情報を、ロックをかけないで、gz圧縮されていた場合は読まない
 my @log;
-error_fail_read($no) unless(file::read_log($no, \@log, 1, 0, 0));  # すべての情報を、ロックをかけないで、gz圧縮されていた場合は読まない
+error_fail_read($no) unless(file::read_log($no, \@log, 1, 0, 0));
 
 # 動作環境読み取り（後半：ログを読み取らないと記述できない場合）
 unless($double_flag){
