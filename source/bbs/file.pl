@@ -487,12 +487,20 @@ sub write_log{
 	my $temp_public = temp_name($log_public);
 	my $temp_secret = temp_name($log_secret);
 
+	warn $log_public;
+	warn $log_secret;
+	warn $temp_public;
+	warn $temp_secret;
+
 	# ログテンポラリファイル[公開部]を開く
 	unless(open(TEMP, ">$temp_public")){
 		unlock($log_public);
 		unlock($log_secret);
 		return 0;
 	}
+
+	warn "499 line ok";
+
 
 	# 公開部スレッド情報を書き込む
 	print TEMP "THREAD_TITLE<>$$log[0]{'THREAD_TITLE'}\n";       # スレッド名
@@ -588,9 +596,13 @@ sub write_log{
 	close(TEMP);
 
 	# ログファイル更新
+	warn "595 line bad";
 	chmod($constants::PUBLIC_FILE_PERMISSION, $temp_public);
 	chmod($constants::SECRET_FILE_PERMISSION, $temp_secret);
 	return 1 if (renew($log_public) and renew($log_secret));
+
+
+	warn "601 line bad";
 
 	# 更新失敗
 	unlock($log_public);
@@ -862,7 +874,9 @@ sub renew{
 	return 0 unless (-e $tempfile);
 
 	# テンポラリファイル→実ファイル変換
-	move($tempfile, $filename);
+	#File::Copy::move($tempfile, $filename) or warn "Cannot Renew File from $tempfile to $filename: $!";
+	unlink($filename);
+	rename($tempfile, $filename);
 
 	# ロック解除
 	if ($CONF->{'system'}->{'fileLock'} == 2){

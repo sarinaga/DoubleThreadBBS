@@ -1,4 +1,5 @@
 #!/usr/bin/perl
+#!C:/Perl64/bin/perl -w
 
 use strict;
 use File::Path;
@@ -64,6 +65,7 @@ sub createPointer(){
 	}
 	print FOUT "0\n";
 	close(FOUT);
+
 	unless(chmod($constants::SECRET_FILE_PERMISSION, $pointer_file)){
 		die "ポインタファイル'${pointer_file}'にパーミッションが設定できませんでした.";
 	}
@@ -76,7 +78,6 @@ sub createPointer(){
 sub createBlacklist(){
 
 	my $blacklist_file = file::blacklist_name();
-	#system("touch ${blacklist_file}");
 	unless(open(FOUT, ">${blacklist_file}")){
 		die "ブラックリストファイル'${blacklist_file}'を初期化できませんでした.";
 	}

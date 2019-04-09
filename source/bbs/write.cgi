@@ -11,18 +11,17 @@ use utf8;
 use CGI;
 use Crypt::PasswdMD5;
 use Digest::SHA 'sha1';
-use Time::localtime;
 
 # ログ出力のヘッダとフッタ
 BEGIN{
 	if ($ENV{'HTTP_HOST'}){
-		use POSIX qw(strftime);
 		use CGI::Carp qw(carpout);
+		use POSIX qw(strftime);
 	    my @tm = localtime;
-		open(LOG, strftime(">error%Y%m%d.log", @tm));
+		open(LOG, strftime(">>error%Y%m%d%H%M%d.log", @tm));
 		carpout(*LOG);
+		warn "write.cgi log start.\n";
 	}
-	warn "write.cgi log start.\n";
 }
 END{
 	warn "write.cgi log end.\n";
@@ -48,10 +47,10 @@ my $cgi = new CGI;
 #--------------------------------------------------------------------------
 
 # コンフィグファイル読み込み
-use vars qw(%CONF);
-error_fail_conf() unless(configReader::readConfig(\%CONF));
-%html::CONF = %CONF;
-%file::CONF = %CONF;
+use vars qw($CONF);
+error_fail_conf() unless($CONF = configReader::readConfig());
+$html::CONF = $CONF;
+$file::CONF = $CONF;
 
 
 #--------------------------------------------------------------------------
@@ -81,7 +80,7 @@ error_fail_conf() unless(configReader::readConfig(\%CONF));
 #
 
 # 容量が大きすぎるときはエラー
-post_huge() if ($ENV{'CONTENT_LENGTH'} > $CONF{'BUFFER_LIMIT'});
+post_huge() if ($ENV{'CONTENT_LENGTH'} > $CONF->{'resource'}->{'bufferLimit'});
 
 # データをパラメータから取得
 my $no         = $cgi->param('no');                          # スレッド番号
@@ -93,7 +92,6 @@ my $trip       = $cgi->param('trip');                        # ユーザトリ�
 my $email      = std::html_escape($cgi->param('email'));     # emailアドレス
 my $password   = $cgi->param('pass');                        # パスワード
 my $sage       = $cgi->param('sage');                        # スレッドを上げるか上げないか
-my $admin      = $cgi->param('admin');                       # (未使用)
 my $set_cookie = $cgi->param('cookie');                      # Cookie利用
 my $build      = $cgi->param('build');                       # 掲示板初期起動時フラグ
 my $tomato     = $cgi->param('tomato');                      # IPアドレス晒し
@@ -111,23 +109,21 @@ bad_request()  if ($ENV{'REQUEST_METHOD'} ne 'POST');
 #                                 データ洗浄
 #--------------------------------------------------------------------------
 # モードが正しいかどうか調べる
-illigal_form() unless($mode eq $writecgi::CREATE or $mode eq $writecgi::REVISE or   # モード違い
-                      $mode eq $writecgi::DELETE or $mode eq $writecgi::POST);
+illigal_form() unless($mode eq $constants::CREATE or $mode eq $constants::REVISE or   # モード違い
+                      $mode eq $constants::DELETE or $mode eq $constants::POST);
 
 
 # 発言修正ができない設定なのにrevise, deleteの要求が来ていたらエラー
-no_change() if (($mode eq $writecgi::DELETE or $mode eq $writecgi::REVISE) and !$CONF{'ACCEPT_CHANGE'});
-
+no_change() if (($mode eq $constants::DELETE or $mode eq $constants::REVISE) and !$CONF->{'general'}->{'acceptChange'});
 
 # 新規スレッド作成で、スレ建て規制制限数に達した人のときはエラー
-over_thread() if (($mode eq $writecgi::CREATE) and check_builder());
-
+over_thread() if (($mode eq $constants::CREATE) and check_builder());
 
 # 新規スレッド作成で、スレッド作成禁止の場合はエラー
-cant_create_thread() if (($mode eq $writecgi::CREATE) and $CONF{'THREAD_MAX'} == 0);
+cant_create_thread() if (($mode eq $constants::CREATE) and $CONF->{'resource'}->{'threadMax'} == 0);
 
 # (やりたくないのだが)bodyにhttp://が含まれる場合、無理矢理rejectする
-if ($body=~m/http:\/\//){
+if ($body=~m/https?:\/\//){
 	std::goto404();
 	exit;
 }
@@ -149,12 +145,16 @@ $trans=~s/\n*$//;
 
 
 # スレッド名洗浄
-if ($mode eq $writecgi::CREATE){  lack_thread() if ($thread eq '');  }
+#   新規スレッド作成の場合, スレッド名は必須.
+#   そうでない場合, スレッド名があってはならない.
+if ($mode eq $constants::CREATE){  lack_thread() if ($thread eq '');  }
 else{  illigal_form() if ($thread ne '');  }
 
 
 # スレッド番号洗浄
-if ($mode eq $writecgi::CREATE){
+#   新規スレッド作成でない場合, スレッド番号は必須.
+#   スレッド番号が指定されたときは, 数字でなければならない.
+if ($mode eq $constants::CREATE){
 	illigal_form() if ($no ne '');
 }else{
 	illigal_form() unless($no=~m/^(\d+)$/);
@@ -162,14 +162,18 @@ if ($mode eq $writecgi::CREATE){
 }
 
 # 発言番号洗浄
-if ($mode eq $writecgi::REVISE or $mode eq $writecgi::DELETE){
+#   発言修正, 削除の場合, 発言番号は必須.
+#   そうでない場合, 発言番号があってはいけない.
+if ($mode eq $constants::REVISE or $mode eq $constants::DELETE){
 	illigal_form() unless($target=~m/^\d+$/);
 }else{
 	illigal_form() if ($target ne '');
 }
 
 # レス番号洗浄
-if ($mode eq $writecgi::POST){
+#   投稿のときのみ, レス番号は任意.
+#   指定された場合, 数字でなければならない.
+if ($mode eq $constants::POST){
 	illigal_form() unless($res=~m/^\d*$/);
 	$res = undef if($res eq '');
 }else{
@@ -178,16 +182,20 @@ if ($mode eq $writecgi::POST){
 
 
 # タイトル, 名前, URI, emailアドレス洗浄
-if ($mode eq $writecgi::DELETE){
+#   削除の場合, 題名, 名前, Web, emailがあってはならない
+if ($mode eq $constants::DELETE){
 	illigal_form() if ($title ne '');
 	illigal_form() if ($name ne '');
 	illigal_form() if ($web ne '');
 	illigal_form() if ($email ne '');
 
 }else{
+    # 削除でない場合, 本文は必須.
+    # 題名, 名前は入力されなかったらデフォルト値にする.
+    # web, emailは入力されているのであればそれは正当なものでなければならない.
 	lack_body() if ($title eq '' and $body eq '');
-	$title = $CONF{'NO_TITLE'} if ($title eq '');
-	$name  = $CONF{'NO_NAME'}  if ($name eq '');
+	$title = $CONF->{'general'}->{'noTitle'} if ($title eq '');
+	$name  = $CONF->{'general'}->{'noName'}  if ($name eq '');
 	if($web ne ''){
 		illigal_http() unless(std::uri_valid($web));
 	}
@@ -197,55 +205,60 @@ if ($mode eq $writecgi::DELETE){
 }
 
 # トリップ洗浄
-if ($mode eq $writecgi::DELETE or $mode eq $writecgi::REVISE){
+#   削除, 修正の場合, あってはならない.
+#   それ以外の場合,任意である.
+#   英数字でなければならない.
+if ($mode eq $constants::DELETE or $mode eq $constants::REVISE){
 	illigal_form() if($trip ne '');
 }else{
-	illigal_trip() unless($trip=~m/^[\da-zA-Z]{0,$CONF{'TRIP_INPUT_LENGTH'}}$/);
+	illigal_trip() unless($trip=~m/^[\da-zA-Z]*$/);
 }
-
 
 # パスワード洗浄
-if ($mode eq $writecgi::CREATE or $mode eq $writecgi::POST){
-	illigal_password() unless($password=~m/^[\da-zA-Z]{$writecgi::PASS_LENGTH_MIN,$CONF{'PASSWORD_LENGTH'}}$/);
-}
+#   英数字でければならない.
+#   bbs.conf.jsonで設定された最低長さがなければならない.
+illigal_password() unless($password=~m/^[\da-zA-Z]{$CONF->{'general'}->{'passwordLength'},}$/);
 
 
 # sage洗浄
-if ($mode eq $writecgi::POST){
+if ($mode eq $constants::POST){
 	$sage = std::trans_bool($sage, 0);
 	illigal_form() unless(defined($sage));
 }else{
 	illigal_form() if ($sage ne '');
-	$sage = ($mode eq $writecgi::CREATE) ? 0 : 1;
+	$sage = ($mode eq $constants::CREATE) ? 0 : 1;
 }
 
 # tomato洗浄
-if ($mode eq $writecgi::CREATE or $mode eq $writecgi::POST){
+if ($mode eq $constants::CREATE or $mode eq $constants::POST){
 	$tomato = std::trans_bool($tomato, 0);
 	illigal_form() unless(defined($tomato));
 }else{
 	illigal_form() if ($tomato ne '');
 }
 
-
 #-------------------------------------------------------------------------
 #                             ログ読み取り
 #-------------------------------------------------------------------------
 # 新規ログ作成の時はログファイルを新規作成し、ヘッダ部分データを作成する
+warn "244line ok";
 my @log;
-if($mode eq $writecgi::CREATE){
+if($mode eq $constants::CREATE){
 	$no = file::read_pointer(1);      # ロックをかけっぱなしにする設定でポインタを読む
 	fail_read() unless(defined($no)); # ポインタが読めなかった
+	warn "248line ok";
 	fail_write() unless(create($no)); # ログ仮ファイルを作る
+	warn "251line ok";
 
 # 投稿、修正、削除の時はログを読み取る
 }else{
 	fail_read() unless(file::read_log($no, \@log, 1, 1, 0));   # ロックをかける、全部読む、gz圧縮対応をしない
 }
 
+warn "255line ok";
 
 # 連続投稿制限を超えるときはエラー（新規・レス投稿の場合）
-if ($mode eq $writecgi::POST){
+if ($mode eq $constants::POST){
 	if (check_chain_post(\@log)){
 		clear($no);
 		post_chain();
@@ -254,24 +267,26 @@ if ($mode eq $writecgi::POST){
 
 
 # 発言番号が制限を越える時はエラー（新規・レス投稿の場合）
-if ($mode eq $writecgi::POST){
+my $pLimit = $CONF->{'resource'}->{'postLimit'};
+
+if ($mode eq $constants::POST){
 	$target = @log;
-	if ($target >= $CONF{'THREAD_LIMIT'}){
+	if ($target >= $pLimit->{'post'}->{'max'}){
 		clear($no);
 		thread_over();
 	}
 }
 
 # スレッド容量が制限を越える場合はエラー
-if ($mode ne $writecgi::DELETE){
-	if ($log[0]{'SIZE'} >= $CONF{'FILE_LIMIT'}){
+if ($mode ne $constants::DELETE){
+	if ($log[0]{'SIZE'} >= $pLimit->{'fileSize'}->{'max'}){
 		clear($no);
 		file_over();
 	}
 }
 
 # ログと入力フォームの整合性を確認する
-if ($mode eq $writecgi::DELETE or $mode eq $writecgi::REVISE){
+if ($mode eq $constants::DELETE or $mode eq $constants::REVISE){
 
 	# 存在しない発言を操作？
 	if ($target >= @log){
@@ -289,9 +304,10 @@ if ($mode eq $writecgi::DELETE or $mode eq $writecgi::REVISE){
 	}
 }
 
+warn "304line ok";
 
 # レス先発言が存在するかどうかを調べる
-if ($mode eq $writecgi::POST and defined($res)){
+if ($mode eq $constants::POST and defined($res)){
 
 	# 存在しない発言にレス？
 	if($res >= @log){
@@ -305,11 +321,12 @@ if ($mode eq $writecgi::POST and defined($res)){
 }
 
 # 発言修正回数を超えて変更しようとしたらエラー
-if ($mode eq $writecgi::REVISE and defined($log[$target]{'CORRECT_TIME'})){
-	if (@{$log[$target]{'CORRECT_TIME'}} >= $CONF{'CHANGE_LIMIT'}){
+if ($mode eq $constants::REVISE and defined($log[$target]{'CORRECT_TIME'})){
+	if (@{$log[$target]{'CORRECT_TIME'}} >= $CONF->{'general'}->{'changeLimit'}){
 		clear($no);
 		change_limit();
 	}
+
 }
 
 
@@ -319,24 +336,24 @@ if ($mode eq $writecgi::REVISE and defined($log[$target]{'CORRECT_TIME'})){
 
 # 新規投稿処理
 my $ip = $ENV{'REMOTE_ADDR'};
-if ($mode eq $writecgi::POST){
+if ($mode eq $constants::POST){
 
 	# 発言番号を１つ進める
 	++$log[0]{'POST'};
 
 
 # 新規スレッド作成処理
-}elsif($mode eq $writecgi::CREATE){
+}elsif($mode eq $constants::CREATE){
 	$target = 0;
 	$log[0]{'POST'} = 1;
 	$log[0]{'THREAD_TITLE'} = $thread;
 	$log[0]{'THREAD_NO'} = $no;
 	$log[0]{'BUILDER_IP_ADDR'} = $ip;
-	$log[0]{'BUILDER_IP_HOST'} = std::gethost($ip);
+	$log[0]{'BUILDER_IP_HOST'} = std::getHostname($ip);
 }
 
 # 最後にあげられた時間
-$log[0]{'AGE_TIME'}  = time() if(!$sage or $mode eq $writecgi::CREATE);
+$log[0]{'AGE_TIME'}  = time() if(!$sage or $mode eq $constants::CREATE);
 
 # 発言番号
 $log[$target]{'NO'}           = $target;                                 # 発言番号
@@ -344,38 +361,38 @@ $log[$target]{'RES'}          = $res if(defined($res));                  # レ�
 
 
 # 発言タイトル、ユーザ名、email、ウェブページアドレス、本文（新規スレッド作成、新規発言、発言修正）
-if ($mode ne $writecgi::DELETE){
+if ($mode ne $constants::DELETE){
 	$log[$target]{'TITLE'}        = $title;
 	$log[$target]{'USER_NAME'}    = $name;
 	$log[$target]{'USER_EMAIL'}   = $email;
 	$log[$target]{'USER_WEBPAGE'} = $web;
 	$log[$target]{'BODY'}         = $body;
-	if ($mode ne $writecgi::REVISE and $trip ne ''){
+	if ($mode ne $constants::REVISE and $trip ne ''){
 		$log[$target]{'TRIP'} = trip($trip)
 	}
-	if ($mode eq $writecgi::CREATE or $mode eq $writecgi::POST){
+	if ($mode eq $constants::CREATE or $mode eq $constants::POST){
 		$log[$target]{'TOMATO'} = $tomato;
 	}
 }
 
 # 投稿IPアドレス(numberic, FQDN)、利用ユーザエージェント
 push(@{$log[$target]{'IP_ADDR'}}, $ip);
-push(@{$log[$target]{'IP_HOST'}}, std::gethost($ip));
+push(@{$log[$target]{'IP_HOST'}}, std::getHostname($ip));
 push(@{$log[$target]{'USER_AGENT'}}, $ENV{'HTTP_USER_AGENT'});
 
 # 投稿時間、パスワード、ユーザID（新規スレッド作成、新規発言）
-if ($mode eq $writecgi::POST or $mode eq $writecgi::CREATE){
+if ($mode eq $constants::POST or $mode eq $constants::CREATE){
 	$log[$target]{'POST_TIME'}   = time();
 	$log[$target]{'PASSWORD'}    = unix_md5_crypt($password, std::salt());
-	$log[$target]{'USER_ID'}     = create_id($ip) if ($CONF{'CREATE_ID'});
+	$log[$target]{'USER_ID'}     = create_id($ip) if ($CONF->{'general'}->{'createId'});
 }
 
-if ($mode eq $writecgi::DELETE){  $log[$target]{'DELETE_TIME'} = time(); }            # 発言削除時間（発言削除）
-if ($mode eq $writecgi::REVISE){  push(@{$log[$target]{'CORRECT_TIME'}}, time());  }  # 発言修正時間（発言修正）
+if ($mode eq $constants::DELETE){  $log[$target]{'DELETE_TIME'} = time(); }            # 発言削除時間（発言削除）
+if ($mode eq $constants::REVISE){  push(@{$log[$target]{'CORRECT_TIME'}}, time());  }  # 発言修正時間（発言修正）
 
 
 # 二重投稿排除処理
-if ($mode eq $writecgi::POST){
+if ($mode eq $constants::POST){
     if (chack_dupe_post(\@log)){
 		clear($no);
 		post_dupe();
@@ -386,8 +403,10 @@ if ($mode eq $writecgi::POST){
 #                               ログ書き出し処理
 #--------------------------------------------------------------------------
 
+warn "403line ok";
+
 # 新規スレッド作成の時はポインタ値更新
-if ($mode eq $writecgi::CREATE){
+if ($mode eq $constants::CREATE){
 	my $pointer = $no + 1;
 	unless(file::write_pointer($pointer)){
 		clear($no);
@@ -397,28 +416,32 @@ if ($mode eq $writecgi::CREATE){
 	}
 }
 
+warn "416line ok";
+
 # 本ログ書き出し
 fail_write() unless(file::write_log(\@log));
 
+warn "421line ok";
+
 # スレッド一覧吐き出し
-age() if(!$sage or $mode eq $writecgi::CREATE);
+age() if(!$sage or $mode eq $constants::CREATE);
 
 
 #--------------------------------------------------------------------------
 #                              Cookieデータ作成
 #--------------------------------------------------------------------------
 my %cookie;
-if ($mode eq $writecgi::POST or $mode eq $writecgi::CREATE){
+if ($mode eq $constants::POST or $mode eq $constants::CREATE){
 	$cookie{'USER_NAME'}    = $name;
 	$cookie{'USER_EMAIL'}   = $email;
 	$cookie{'USER_WEBPAGE'} = $web;
 	$cookie{'TRIP'}         = $trip;
 	$cookie{'PASSWORD'}     = $password;
 	$cookie{'COOKIE'}       = $set_cookie;
-	$cookie{'SAGE'}         = $sage if ($mode eq $writecgi::POST);
+	$cookie{'SAGE'}         = $sage if ($mode eq $constants::POST);
 	$cookie{'TOMATO'}       = $tomato;
 }
-my $expires = ($set_cookie) ? $CONF{'COOKIE_EXPIRES'} : -1;
+my $expires = ($set_cookie) ? $CONF->{'general'}->{'cookieExpires'} : -1;
 
 
 #--------------------------------------------------------------------------
@@ -427,10 +450,10 @@ my $expires = ($set_cookie) ? $CONF{'COOKIE_EXPIRES'} : -1;
 
 # 処理形態を判別
 my $process;
-$process = '新規スレッド作成' if ($mode eq $writecgi::CREATE);
-$process = '発言修正'         if ($mode eq $writecgi::REVISE);
-$process = '発言削除'         if ($mode eq $writecgi::DELETE);
-if ($mode eq $writecgi::POST){
+$process = '新規スレッド作成' if ($mode eq $constants::CREATE);
+$process = '発言修正'         if ($mode eq $constants::REVISE);
+$process = '発言削除'         if ($mode eq $constants::DELETE);
+if ($mode eq $constants::POST){
 	if (defined($res)){  $process = 'レス発言投稿';  }
 	else{ $process = '新規投稿';  }
 }
@@ -442,7 +465,7 @@ html::http_response_header();
 
 
 # htmlヘッダ出力
-if ($mode eq $writecgi::POST or $mode eq $writecgi::CREATE){
+if ($mode eq $constants::POST or $mode eq $constants::CREATE){
 	html::header(*STDOUT , $process, undef, \%cookie, $expires);
 }else{
 	html::header(*STDOUT , $process);
@@ -454,12 +477,12 @@ print "<h2>$process</h2>\n\n";
 print "<p>書き込みが終了しました。</p>";
 
 # 次の発言読み込みフォームを表示
-if ($mode eq $writecgi::DELETE){
+if ($mode eq $constants::DELETE){
 	html::form_read(*STDOUT, $no, $#log);
 
 }else{
 	html::form_read(*STDOUT, $no, $#log, $target,
-	                $mode eq $writecgi::REVISE ? '修正' : '投稿');
+	                $mode eq $constants::REVISE ? '修正' : '投稿');
 }
 
 # リンクバー
@@ -480,6 +503,8 @@ exit;
 #      新規スレッド作成の時、新しいログファイルを作る（中身なし）        #
 ##########################################################################
 sub create{
+
+
 	my $no = shift;     # スレッド番号
 
 	my $log_public = file::public_name($no);
@@ -494,9 +519,12 @@ sub create{
 	}
 	close(FOUT);
 
+
 	# ファイル属性変更
 	chmod($file::PUBLIC_FILE_PERMISSION, $log_public);
 	chmod($file::SECRET_FILE_PERMISSION, $log_secret);
+
+	warn "518 line ok";
 
 	# ロックをかける
 	unless(file::filelock($log_public) and file::filelock($log_secret)){
@@ -505,6 +533,7 @@ sub create{
 		unlink($log_secret);  # 新しく作ったファイルを削除するしかない
 		return 0;
 	}
+
 
 	return 1;
 }
@@ -530,7 +559,7 @@ sub age{
 	count_builder(\@thread);
 
 	# bbs.htmlを更新させる[ここ以下の内容]
-	return file::create_bbshtml(\@thread);
+	return html::create_bbshtml(\@thread);
 
 }
 
@@ -571,7 +600,7 @@ sub count_builder{
 	# スレ建て規制に引っかかったものを抽出
 	my @over_builder;
 	foreach my $addr_host(keys %builder){
-		push(@over_builder, $addr_host) if ($builder{$addr_host} >= $CONF{'THREAD_MAX'});
+		push(@over_builder, $addr_host) if ($builder{$addr_host} >= $CONF->{'resource'}->{'threadMax'});
 	}
 
 	# スレ建てすぎブラックリスト出力
@@ -589,7 +618,7 @@ sub check_builder{
 
 	# IPアドレス取得
 	my $ip_addr = $ENV{'REMOTE_ADDR'};     # 投稿者IP_ADDR
-	my $ip_host = std::gethost($ip_addr);  # 投稿者IP_HOST
+	my $ip_host = std::getHostname($ip_addr);  # 投稿者IP_HOST
 
 	# スレ建てすぎブラックリストを読み出す
 	my @builder;
@@ -611,14 +640,14 @@ sub check_builder{
 sub check_chain_post{
 	my $log = shift;
 
-	return 0 if ($CONF{'CHAIN_POST'} == 0);  # 連続投稿の監視をしない場合はFALSEを返す
+	return 0 if ($CONF->{'chainLimit'}->{'post'} == 0);  # 連続投稿の監視をしない場合はFALSEを返す
 
 	my $ip_addr = $ENV{'REMOTE_ADDR'};       # 投稿者IP_ADDR
-	my $ip_host = std::gethost($ip_addr);    # 投稿者IP_HOST
+	my $ip_host = std::getHostname($ip_addr);    # 投稿者IP_HOST
 
 	my $count = 0;  # 自分のIPアドレスがどのくらい出てきたかを数える
 	for(my $i=@$log-1;$i>=0 and
-	                  $$log[$i]{'POST_TIME'} >=time() - $CONF{'CHAIN_TIME'} * 60 ;--$i){
+	                  $$log[$i]{'POST_TIME'} >=time() - $CONF->{'chainLimit'}->{'time'} * 60 ;--$i){
 
 		my $last_addr = @{$log[$i]{'IP_ADDR'}} - 1;
 		my $last_host = @{$log[$i]{'IP_HOST'}} - 1;
@@ -627,7 +656,7 @@ sub check_chain_post{
 		             $ip_host eq $$log[$i]{'IP_HOST'}[$last_host]
 		             );
 
-		return 1 if ($count >= $CONF{'CHAIN_POST'});   # 超えたらエラー
+		return 1 if ($count >= $CONF->{'chainLimit'}->{'post'});   # 超えたらエラー
 
 	}
 
@@ -648,11 +677,11 @@ sub chack_dupe_post{
 	my $res   = $$log[$last]{'RES'};
 
 	# 二重投稿かどうかチェックする
-	for(my $i=std::math_max(0, $last-$CONF{'DUPE_BACK'}) ; $i<$last ; ++$i){
+	for(my $i=std::math_max(0, $last-$CONF->{'general'}->{'dupeBack'}) ; $i<$last ; ++$i){
 
 		my $dupe = 1;
-		$dupe = 0 if ($name  ne $CONF{'NO_NAME'}  and $name  ne $$log[$i]{'USER_NAME'});
-		$dupe = 0 if ($title ne $CONF{'NO_TITLE'} and $title ne $$log[$i]{'TITLE'});
+		$dupe = 0 if ($name  ne $CONF->{'general'}->{'noName'}  and $name  ne $$log[$i]{'USER_NAME'});
+		$dupe = 0 if ($title ne $CONF->{'general'}->{'noTitle'} and $title ne $$log[$i]{'TITLE'});
 		$dupe = 0 if ($body  ne $$log[$i]{'BODY'});
 		$dupe = 0 if ($res   ne $$log[$i]{'RES'});
 		return 1 if ($dupe);
@@ -685,14 +714,14 @@ sub create_id{
 	my $salt = substr($seed, $day, 1) . substr($seed, $mon, 1) . substr($seed, ($year % length($seed)) ,1);
 
 	# 生成
-	return substr(std::scramble($ip, $salt), 0, $CONF{'ID_LENGTH'});
+	return substr(std::createTrip($ip, $salt), 0, $CONF->{'general'}->{'idLength'});
 }
 
 ###########################################################################
 #                              トリップ製作                               #
 ###########################################################################
 sub trip{
-	return substr(std::scramble(shift, $CONF{'TRIP_KEY'}), 0, $CONF{'TRIP_OUTPUT_LENGTH'});
+	return substr(std::createTrip(shift, $CONF->{'general'}->{'tripKey'}), 0, $CONF->{'general'}->{'tripLength'});
 }
 
 
@@ -774,7 +803,7 @@ sub illigal_http{
 #
 sub illigal_trip{
 	error_head();
-	print "<p>トリップは$CONF{'TRIP_INPUT_LENGTH'}文字までの英数字を利用してください。</p>\n\n";
+	print "<p>トリップ生成文字列は英数字を利用してください。</p>\n\n";
 	error_foot();
 }
 
@@ -784,7 +813,7 @@ sub illigal_trip{
 #
 sub illigal_password{
 	error_head();
-	print "<p>パスワードは$writecgi::PASS_LENGTH_MIN文字以上$CONF{'PASSWORD_LENGTH'}文字以下の英数字を利用してください。</p>\n\n";
+	print "<p>パスワードは$CONF->{'general'}->{'passwordLength'}文字以上の英数字を利用してください。</p>\n\n";
 	error_foot();
 }
 
@@ -862,7 +891,7 @@ sub post_huge{
 #
 sub file_over{
 	error_head();
-	print "<p>あなたが発言を用意している間にスレッドの容量限界（$CONF{'FILE_LIMIT'}バイト）を超えたようです。";
+	print "<p>あなたが発言を用意している間にスレッドの容量限界（$CONF->{'resource'}->{'fileSize'}->{'max'}バイト）を超えたようです。";
 	print "容量限界を超えたので発言、修正をすることはできません。</p>\n\n";
 	error_foot();
 }
@@ -873,7 +902,7 @@ sub file_over{
 #
 sub thread_over{
 	error_head();
-	print "<p>あなたが発言を用意している間にスレッドの投稿数限界（$CONF{'THREAD_LIMIT'}番まで）を超えたようです。";
+	print "<p>あなたが発言を用意している間にスレッドの投稿数限界（$CONF->{'resource'}->{'post'}->{'max'}番まで）を超えたようです。";
 	print "投稿数限界を超えたので発言をすることはできません。</p>\n\n";
 	error_foot();
 }
@@ -915,7 +944,7 @@ sub no_change{
 #
 sub change_limit{
 	error_head();
-	print "<p>$CONF{'CHANGE_LIMIT'}回を超えて発言を修正することはできません。</p>\n\n";
+	print "<p>$CONF->{'general'}->{'changeLimit'}回を超えて発言を修正することはできません。</p>\n\n";
 	error_foot();
 }
 

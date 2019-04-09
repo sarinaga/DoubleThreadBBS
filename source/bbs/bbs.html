@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 
-<html lang="ja">
+<html>
 
 <head>
 
-<link rel='stylesheet' type='text/css' href='./bbs.css' />
+<meta charset='UTF-8'>
+<link rel='stylesheet' type='text/css' href='./bbs.css'>
 <script type='text/javascript' src='./bbs.js'></script>
-
-<title>スレッド一覧表示 - 人生自爆症候群掲示板</title>
+<title>スレッド一覧表示 - マルチスレッド掲示板</title>
 
 </head>
 
@@ -15,43 +15,17 @@
 
 <body>
 
-<h1 id='title'>人生自爆症候群掲示板</h1>
+<h1 id='title'>マルチスレッド掲示板</h1>
 
 <div class='info'>
 
-<!--
-                   スレッド一覧表示上部案内・説明表示 HTML
-
-                                                  2002.11.16 さゆりん先生
-
-★編集上の注意
-
-　このファイルはスレッド一覧表示で上部に表示される説明、案内表示を記述するものです。
-　編集方法はHTMLのコメントに記述されている通りに行ってください。
-
-　漢字コードはEUCを利用してください。改行は利用OSにあわせたものを利用してください。
-
--->
-
-<!-- <h2>タグの間だけを編集してください。 <h2>タグは消さないでください -->
-<h2 id='info'>ご案内</h2>
-
-<!-- ここから掲示板設置者が自由にHTMLを記述することができます -->
-
-<p>掲示板に宣伝を書き込むことは厳禁です。見つかり次第厳正に対処します。</p>
-<p>この掲示板はβ版です。バグを見つけましたらご報告ください。</p>
-<p>cookieとjavascriptを有効にしておきますと名前、email、webpage、トリップ、パスワードを保存することができます。</p>
-<p>蔵太平山に逝きましょう。</p>
-<p>小麦たんハァハァ。</p>
-
-
-<!-- 記述終わり -->
-
+<p>cookieとjavascriptを有効にすると名前、email、webpage、トリップ、パスワードを保存することができます。</p>
+<p>タイトルが英語だけの場合は投稿できなくなりました。皆様にはご迷惑をおかけしますが、ご協力お願いいたします。</p>
 </div>
 
 <!--======================================================================-->
 
-<div class='link'><a href="#create-thread">新規スレッド作成</a>　<a href='http://www.sarinaga.com/'>トップページ</a>　<a href='./admin.html'>管理モード</a>　<a href='mailto:webmaster@sarinaga.com'>管理者宛メール</a>　</div>
+<div class='link'><a href="#create-thread">新規スレッド作成</a>　<a href='http://www.sarinaga.com/'>トップページ</a>　<a href='./admin.html'>管理モード</a>　</div>
 
 <!--======================================================================-->
 
@@ -63,14 +37,8 @@
 
 <table class='thread-list'><tbody>
 
-<tr><td class='no'>11.</td><td class='thread'><a href='./read.cgi?no=11;ls=50;tree=1;sub=1' class='thread' title='最新50レスを表示'><span title='蔵太平山総合スレ'>蔵太平山総合スレ</span></a>(17)</td><td class='date'>2004年11月11日(木)06時44分</td><td class='all'><a href='./read.cgi?no=11' title='スレッド11番、番号順'>全発言表示</a></td><td class='titleonly'><a href='./read.cgi?no=11;sub=1;mes=0;tree=1' title='スレッド11番、コメント順'>全題名表示</a></td></tr>
-<tr><td class='no'>4.</td><td class='thread'><a href='./read.cgi?no=4;ls=50;tree=1;sub=1' class='thread' title='最新50レスを表示'><span title='オフ会用スレ'>オフ会用スレ</span></a>(129)</td><td class='date'>2004年11月10日(水)22時51分</td><td class='all'><a href='./read.cgi?no=4' title='スレッド4番、番号順'>全発言表示</a></td><td class='titleonly'><a href='./read.cgi?no=4;sub=1;mes=0;tree=1' title='スレッド4番、コメント順'>全題名表示</a></td></tr>
-<tr><td class='no'>3.</td><td class='thread'><a href='./read.cgi?no=3;ls=50;tree=1;sub=1' class='thread' title='最新50レスを表示'><span title='日記感想スレ'>日記感想スレ</span></a>(22)</td><td class='date'>2004年10月21日(木)02時53分</td><td class='all'><a href='./read.cgi?no=3' title='スレッド3番、番号順'>全発言表示</a></td><td class='titleonly'><a href='./read.cgi?no=3;sub=1;mes=0;tree=1' title='スレッド3番、コメント順'>全題名表示</a></td></tr>
-<tr><td class='no'>6.</td><td class='thread'><a href='./read.cgi?no=6;ls=50;tree=1;sub=1' class='thread' title='最新50レスを表示'><span title='各種試験用スレッド'>各種試験用スレッド</span></a>(44)</td><td class='date'>2004年10月21日(木)00時17分</td><td class='all'><a href='./read.cgi?no=6' title='スレッド6番、番号順'>全発言表示</a></td><td class='titleonly'><a href='./read.cgi?no=6;sub=1;mes=0;tree=1' title='スレッド6番、コメント順'>全題名表示</a></td></tr>
-<tr><td class='no'>10.</td><td class='thread'><a href='./read.cgi?no=10;ls=50;tree=1;sub=1' class='thread' title='最新50レスを表示'><span title='メンテナンス情報'>メンテナンス情報</span></a>(17)</td><td class='date'>2004年10月20日(水)23時36分</td><td class='all'><a href='./read.cgi?no=10' title='スレッド10番、番号順'>全発言表示</a></td><td class='titleonly'><a href='./read.cgi?no=10;sub=1;mes=0;tree=1' title='スレッド10番、コメント順'>全題名表示</a></td></tr>
-<tr><td class='no'>16.</td><td class='thread'><a href='./read.cgi?no=16;ls=50;tree=1;sub=1' class='thread' title='最新50レスを表示'><span title='プログラミングおもちゃ箱'>プログラミングおもちゃ箱</span></a>(1)</td><td class='date'>2004年07月24日(土)17時27分</td><td class='all'><a href='./read.cgi?no=16' title='スレッド16番、番号順'>全発言表示</a></td><td class='titleonly'><a href='./read.cgi?no=16;sub=1;mes=0;tree=1' title='スレッド16番、コメント順'>全題名表示</a></td></tr>
-<tr><td class='no'>9.</td><td class='thread'><a href='./read.cgi?no=9;ls=50;tree=1;sub=1' class='thread' title='最新50レスを表示'><span title='雑談スレ'>雑談スレ</span></a>(10)</td><td class='date'>2004年02月22日(日)15時14分</td><td class='all'><a href='./read.cgi?no=9' title='スレッド9番、番号順'>全発言表示</a></td><td class='titleonly'><a href='./read.cgi?no=9;sub=1;mes=0;tree=1' title='スレッド9番、コメント順'>全題名表示</a></td></tr>
-<tr><td class='no'>1.</td><td class='thread'><a href='./read.cgi?no=1;ls=50;tree=1;sub=1' class='thread' title='最新50レスを表示'><span title='ギルドラブひな食堂（通常会議室）'>ギルドラブひな食堂（通常会議室）</span></a>(3)</td><td class='date'>2003年02月12日(水)22時10分</td><td class='all'><a href='./read.cgi?no=1' title='スレッド1番、番号順'>全発言表示</a></td><td class='titleonly'><a href='./read.cgi?no=1;sub=1;mes=0;tree=1' title='スレッド1番、コメント順'>全題名表示</a></td></tr>
+<tr><td class='no'>3.</td><td class='thread'><a href='./read.cgi?no=3;ls=100;tree=1;sub=1' class='thread' title='最新100レスを表示'><span title='どうせうまくいくまい2'>どうせうまくいくまい2</span></a>(1)</td><td class='date'>2019年04月08日(月)23時44分</td><td class='all'><a href='./read.cgi?no=3' title='スレッド3番、番号順'>全発言表示</a></td><td class='titleonly'><a href='./read.cgi?no=3;sub=1;mes=0;tree=1' title='スレッド3番、コメント順'>全題名表示</a></td></tr>
+<tr><td class='no'>2.</td><td class='thread'><a href='./read.cgi?no=2;ls=100;tree=1;sub=1' class='thread' title='最新100レスを表示'><span title='どうせうまくいくまい'>どうせうまくいくまい</span></a>(1)</td><td class='date'>2019年04月08日(月)23時42分</td><td class='all'><a href='./read.cgi?no=2' title='スレッド2番、番号順'>全発言表示</a></td><td class='titleonly'><a href='./read.cgi?no=2;sub=1;mes=0;tree=1' title='スレッド2番、コメント順'>全題名表示</a></td></tr>
 
 </tbody></table>
 
@@ -80,7 +48,7 @@
 
 <!--======================================================================-->
 
-<div class='link'><a href='http://www.sarinaga.com/'>トップページ</a>　<a href='./admin.html'>管理モード</a>　<a href='mailto:webmaster@sarinaga.com'>管理者宛メール</a>　</div>
+<div class='link'><a href='http://www.sarinaga.com/'>トップページ</a>　<a href='./admin.html'>管理モード</a>　</div>
 
 <!--======================================================================-->
 
@@ -96,14 +64,14 @@
 <tr class="thread">
 <th>スレッド名</th>
 <td>
-  <input type='text' name='thread' size='40' value='' />
+  <input type='text' name='thread' size='40' value=''>
 </td>
 </tr>
 
 <tr class='name'>
 <th>名前</th>
 <td>
-  <input type='text' name='name' size='20' />
+  <input type='text' name='name' size='20' >
   <script type='text/javascript'>
     document.post.name.value = getCookie("USER_NAME");
   </script>
@@ -113,7 +81,7 @@
 <tr class="title">
 <th>タイトル</th>
 <td>
-  <input type='text' name='title' size='40' value='' />
+  <input type='text' name='title' size='40' value=''>
 </td>
 </tr>
 
@@ -125,7 +93,7 @@
 <tr class='email'>
 <th>email</th>
 <td>
-  mailto:<input type='text' name='email' size='30' />
+  mailto:<input type='text' name='email' size='30' >
   <script type='text/javascript'>
      document.post.email.value = getCookie("USER_EMAIL");
   </script>
@@ -135,7 +103,7 @@
 <tr class='webpage'>
 <th>webpage</th>
 <td>
-  http://<input type='text' name='web' size='30' />
+  http://<input type='text' name='web' size='30' >
   <script type='text/javascript'>
     document.post.web.value = getCookie("USER_WEBPAGE");
   </script>
@@ -145,8 +113,8 @@
 <tr class="trip">
 <th>トリップ</th>
 <td>
-  <input type='text' name='trip' size='10' maxlength='10' />
-  <small>固有IDを生成する. [0-9A-Za-z]で0文字以上10文字以内.</small>
+  <input type='text' name='trip' size='10'>
+  <small>固有IDを生成する. [0-9A-Za-z]で0文字以上.</small>
   <script type='text/javascript'>
     document.post.trip.value = getCookie("TRIP");
   </script>
@@ -158,9 +126,10 @@
 <td>
   <input type='password'
          name='pass'
-         size='20'
-         maxlength='20' />
-  <small>発言を削除、訂正するのに必要. [0-9A-Za-z]で5文字以上20文字以内.</small>
+         size='10'
+         required='required'
+         minlength='5'>
+  <small>発言を削除、訂正するのに必要. [0-9A-Za-z]で5文字以上.</small>
   <script type='text/javascript'>
     document.post.pass.value = getCookie("PASSWORD");
   </script>
@@ -170,7 +139,7 @@
 <tr class='other'>
 <th>その他</th>
 <td>
-  <input type='checkbox' name='cookie' value='1' /> cookieを保存する.
+  <input type='checkbox' name='cookie' value='1'> cookieを保存する.
   <script type='text/javascript'>
     var cookie = getCookie("COOKIE");
     if (cookie == 1)
@@ -179,7 +148,7 @@
         document.post.cookie.checked = false;
   </script>
 
-  <input type='checkbox' name='tomato' value='1' /> IPアドレス強制表示.
+  <input type='checkbox' name='tomato' value='1'> IPアドレス強制表示.
   <script type='text/javascript'>
     var tomato = getCookie("TOMATO");
     if (tomato == 1)
@@ -193,11 +162,11 @@
 <tr class="post">
 <th>フォーム送信</th>
 <td>
-  <input type='submit' value='スレッド作成' />
+  <input type='submit' value='スレッド作成' >
   <input type='reset' value='リセット'
          onclick='return reset_form();'
-         onkeypress='return reset_form();'  />
-  <input type='hidden' name='mode' value='create' />
+         onkeypress='return reset_form();' >
+  <input type='hidden' name='mode' value='create'>
 </td>
 </tr>
 
@@ -208,11 +177,11 @@
 
 </div>
 
-<div class='link'><a href='http://www.sarinaga.com/'>トップページ</a>　<a href='./admin.html'>管理モード</a>　<a href='mailto:webmaster@sarinaga.com'>管理者宛メール</a>　</div>
+<div class='link'><a href='http://www.sarinaga.com/'>トップページ</a>　<a href='./admin.html'>管理モード</a>　</div>
 
 <!--======================================================================-->
 
-<div class="version" xml:lang="en">Double Thread BBS version 0.70 - programed by <a href='http://www.sarinaga.com/'>SAYURIN-SENSEI</a></div>
+<div class="version" lang="en">Double Thread BBS version 0.80 - programed by <a href='http://www.sarinaga.com/'>SAYURIN-SENSEI</a></div>
 
 </body>
 

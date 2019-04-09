@@ -10,14 +10,13 @@ use strict;
 use utf8;
 use CGI;
 use Digest::SHA 'sha512';
-use Time::localtime;
 
 BEGIN{
 	if ($ENV{'HTTP_HOST'}){
 		use POSIX qw(strftime);
 		use CGI::Carp qw(carpout);
 	    my @tm = localtime;
-		open(LOG, strftime(">error%Y%m%d.log", @tm));
+		open(LOG, strftime(">>error%Y%m%d.log", @tm));
 		carpout(*LOG);
 	warn "admin.cgi log start.\n";
 	}
@@ -85,11 +84,10 @@ $PASSWORD_LENGTH = 8;
 #--------------------------------------------------------------------------
 #                              動作環境を読み込み
 #--------------------------------------------------------------------------
-# コンフィグファイル読み込み
-use vars qw(%CONF);
-no_conf() unless(configReader::readConfig(\%CONF));
-%html::CONF = %CONF;
-%file::CONF = %CONF;
+use vars qw($CONF);
+error_fail_conf() unless($CONF = configReader::readConfig());
+$html::CONF = $CONF;
+$file::CONF = $CONF;
 
 #--------------------------------------------------------------------------
 #                                 フォーム取得
@@ -103,7 +101,7 @@ no_conf() unless(configReader::readConfig(\%CONF));
 #
 
 # 容量が大きすぎるときはエラー
-post_huge() if ($ENV{'CONTENT_LENGTH'} > $CONF{'BUFFER_LIMIT'});
+post_huge() if ($ENV{'CONTENT_LENGTH'} > $CONF->{'resource'}->{'bufferLimit'});
 
 # フォームデータ取得
 my $cgi = new CGI;
@@ -565,7 +563,7 @@ sub thread_command{
 #                          テンポラリファイル名作成                       #
 ###########################################################################
 sub temp_filename{
-	return "$CONF{'TEMP_DIR'}temp.$$";
+	return file::temp_name('admin');
 }
 
 

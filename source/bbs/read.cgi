@@ -15,7 +15,7 @@ BEGIN{
 		use CGI::Carp qw(carpout);
 		use POSIX qw(strftime);
 	    my @tm = localtime;
-		open(LOG, strftime(">error%Y%m%d.log", @tm));
+		open(LOG, strftime(">>error%Y%m%d.log", @tm));
 		carpout(*LOG);
 		warn "read.cgi log start.\n";
 	}
@@ -36,10 +36,10 @@ unless($ENV{'HTTP_HOST'}){
 
 
 # 動作環境読み取り
-use vars qw(%CONF);
-error_fail_conf() unless(configReader::readConfig(\%CONF));
-%html::CONF = %CONF;
-%file::CONF = %CONF;
+use vars qw($CONF);
+error_fail_conf() unless($CONF = configReader::readConfig());
+$html::CONF = $CONF;
+$file::CONF = $CONF;
 
 # CGIクラス利用
 my $cgi = new CGI;
@@ -164,8 +164,8 @@ unless($double_flag){
 $param{'st'} = 0     if($param{'st'} < 0);
 $param{'en'} = $#log if($#log < $param{'en'});
 
-$param{'mode'} |= $html::NO_REVISE if ($log[0]{'SIZE'} >= $CONF{'FILE_LIMIT'});   # 容量超過
-$param{'mode'} |= $html::COMPLETE  if ($log[0]{'POST'} >= $CONF{'THREAD_LIMIT'}); # 発言数超過
+$param{'mode'} |= $html::NO_REVISE if ($log[0]{'SIZE'} >= $CONF->{'general'}->{'fileLimit'});   # 容量超過
+$param{'mode'} |= $html::COMPLETE  if ($log[0]{'POST'} >= $CONF->{'general'}->{'threadLimit'}); # 発言数超過
 
 
 #
@@ -319,9 +319,9 @@ sub rev{
 
 <h3 id='howto'>発言の削除、修正</h3>
 
-<p>このフォームから<em class="thread">スレッド名「$thread」(スレッド番号${no}番)の${target}番発言</em>の修正、削除ができます。発言修正、削除を行うには投稿時に指定したパスワードが必要です。</p>
+<p>このフォームから<em class="thread">スレッド名「${thread}」(スレッド番号${no}番)の${target}番発言</em>の修正、削除ができます。発言修正、削除を行うには投稿時に指定したパスワードが必要です。</p>
 
-<p>パスワードを忘れてしまった発言の削除、中傷発言の削除、消してしまった発言を復活させたい場合などは<a href="mailto:$CONF{'ADMIN_MAIL'}">管理者</a>にご連絡ください。</p>
+<p>パスワードを忘れてしまった発言の削除、中傷発言の削除、消してしまった発言を復活させたい場合などは<a href="mailto:$CONF->{'general'}->{'adminMail'}">管理者</a>にご連絡ください。</p>
 
 <p>管理者は人の発言を勝手に修正することはできません。したがってパスワードを忘れるとその投稿は誰にも修正できなくなります(管理者が消すことはできます)。</p>
 
@@ -469,24 +469,27 @@ sub notice{
 	my $amount = shift;  # スレッドの大きさ
 	my $post = shift;    # 投稿数
 
+	my $pLimit = $CONF->{'resource'}->{'postLimit'};
 	# スレッド制限に引っかからない場合は何も表示しない
-	return if ($amount < $CONF{'FILE_CAUTION'} and $post < $CONF{'THREAD_CAUTION'});
+	return if ($amount < $pLimit->{'fileSize'}->{'caution'} and
+		       $post   < $pLimit->{'post'}->{'caution'});
 
 	# スレッドの大きさをKB単位にする
 	my $kb    = int($amount / 1000);
-	my $limit = int($CONF{'FILE_LIMIT'} / 1000);
+	my $limit = int($pLimit->{'fileSize'}->{'max'} / 1000);
+	my $caution = int($pLimit->{'fileSize'}->{'caution'} / 1000);
 
 	# 警告・注意表示をする
 	print "<div class='notice'>\n\n";
 
 	# 上限に達した場合のメッセージ
 	my $already_display = 0;
-	if($amount >= $CONF{'FILE_LIMIT'}){
-		print "<p class='warning'>スレッドの容量が上限($limit" . "KB)に達しました。これ以上投稿、修正はできません。</p>\n\n";
+	if($amount >= $pLimit->{'fileSize'}->{'max'} ){
+		print "<p class='warning'>スレッドの容量が上限(${limit}KB)に達しました。これ以上投稿、修正はできません。</p>\n\n";
 		$already_display = 1;
 	}
-	if($post >= $CONF{'THREAD_LIMIT'}){
-		print "<p class='warning'>スレッドへの投稿数が上限($CONF{'THREAD_LIMIT'}発言)に達しました。これ以上投稿できません。</p>\n\n";
+	if($post >= $pLimit->{'post'}->{'max'}){
+		print "<p class='warning'>スレッドへの投稿数が上限($pLimit->{'post'}->{'max'}発言)に達しました。これ以上投稿できません。</p>\n\n";
 		$already_display = 1;
 	}
 	if($already_display){
@@ -495,23 +498,24 @@ sub notice{
 	}
 
 	# 警告表示（ファイル容量制限）
-	if($amount >= $CONF{'FILE_WARNING'}){
+	if($amount >= $pLimit->{'fileSize'}->{'warning'}){
 		print '<p class="warning">';
-	}elsif($amount >= $CONF{'FILE_CAUTION'}){
+	}elsif($amount >= $pLimit->{'fileSize'}->{'caution'}){
 		print '<p class="caution">';
 	}
-	if ($amount >= $CONF{'FILE_CAUTION'}){
-		print "スレッドの容量が$kb" . "KBを超えています。$limit" . "KBを超えると投稿、修正が出来なくなります。</p>\n\n";
+	if ($amount >= $pLimit->{'fileSize'}->{'caution'}){
+		print "スレッドの容量が${caution}KBを超えています。${limit}KBを超えると投稿、修正が出来なくなります。</p>\n\n";
 	}
 
 	# 警告表示（投稿量制限）
-	if($post >= $CONF{'THREAD_WARNING'}){
-		print "<p class='warning'>スレッドへの投稿数が$CONF{'THREAD_WARNING'}";
-	}elsif($post >= $CONF{'THREAD_CAUTION'}){
-		print "<p class='caution'>スレッドへの投稿数が$CONF{'THREAD_CAUTION'}";
-	}
-	if($post >= $CONF{'THREAD_CAUTION'}){
-		print "発言を超えています。$CONF{'THREAD_LIMIT'}発言を超えると投稿が出来なくなります。</p>\n\n";
+	if($post >= $pLimit->{'post'}->{'caution'}){
+		if($post >= $pLimit->{'post'}->{'warning'}){
+			print "<p class='warning'>";
+		}elsif($post >= $pLimit->{'post'}->{'caution'}){
+			print "<p class='caution'>";
+		}
+		print "スレッドへの投稿数が$pLimit->{'post'}->{'caution'}発言を超えています。";
+		print "$pLimit->{'post'}->{'max'}発言を超えると投稿が出来なくなります。</p>\n\n";
 	}
 	print "</div>\n\n";
 
@@ -543,11 +547,9 @@ sub form_new{
 	print "<div class='post'>\n\n";
 	print "<h3 id='newpost'>$message</h3>\n\n";
 
-	if($$log[0]{'SIZE'} >= $CONF{'FILE_LIMIT'} or $$log[0]{'POST'} >= $CONF{'THREAD_LIMIT'}){
-		print '<p>スレッドの容量を超えているので';
-		if (defined($res)){  print 'レス発言投稿';  }
-		else{  print '新規投稿';  }
-		print "は出来ません。</p>\n\n";
+	if($$log[0]{'SIZE'} >= $CONF->{'resource'}->{'postLimit'}->{'fileSize'}->{'max'} or
+	   $$log[0]{'POST'} >= $CONF->{'resource'}->{'postLimit'}->{'post'}->{'max'}){
+		print "<p>スレッドの容量を超えているので投稿は出来ません。</p>\n\n";
 
 	}elsif(!defined($res) or !defined($$log[$res]{'DELETE_TIME'})){
 
@@ -596,19 +598,20 @@ sub form_rev{
 	print "<div class='revise'>\n\n";
 	print "<h3 id='revise'>発言修正</h3>\n\n";
 
-	if($$log[0]{'SIZE'} >= $CONF{'FILE_LIMIT'}){
+	if($$log[0]{'SIZE'} >= $CONF->{'resource'}->{'postLimit'}->{'fileSize'}->{'max'}){
 		print "<p>スレッドの容量を超えているので修正できません。</p>\n\n";
 
 	}elsif(defined($$log[$target]{'DELETE_TIME'})){
 		print "<p>この発言はすでに削除されているので修正できません。</p>\n\n";
 
-	}elsif(defined($$log[$target]{'CORRECT_TIME'}) && @{$$log[$target]{'CORRECT_TIME'}} >= $CONF{'CHANGE_LIMIT'}){
-		print "<p>$CONF{'CHANGE_LIMIT'}回を超えて発言を修正することはできません。</p>";
+	}elsif(defined($$log[$target]{'CORRECT_TIME'}) &&
+	       @{$$log[$target]{'CORRECT_TIME'}} >= $CONF->{'general'}->{'changeLimit'}){
+		print "<p>$CONF->{'general'}->{'changeLimit'}回を超えて発言を修正することはできません。</p>";
 
 	}else{
 
 		if (defined($$log[$target]{'CORRECT_TIME'})){
-			my $limit = $CONF{'CHANGE_LIMIT'} - @{$$log[$target]{'CORRECT_TIME'}};
+			my $limit = $CONF->{'general'}->{'changeLimit'} - @{$$log[$target]{'CORRECT_TIME'}};
 			print "<p>あと${limit}回発言を修正できます。</p>\n\n";
 		}
 		my $body = $$log[$target]{'BODY'};
@@ -671,8 +674,9 @@ sub regularization{
 ##########################################################################
 sub location{
 	my $query = shift;
+	my $base = $CONF->{'general'}->{'baseHttp'};
 	print "Status: 302 Found\n";
-	print "Location: $CONF{'BASE_HTTP'}$file::READ_SCRIPT?$query\n\n";
+	print "Location: $base$file::READ_SCRIPT?$query\n\n";
 	exit;
 }
 

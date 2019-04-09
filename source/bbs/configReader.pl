@@ -90,6 +90,10 @@ sub setDefaulyToConfig{
 	# バージョン番号 x 100
 	$c->{'VERSION'} = $constants::VERSION;
 
+	# OS情報
+	$c->{'system'}->{'OS'}->{'name'} = $^O;
+	$c->{'system'}->{'OS'}->{'isUnix'} = ($^O=~m/(linux|freebsd)/);
+
 	return $c;
 
 

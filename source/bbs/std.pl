@@ -285,10 +285,10 @@ sub gtime_format{
 ##########################################################################
 #                    トリップキー作成(write.cgiに移動？)                 #
 ##########################################################################
-sub createTripe{
+sub createTrip{
 	my $str  = shift;   # ハッシュ化したい文字列
 	my $salt = shift;   # ハッシュ化キー
-	my $crypted = sha1_base64("$salt\$str");
+	my $crypted = Digest::SHA1::sha1_base64("$salt\$str");
 	return $crypted;
 }
 
