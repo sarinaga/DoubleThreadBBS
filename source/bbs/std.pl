@@ -3,11 +3,13 @@
 #
 #                                          2002.10.23 さゆりん先生
 #
+package std;
+
 use strict;
 use Digest::SHA1 qw(sha1_base64);
 use utf8;
+binmode(STDOUT, ":utf8"); 
 
-package std;
 
 
 
@@ -300,7 +302,9 @@ sub createTrip{
 #                                  強制404                               #
 ##########################################################################
 sub goto404{
-#Status: 404 Not Found
+	#Status: 404 Not Found
+	my $marker = shift;
+
 	print << "EOF";
 Content-Type: text/html;
 
@@ -314,6 +318,7 @@ Content-Type: text/html;
 The requested URL $ENV{'REQUEST_URI'} was not found on this server.<P>
 <HR>
 <ADDRESS>$ENV{'SERVER_SOFTWARE'} Server at www.sarinaga.com Port 80</ADDRESS>
+<p>$marker</p>
 </BODY>
 </HTML>
 EOF

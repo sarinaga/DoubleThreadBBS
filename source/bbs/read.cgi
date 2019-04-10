@@ -7,14 +7,18 @@
 #
 use strict;
 use CGI;
+use Data::Dumper;
+use Encode;
 use utf8;
+binmode(STDOUT, ":utf8"); 
 
 BEGIN{
 	if ($ENV{'HTTP_HOST'}){
 		use CGI::Carp qw(carpout);
 		use POSIX qw(strftime);
 	    my @tm = localtime;
-		open(LOG, strftime(">>error%Y%m%d.log", @tm));
+		open(LOG, strftime(">>error%Y%m%d%H%M%d.log", @tm));
+		binmode(LOG, ":utf8"); 
 		carpout(*LOG);
 		warn "read.cgi log start.\n";
 	}
@@ -27,6 +31,7 @@ require './html.pl';
 require './file.pl';
 require './std.pl';
 require './configReader.pl';
+
 
 unless($ENV{'HTTP_HOST'}){
 	print "このプログラムはCGI用です. コマンドラインからの実行はできません. \n";
@@ -50,7 +55,6 @@ bad_request()  if ($ENV{'REQUEST_METHOD'} ne 'GET');
 my $reg_query = regularization($ENV{'QUERY_STRING'}, \$cgi);
 location($reg_query) if ($ENV{'QUERY_STRING'} ne $reg_query);
 
-
 #
 # パラメータを読み取り、データ洗浄する（前処理）
 #
@@ -59,31 +63,32 @@ location($reg_query) if ($ENV{'QUERY_STRING'} ne $reg_query);
 #
 # no       = スレッド番号
 #
-# st       = 読み取り開始（省略時は0）
-# en       = 読み取り終了（省略時は最後まで）
-# at       = 単体発言表示
-# ls       = 最新の発言*個表示
+# st       = 読み取り開始(省略時は0)
+# en       = 読み取り終了(省略時は最後まで)
+# at       = 単体発言表示(指定された発言だけを表示する)
+# ls       = 最新の発言をn個表示(nは指定された数)
 #
-# mes      = 発言本文を表示するかしないか（省略時は1）
-# sub      = 発言タイトル一覧を表示するかしないか（省略時は0）
+# mes      = 発言本文を表示するかしないか(省略時は1)
+# sub      = 題名一覧を表示するかしないか(省略時は0)
 #
-# tree     = ツリー・スレッド表示方式の発言表示
+# tree     = スレッド順で出力するかどうか(題名一覧はツリー表示)
 #
-# res      = 発言レス投稿フォーム表示
-# del      = 発言削除確認フォーム表示
-# rev      = 発言修正確認フォーム表示
+# res      = レス投稿フォーム表示
+# del      = 発言削除フォーム表示
+# rev      = 発言修正フォーム表示
 #
+
+# スレッド番号
 my $no  = $cgi->param('no');
 error_illigal_call() unless($no =~m/^(\d+)$/);  # 洗浄
-$no = $1;
-
+$no = $1 * 1;
 
 # 動作環境読み取り（前半：ログを読み取らなくても判断できる部分）
 my %param;
-$param{'no'}   = $no;
+$param{'no'}   = $no;   # スレ番号
 $param{'mode'} = 0;
 
-# データが矛盾していないかチェックする(at, res, rev)
+# データが矛盾していないかチェックする
 my $double_flag = 0;   # 重複入力されていないかどうかを確認するフラグ（結構あとまで使うので注意）
 foreach my $key('at', 'res', 'rev'){
 	my $num = $cgi->param($key);
@@ -93,8 +98,8 @@ foreach my $key('at', 'res', 'rev'){
 		error_illigal_call() if($double_flag);       # 重複していた場合不正
 
 		$double_flag    = 1;
-		$param{'st'}    = $num;
-		$param{'en'}    = $num;
+		$param{'st'}    = $num * 1;
+		$param{'en'}    = $num * 1;
 
 		if($key eq 'at'){
 			$param{'mode'} |= $html::ATONE;  # 単体発言表示
@@ -163,24 +168,34 @@ unless($double_flag){
 $param{'st'} = 0     if($param{'st'} < 0);
 $param{'en'} = $#log if($#log < $param{'en'});
 
-$param{'mode'} |= $html::NO_REVISE if ($log[0]{'SIZE'} >= $CONF->{'general'}->{'fileLimit'});   # 容量超過
-$param{'mode'} |= $html::COMPLETE  if ($log[0]{'POST'} >= $CONF->{'general'}->{'threadLimit'}); # 発言数超過
-
+$param{'mode'} |= $html::NO_REVISE if ($log[0]{'SIZE'} >= $CONF->{'resource'}->{'postLimit'}->{'fileSize'}->{'max'});   # 容量超過
+$param{'mode'} |= $html::COMPLETE  if ($log[0]{'POST'} >= $CONF->{'resource'}->{'postLimit'}->{'post'}->{'max'});       # 発言数超過
 
 #
 # HTML表示
 #
 html::http_response_header();
+
+print "<pre>";
+print Dumper %param;
+print sprintf("%016b", $param{'mode'}) . "\n";
+print "</pre>";
+
+
 if($cgi->param('at') ne ''){
+	print "at";
 	at(\@log, \%param);
 
 }elsif($cgi->param('res') ne ''){
+	print "res";
 	res(\@log, \%param);
 
 }elsif($cgi->param('rev') ne ''){
+	print "rev";
 	rev(\@log, \%param);
 
 }else{
+	print "mes";
 	mes(\@log, \%param);
 }
 
@@ -210,10 +225,10 @@ sub at{
 	my $at    = $$param{'st'};
 
 	# ヘッダ
-	html::header(*STDOUT, "$$log[0]{'THREAD_TITLE'} - 単発言表示");
+	html::header(*STDOUT, $$log[0]{'THREAD_TITLE'} . " - 単発言表示");
 
 	# 冒頭説明文
-	print "<h2 id='subtitle'>$$log[0]{'THREAD_TITLE'}</h2>\n\n";
+	print "<h2 id='subtitle'>" . $$log[0]{'THREAD_TITLE'} . "</h2>\n\n";
 	notice($$log[0]{'SIZE'}, $log[0]{'POST'});
 	html::hr(*STDOUT);
 
@@ -259,7 +274,7 @@ sub res{
 	html::header(*STDOUT, "$thread - レス発言フォーム");
 	print "<h2 id='subtitle'>$thread</h2>\n\n";
 	html::hr(*STDOUT);
-
+	
 	# 説明
 	print << "HTML";
 <div class='howto'>
@@ -271,7 +286,6 @@ sub res{
 </div>
 
 HTML
-
 
 	# リンクバー
 	html::link_3set(*STDOUT, $no);
@@ -560,7 +574,7 @@ sub form_new{
 		html::formparts_name(*STDOUT, undef, $title, $body, undef, undef);
 		html::formparts_password(*STDOUT, 1, html::pass_message() );
 		html::formparts_age(*STDOUT, 1, 1);
-		html::formparts_foot(*STDOUT, $html::POST, $writecgi::POST, $no, $res);
+		html::formparts_foot(*STDOUT, $html::POST, $constants::POST, $no, $res);
 
 	}else{
 		print "<p>すでに発言が削除されているのでレスをつけることはできません。</p>\n\n";
@@ -617,7 +631,7 @@ sub form_rev{
 		html::formparts_head(*STDOUT);
 		html::formparts_name(*STDOUT, $$log[$target]{'USER_NAME'}, $$log[$target]{'TITLE'}, $body, $$log[$target]{'USER_EMAIL'}, $$log[$target]{'USER_WEBPAGE'});
 		html::formparts_password(*STDOUT, 0, $html::PASS_REINPUT);
-		html::formparts_foot(*STDOUT, $html::REVISE, $writecgi::REVISE, $$log[0]{'THREAD_NO'}, $target);
+		html::formparts_foot(*STDOUT, $html::REVISE, $constants::REVISE, $$log[0]{'THREAD_NO'}, $target);
 	}
 	print "</div>\n\n";
 }
@@ -675,7 +689,7 @@ sub location{
 	my $query = shift;
 	my $base = $CONF->{'general'}->{'baseHttp'};
 	print "Status: 302 Found\n";
-	print "Location: $base$file::READ_SCRIPT?$query\n\n";
+	print "Location: ${base}${constants::READ_CGI}?${query}\n\n";
 	exit;
 }
 

@@ -15,6 +15,7 @@ use Time::HiRes qw(sleep);
 use Crypt::PasswdMD5;
 use Digest::SHA 'sha1_hex';
 use utf8;
+binmode(STDOUT, ":utf8"); 
 
 require './constants.pl';
 
@@ -60,6 +61,7 @@ use vars qw($CONF);
 #
 #         DELETE_TIME     : + 削除された時間(epoc),
 #         DELETE_ADMIN    : + 発言を削除した管理者,
+#         RES             : + レス先,
 #         TITLE           : # 発言タイトル,
 #         USER_NAME       : # 投稿者氏名,
 #         USER_EMAIL      : # 投稿者e-mail,
@@ -139,10 +141,12 @@ sub read_log{
 	unless(open(FIN_P, $log_public)){
 		clear($no);  return 0;
 	}
+
 	unless(open(FIN_S, $log_secret)){
 		close(FIN_P); clear($no);  return 0;
 	}
-
+	binmode(FIN_S, ":utf8");	
+	binmode(FIN_P, ":utf8");	
 
 	# ログ[公開部／非公開部]からスレッド情報を読み出す
 	my $result = read_header(*FIN_P, $log);      # [公開部]
@@ -232,6 +236,7 @@ sub read_log{
 
 			# １行読む／区切り文字を見つけたらそれを返す
 			my $read = <FIN>;
+			utf8::decode($read);
 			chomp($read);
 			return $read if ($read eq '&' or $read eq '&&');
 
@@ -292,6 +297,7 @@ sub read_log{
 		for(;;){
 			return undef if(eof(FIN));        # ログが正常なら未到達
 			my $read = <FIN>;
+			utf8::decode($read);
 			chomp($read);
 			if ($read eq '&&'){               # 区切り記号まで読んだ
 				chomp($body);
@@ -498,6 +504,7 @@ sub write_log{
 		unlock($log_secret);
 		return 0;
 	}
+	binmode(TEMP, ":utf8");	
 
 	warn "499 line ok";
 
@@ -571,6 +578,7 @@ sub write_log{
 		unlock($log_public);
 		unlock($log_secret);
 	}
+	binmode(TEMP, ":utf8");	
 
 	# 非公開部スレッド情報を書き込む
 	print TEMP "BUILDER_IP_ADDR<>$$log[0]{'BUILDER_IP_ADDR'}\n"; # スレッド作成者 IPアドレス
@@ -672,6 +680,7 @@ sub read_pointer{
 	return undef unless (filelock($pointer_file) and open(FIN, $pointer_file));
 	my $read=<FIN>;
 	close(FIN);
+	utf8::decode($read);
 	unlock($pointer_file) unless($lock);
 
 	# 洗浄
@@ -698,6 +707,7 @@ sub write_pointer{
 		unlock($pointer_file);
 		return 0;
 	}
+	binmode(TEMP, ":utf8");	
 	print TEMP "$pointer\n";
 	close(TEMP);
 	chmod($constants::SECRET_FILE_PERMISSION, $pointer_temp);
@@ -716,6 +726,7 @@ sub read_overbuilder{
 	close(FIN);
 
 	foreach my $line(@dat){
+		utf8::decode($line);
 		chomp($line);
 		push(@$list, $line);
 	}
@@ -737,6 +748,7 @@ sub write_overbuilder{
 		unlock($filename);
 		return 0;
 	}
+	binmode(TEMP, ":utf8");	
 
 	# ブラックリスト書き込み～更新
 	foreach my $line(@_){
@@ -757,6 +769,7 @@ sub read_adminpass{
 	my $pass_file = adminpass_name();
 	return 0 unless (open(FIN, $pass_file));
 	foreach my $line(<FIN>){
+		utf8::decode($line);
 		chomp($line);
 		my ($user, $pass) = split(/:/, $line, 2);
 		$$passwords{$user} = $pass;
@@ -782,6 +795,8 @@ sub write_adminpass{
 		unlock($pass_file);
 		return 0;
 	}
+	binmode(TEMP, ":utf8");	
+
 	my ($user, $pass);
 	while ( ($user, $pass) = each(%$passwords) ){
 		print TEMP "$user:$pass\n";

@@ -9,7 +9,7 @@
        "掲示板システムの起点となるURL                               "
       ,"  ・'bbs.cgi'が置かれるURLを書く.                           "
     ],
-    "baseHttp" : "http://localhost/bbs/",
+    "baseHttp" : "http://localhost/~sarinaga/bbs/",
     "BASE_HTTP" : "http://www.sarinaga.com/bbs/",
 
     "//adminMail" : "管理者メールアドレス",

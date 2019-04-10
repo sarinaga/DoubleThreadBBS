@@ -6,16 +6,18 @@
 #                                          2003.01.14 さゆりん先生
 #
 use strict;
-use utf8;
 use CGI;
 use Digest::SHA 'sha512';
+use utf8;
+binmode(STDOUT, ":utf8"); 
 
 BEGIN{
 	if ($ENV{'HTTP_HOST'}){
 		use POSIX qw(strftime);
 		use CGI::Carp qw(carpout);
 	    my @tm = localtime;
-		open(LOG, strftime(">>error%Y%m%d.log", @tm));
+		open(LOG, strftime(">>error%Y%m%d%H%M%d.log", @tm));
+		binmode(LOG, ":utf8"); 
 		carpout(*LOG);
 	warn "admin.cgi log start.\n";
 	}
@@ -237,6 +239,7 @@ if (open(FIN, $tempfile)) {
 	print "<div class='result'>\n";
 	until(eof(FIN)){
 		my $line = <FIN>;
+		utf8::decode($line);
 		print "$line";
 	}
 	print "</div>\n\n";
@@ -291,6 +294,7 @@ sub display_command{
 	unless (open(FOUT, ">>$filename")) {
 		open(FOUT, ">$filename") or return $RESULT{'BAD'};
 	}
+	binmode(FOUT, ":utf8");	
 	print FOUT "<div class='commandline'>$purecommand</div>\n";
 	print FOUT "<dl class='message'>\n\n";
 	foreach my $i(@nums){
@@ -432,8 +436,9 @@ sub html{
 		                                # ログが読めない時は次のスレッドへ
 
 		my $htmlfile = file::html_name($no);
-		#next if (-f $htmlfile);
+
 		open(FOUT, ">$htmlfile") or next;  # ログ出力ファイル
+		binmode(FOUT, ":utf8");	
 
 		html::header(*FOUT, "$log[0]{'THREAD_TITLE'} - 過去ログ表示", 0, undef, undef, 1);
 
@@ -496,6 +501,7 @@ sub thread_list{
 	unless (open(FOUT, ">>$filename")) {
 		open(FOUT, ">$filename") or return $RESULT{'BAD'};
 	}
+	binmode(FOUT, ":utf8");	
 	print FOUT "<div class='commandline'>$c_line</div>\n";
 
 	# スレッド一覧表示

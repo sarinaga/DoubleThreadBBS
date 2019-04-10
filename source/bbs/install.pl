@@ -4,6 +4,7 @@ use File::Path;
 use lib '/home/sarinaga/perl/lib/perl5/site_perl/5.14';
 use Crypt::PasswdMD5;
 use utf8;
+binmode(STDOUT, ":utf8"); 
 
 require './configReader.pl';
 require './constants.pl';
@@ -15,8 +16,6 @@ use vars qw($CONF);
 $CONF = configReader::readConfig();
 $file::CONF = $CONF;
 $html::CONF = $CONF;
-
-binmode(STDOUT, ":utf8");
 
 ##########################################################################
 #                   ファイル、ディレクトリの初期化                       #
@@ -63,7 +62,8 @@ sub createPointer(){
 	my $pointer_file = file::pointer_name();
 	unless(open(FOUT, ">${pointer_file}")){
 		die "ポインタファイル'${pointer_file}'を初期化できませんでした.";
-	}
+	}	
+	binmode(FOUT, ":utf8");		
 	print FOUT "0\n";
 	close(FOUT);
 
@@ -82,6 +82,7 @@ sub createBlacklist(){
 	unless(open(FOUT, ">${blacklist_file}")){
 		die "ブラックリストファイル'${blacklist_file}'を初期化できませんでした.";
 	}
+	binmode(FOUT, ":utf8");	
 	close(FOUT);
 	unless(chmod($constants::SECRET_FILE_PERMISSION, $blacklist_file)){
 		die "ブラックリストファイル'${blacklist_file}'にパーミッションが設定できませんでした.";
@@ -98,6 +99,7 @@ sub createAdminPassword(){
 	unless(open(FOUT, ">$password_file")){
 		die "管理者パスワードファイル'${password_file}'を初期化できませんでした.";
 	}
+	binmode(FOUT, ":utf8");	
 	my $cpassword = apache_md5_crypt('admin', std::salt());
 	print FOUT "admin:$cpassword\n";
 	close(FOUT);

@@ -6,10 +6,11 @@
 #                                          2002.10.23 さゆりん先生
 #
 use strict;
-use utf8;
 use CGI;
 use Crypt::PasswdMD5;
 use Digest::SHA 'sha1';
+use utf8;
+binmode(STDOUT, ":utf8"); 
 
 # ログ出力のヘッダとフッタ
 BEGIN{
@@ -18,6 +19,7 @@ BEGIN{
 		use POSIX qw(strftime);
 	    my @tm = localtime;
 		open(LOG, strftime(">>error%Y%m%d%H%M%d.log", @tm));
+		binmode(LOG, ":utf8"); 
 		carpout(*LOG);
 		warn "write.cgi log start.\n";
 	}
@@ -86,18 +88,44 @@ my $no         = $cgi->param('no');                          # スレッド番�
 my $mode       = $cgi->param('mode');                        # 操作モード
 my $target     = $cgi->param('target');                      # 発言修正番号または発言削除番号
 my $res        = $cgi->param('res');                         # レス先番号
-my $web        = std::html_escape($cgi->param('web'));       # httpアドレス
+my $web        = $cgi->param('web');                         # httpアドレス
 my $trip       = $cgi->param('trip');                        # ユーザトリップ
-my $email      = std::html_escape($cgi->param('email'));     # emailアドレス
+my $email      = $cgi->param('email');                       # emailアドレス
 my $password   = $cgi->param('pass');                        # パスワード
 my $sage       = $cgi->param('sage');                        # スレッドを上げるか上げないか
 my $set_cookie = $cgi->param('cookie');                      # Cookie利用
 my $build      = $cgi->param('build');                       # 掲示板初期起動時フラグ
 my $tomato     = $cgi->param('tomato');                      # IPアドレス晒し
-my $thread     = std::html_escape($cgi->param('thread'));    # スレッド名
-my $title      = std::html_escape($cgi->param('title'));     # 題名
-my $name       = std::html_escape($cgi->param('name'));      # 投稿者名
-my $body       = std::html_escape($cgi->param('body'));      # 本文
+my $thread     = $cgi->param('thread');                      # スレッド名
+my $title      = $cgi->param('title');                       # 題名
+my $name       = $cgi->param('name');                        # 投稿者名
+my $body       = $cgi->param('body');                        # 本文
+
+# UTF-8変換
+utf8::decode($no);         
+utf8::decode($mode);       
+utf8::decode($target);     
+utf8::decode($res);        
+utf8::decode($web);        
+utf8::decode($trip);       
+utf8::decode($email);      
+utf8::decode($password);   
+utf8::decode($sage);       
+utf8::decode($set_cookie); 
+utf8::decode($build);      
+utf8::decode($tomato );    
+utf8::decode($thread);     
+utf8::decode($title);      
+utf8::decode($name);       
+utf8::decode($body);       
+
+# HTML特殊文字エスケープ
+$web        = std::html_escape($web);       # httpアドレス
+$email      = std::html_escape($email);     # emailアドレス
+$thread     = std::html_escape($thread);    # スレッド名
+$title      = std::html_escape($title);     # 題名
+$name       = std::html_escape($name);      # 投稿者名
+$body       = std::html_escape($body);      # 本文
 
 
 # スレッド再構成以外の場合はPOSTで呼び出さなければいけない
@@ -123,16 +151,9 @@ cant_create_thread() if (($mode eq $constants::CREATE) and $CONF->{'resource'}->
 
 # (やりたくないのだが)bodyにhttp://が含まれる場合、無理矢理rejectする
 if ($body=~m/https?:\/\//){
-	std::goto404();
+	std::goto404("!");
 	exit;
 }
-
-# (やりたくないのだが)titleが英語だけの場合、無理矢理rejectする
-if ($title=~m/^[\w\s]+$/){
-	std::goto404();
-	exit;
-}
-
 
 # 改行文字修正
 my $trans = join('<>', $thread, $title, $name, $body);
@@ -201,6 +222,8 @@ if ($mode eq $constants::DELETE){
 	if($email ne ''){
 		illigal_email() unless(std::email_valid($email))
 	}
+	warn "$name";
+	
 }
 
 # トリップ洗浄

@@ -6,9 +6,10 @@
 #
 package html;
 use strict;
-use utf8;
 use Cwd 'getcwd';
 use Data::Dumper;
+use utf8;
+binmode(STDOUT, ":utf8"); 
 
 require './std.pl';
 require './file.pl';
@@ -41,7 +42,6 @@ $NO_REVISE   = 0B0000000000000010;  #「発言修正」ができない状態（�
 $ATONE       = 0B0000000000000100;  # １発言単体表示モードでの発言出力
 $RES         = 0B0000000000001000;  # レス発言投稿フォーム用発言出力
 $REV         = 0B0000000000010000;  # 発言修正フォーム用発言出力
-
 $TOMATO      = 0B0000000000100000;  # 強制トマト表示
 
 $TITLE       = 0B1000000000000000;  # 通常表示モードでタイトルを表示する
@@ -260,6 +260,7 @@ sub mes_one{
 	unless($mode & $ADMIN or $mode & $HTML ){
 		$ctrl = !defined($dat{'DELETE_TIME'});
 	}
+
 	if ($ctrl){
 		print FOUT "<span class='ctrl'>";
 		unless(($mode & $ATONE) !=0){
@@ -332,7 +333,7 @@ sub message_header{
 
 	print FOUT "<br>\n";
 	print FOUT scalar std::time_format($$log[$target]{'POST_TIME'});
-	if (defined($res)){
+	if ($res ne ''){
 		print FOUT '　[';
 		if($mode & $ADMIN){
 			print FOUT "${res}番";
@@ -455,7 +456,7 @@ sub list_header{
 
 	# レスポンス先出力
 	print FOUT ' <td class="response">';
-	if (defined($res)){
+	if ($res ne ''){
 		if ($$param{'st'} > $res){
 			print FOUT "<a href='./$constants::READ_CGI?no=$$param{'no'};at=$res'>${res}番</a>";
 		}else{
