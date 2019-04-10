@@ -214,8 +214,7 @@
        "テンポラリファイルを作成する場所"
       ,"  ・末尾のディレクトリ記号の'/'がない場合は自動的に補われる.        "
     ],
-    "tmpunix" : "/tmp/",
-	"tmp" : "C:/Users/micro/AppData/Local/Temp/",
+	"tmp" : "/tmp/",
 
     "//fileLock" : [
        "ファイルロックの方法"

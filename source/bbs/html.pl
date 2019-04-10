@@ -623,8 +623,6 @@ sub thread_list{
 
 	# スレッド一覧を出力する～有効なスレッドがない場合
 	print FOUT "<div class='thread-list'>\n\n";
-	print "スレッドの数:@$thread\n";
-	print Dumper $thread;
 	unless (@$thread > 0){
 		print FOUT "<p>スレッドはまだ作られていないか、有効なスレッドがありません。</p>\n\n</div>\n\n";
 		return;
@@ -769,7 +767,7 @@ sub link_adminmode{
 ###########################################################################
 sub link_adminmail{
 	local(*FOUT) = shift; # 出力先ファイルハンドル
-#	print FOUT "<a href='mailto:" . $CONF->{'general'}->{'adminMail'} . "'>管理者宛メール</a>　";
+	print FOUT "<a href='mailto:" . $CONF->{'general'}->{'adminMail'} . "'>管理者宛メール</a>　";
 }
 
 
@@ -804,7 +802,7 @@ sub link_3set_close{  # 互換のため（関数命名に大失敗）
 	my $no       = shift; # スレッド番号
 	link_set(*FOUT, $no);
 	link_adminmail(*FOUT);
-	print "</div>\n\n";
+	print FOUT "</div>\n\n";
 }
 
 

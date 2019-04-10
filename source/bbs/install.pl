@@ -1,6 +1,4 @@
 #!/usr/bin/perl
-#!C:/Perl64/bin/perl -w
-
 use strict;
 use File::Path;
 use lib '/home/sarinaga/perl/lib/perl5/site_perl/5.14';
@@ -18,6 +16,8 @@ $CONF = configReader::readConfig();
 $file::CONF = $CONF;
 $html::CONF = $CONF;
 
+binmode(STDOUT, ":utf8");
+
 ##########################################################################
 #                   ファイル、ディレクトリの初期化                       #
 ##########################################################################
@@ -26,12 +26,12 @@ sub createDirectory{
 	# ディレクトリを作る
 	my %dirs = (
 	  "$CONF->{'system'}->{'log'}->{'public'}" => $constants::PUBLIC_DIR_PERMISSION,
-	  "$CONF->{'system'}->{'log'}->{'secret'}" => $constants::PUBLIC_DIR_PERMISSION,
-#	  "$CONF->{'system'}->{'log'}->{'secret'}" => $constants::SECRET_DIR_PERMISSION,
+	  "$CONF->{'system'}->{'log'}->{'secret'}" => $constants::SECRET_DIR_PERMISSION,
  	  "$CONF->{'system'}->{'log'}->{'html'}"   => $constants::PUBLIC_DIR_PERMISSION,
 	);
 
 	foreach my $dir(keys %dirs){
+		my $permission = $dirs{$dir};
 		chop($dir);
 		if (-e $dir){
 			if (-d $dir){
@@ -46,7 +46,8 @@ sub createDirectory{
 		if (-e $dir){
 			die "ディレクトリまたはファイル'${dir}'を削除できませんでした. ";
 		}
-		unless (mkdir($dir, $dirs{$dir})){
+
+		unless (mkdir($dir, $permission)){
 			die "ディレクトリ'${dir}'を作成できませんでした. ";
 		}
 
@@ -132,4 +133,5 @@ createPointer();
 createBlacklist();
 createAdminPassword();
 createPage();
-print "インストールが正しく終了しました. 'bbs.html'からアクセスできます.";
+
+print "インストールが正しく終了しました. 'bbs.html'からアクセスできます.\n";

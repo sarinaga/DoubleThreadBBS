@@ -11,35 +11,21 @@ AddType "text/javascript; charset=utf-8" js
 AddType "text/html; charset=utf-8" html
 
 # アクセス制限の基本設定
-#  Apache2.2の記述
-#Order allow,deny
-#Allow from all
-
-#  Apache2.4の記述
-Require all granted
+Order allow,deny
+Allow from all
+#Require all granted
 
 # プログラムと設定を隠蔽する
 <Files ~ "\.(pl|conf|templete|json)$">
-  #  Apache2.2の記述
-  #deny from all
-  #  Apache2.4の記述
-  Require all denied
+  deny from all
+  #Require all denied
 </Files>
 
 
 # error.logをweb上で見るかどうかを設定
 <Files "error.log">
-  # Web上で見ない
-  #   Apache2.2の記述
-  #deny from all
-  #   Apache2.4の記述
-  Require all denied
-
-  # Web上で見る
-  #   Apache2.2の記述
-  #allow from all
-  #   Apache2.4の記述
-  Require all granted
+  allow from all
+  #Require all granted
 </Files>
 
 # UAにキャッシュを保存させない
