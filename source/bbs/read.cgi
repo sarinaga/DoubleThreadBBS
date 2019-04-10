@@ -1,4 +1,3 @@
-#!C:/Perl64/bin/perl -w
 #!/usr/bin/perl -w
 #
 #

@@ -874,8 +874,7 @@ sub renew{
 	return 0 unless (-e $tempfile);
 
 	# テンポラリファイル→実ファイル変換
-	#File::Copy::move($tempfile, $filename) or warn "Cannot Renew File from $tempfile to $filename: $!";
-	unlink($filename);
+	File::Copy::move($tempfile, $filename) or warn "Cannot renew File from $tempfile to $filename: $!";
 	rename($tempfile, $filename);
 
 	# ロック解除

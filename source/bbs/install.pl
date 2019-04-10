@@ -128,10 +128,24 @@ sub createPage{
 	print "管理者ページ'admin.html'を作成しました.\n";
 }
 
+###########################################################################
+#                        cgiに実行権限を付与                           #
+###########################################################################
+sub setPermission{
+	chmod 0700, "./$constants::READ_CGI";
+	print "'${constants::READ_CGI}'に実行権限をつけました.\n";
+	chmod 0700, "./$constants::WRITE_CGI";
+	print "'${constants::WRITE_CGI}'に実行権限をつけました.\n";
+	chmod 0700, "./$constants::ADMIN_CGI";
+	print "'${constants::ADMIN_CGI}'に実行権限をつけました.\n";
+}
+
+
 createDirectory();
 createPointer();
 createBlacklist();
 createAdminPassword();
 createPage();
+setPermission();
 
 print "インストールが正しく終了しました. 'bbs.html'からアクセスできます.\n";

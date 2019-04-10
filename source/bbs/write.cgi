@@ -1,4 +1,3 @@
-#!C:/Perl64/bin/perl -w
 #!/usr/bin/perl -w
 #
 #
@@ -521,8 +520,8 @@ sub create{
 
 
 	# ファイル属性変更
-	chmod($file::PUBLIC_FILE_PERMISSION, $log_public);
-	chmod($file::SECRET_FILE_PERMISSION, $log_secret);
+	chmod($constants::PUBLIC_FILE_PERMISSION, $log_public);
+	chmod($constants::SECRET_FILE_PERMISSION, $log_secret);
 
 	warn "518 line ok";
 

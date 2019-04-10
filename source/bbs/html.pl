@@ -838,7 +838,7 @@ sub header{
 HEADER
 
 	# タイトル、base要素、スタイルシート、基本javascriptを出力
-	print FOUT "<meta charset='UTF-8'>\n";
+	print FOUT "<meta charset='f'>\n";
 	print FOUT "<base href='$CONF->{'general'}->{'baseHttp'}'>\n" if ($base);
 	print FOUT "<link rel='stylesheet' type='text/css' href='./$constants::STYLESHEET'>\n";
 	print FOUT "<script type='text/javascript' src='./$constants::JAVA_SCRIPT'></script>\n" if(!$outhtml);
