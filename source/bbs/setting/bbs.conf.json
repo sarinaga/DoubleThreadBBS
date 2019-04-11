@@ -24,6 +24,18 @@
     "//noTitle" : "題名のデフォルト値",
     "noTitle" : "題名はつけられませんでした",
 
+    "//icon" : [
+       "アイコン"
+      ,"  ・発言のwebページとemailのリンクに利用するアイコンふの画像ファイルを指定する."
+      ,"  ・URIまたはスクリプトからの相対パスを記述."
+      ,"  ・空文字列またはnullを設定するとアイコンを表示しなくなる."
+    ],
+    "icon" : {
+      "email" : "./image/icon_mail.gif",
+      "web" : "./image/icon_web.gif",
+      "//endofhash" : null
+    },
+
     "//threadLengthMax" : "スレッド名を何文字まで表示させるか",
     "threadLengthMax" : 40,
 
@@ -108,17 +120,6 @@
 
   "//resource" : "リソース設定",
   "resource" : {
-    "//icon" : [
-       "アイコン"
-      ,"  ・発言のwebページとemailのリンクに利用するアイコンふの画像ファイルを指定する."
-      ,"  ・URIまたはスクリプトからの相対パスを記述."
-      ,"  ・空文字列またはnullを設定するとアイコンを表示しなくなる."
-    ],
-    "icon" : {
-      "email" : "./icon_mail.gif",
-      "web" : "./icon_web.gif",
-      "//endofhash" : null
-    },
 
     "//threadMax" : [
        "スレッド保存数"

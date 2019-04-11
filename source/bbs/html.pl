@@ -666,9 +666,10 @@ sub link_email{
 	my $name     = shift; # 名前
 
 	$email = std::shredder("mailto:$email");
-	print FOUT "<a href='$email' title='$name'>";
-	if ($CONF->{'icon'}->{'email'}){
-		print FOUT "<img src='$CONF->{'icon'}->{'email'}' alt='email'>";
+	print FOUT "<a href='$email' title='${name}のe-mailアドレス'>";
+	my $icon = $CONF->{'general'}->{'icon'}->{'email'};
+	if ($icon){
+		print FOUT "<img src='$icon' alt='email'>";
 	}else{
 		print FOUT '<small>email</small>';
 	}
@@ -686,9 +687,10 @@ sub link_webpage{
 	my $name     = shift; # 名前
 
 	$webpage = std::shredder($webpage);
-	print FOUT "<a href='http://$webpage' title='$name'>";
-	if ($CONF->{'icon'}->{'web'}){
-		print FOUT "<img src='$CONF->{'icon'}->{'web'}' alt='webpage'>";
+	print FOUT "<a href='http://$webpage' title='${name}のWebページ'>";
+	my $icon = $CONF->{'general'}->{'icon'}->{'web'};
+	if ($icon){
+		print FOUT "<img src='$icon' alt='webpage'>";
 	}else{
 		print FOUT '<small>webpage</small>';
 	}
