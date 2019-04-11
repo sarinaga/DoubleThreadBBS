@@ -1315,17 +1315,19 @@ sub create_bbshtml{
 	header(*FOUT, 'スレッド一覧表示');
 
 	# bbs.html冒頭説明文出力
-	my $info = '';
 	unless (open(FIN, $constants::THREADLIST_INFO)){
 		warn "テンプレートファイル'${constants::THREADLIST_INFO}'がオープンできなかった.";
 		return 0; 
 	}
 	binmode(FIN, ":utf8"); 
-	
+	my $info = '';
 	until(eof(FIN)){
 		my $line = <FIN>;
-		$info .= utf8::decode($line);
+		utf8::decode($line);
+		$info .= $line
 	}
+	print $info;
+	close(FIN);
 
 	print FOUT "<div class='info'>\n\n";
 	print FOUT "$info\n";
@@ -1407,6 +1409,7 @@ sub create_adminpage{
 		utf8::decode($line);
 		$info .= $line;
 	}
+	close(FIN);
 	$info =~ s/(\$\w+)/$1/gee;
 
 	# admin.htmlの書き出し
