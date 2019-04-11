@@ -9,6 +9,7 @@ use strict;
 use Cwd 'getcwd';
 use Data::Dumper;
 use utf8;
+
 binmode(STDOUT, ":utf8"); 
 binmode(STDERR, ":utf8"); 
 
@@ -265,13 +266,13 @@ sub mes_one{
 	if ($ctrl){
 		print FOUT "<span class='ctrl'>";
 		unless(($mode & $ATONE) !=0){
-			print FOUT "<a href='./$constants::READ_CGI?no=$t_no;at=$no'>単発言表示</a>　";
+			print FOUT "<a href='./$constants::READ_CGI?no=$t_no;at=$no'>この発言のみ表示</a>　";
 		}
 		unless(($mode & $COMPLETE) !=0 or ($mode & $RES) !=0){
-			print FOUT "<a href='./$constants::READ_CGI?no=$t_no;res=$no'>レスをつける</a>　";
+			print FOUT "<a href='./$constants::READ_CGI?no=$t_no;res=$no'>レス発言</a>　";
 		}
 		unless(($mode & $REV) !=0){
-			print FOUT "<a href='./$constants::READ_CGI?no=$t_no;rev=$no'>発言修正</a>";
+			print FOUT "<a href='./$constants::READ_CGI?no=$t_no;rev=$no'>修正・削除</a>";
 		}
 		print FOUT "</span><br>\n";
 	}
@@ -316,26 +317,75 @@ sub mes_one{
 
 #
 # 発言のヘッダを出力する
-#
-# 発言番号、発言タイトル、名前、トリップ、ID
-# 発言時間、レス先
+#   発言番号、発言タイトル、名前(トリップ)、返信先、投稿時間、ID
 #
 sub message_header{
 	local(*FOUT) = shift;  # 出力先
-	my $target   = shift;  # 発言させる表示番号
+	my $num   = shift;  # 発言させる表示番号
 	my $log      = shift;  # 発言ログ全部
 	my $param    = shift;  # 出力パラメータ
 
+	my $no     = $$log[0]{'THREAD_NO'};
+	my $name  = $$log[$num]{'USER_NAME'};
 	my $mode = $$param{'mode'};
-	my $res  = $$log[$target]{'RES'};
-	my $kill = (defined($$log[$target]{'DELETE_TIME'}) and !($mode & $ADMIN) );
+	my $res  = $$log[$num]{'RES'};
+	my $email  = $$log[$num]{'USER_EMAIL'};
+	my $web  = $$log[$num]{'USER_WEBPAGE'};
+	my $trip   = $$log[$num]{'TRIP'};
+	my $title  = $$log[$num]{'TITLE'};
 
-	title(*FOUT, $target, $log, $param);
+	my $kill = 0;
+	my $no_link = 0;
 
-	print FOUT "<br>\n";
-	print FOUT scalar std::time_format($$log[$target]{'POST_TIME'});
+	# 状態調整
+	if (!($mode & $ADMIN)){
+		if (defined($$log[$num]{'DELETE_TIME'}) ){
+			$no_link = 1;
+			$kill    = 1;
+			$name    = $CONF->{'general'}->{'killed'}->{'name'};
+			$title   = $CONF->{'general'}->{'killed'}->{'title'};
+			$trip    = undef;
+			$email   = undef;
+			$web     = undef;
+		}
+	}
+
+	# 発言番号
+	print FOUT "<tt>$num.</tt>";
+
+	# タイトル
+	if ($kill){   
+		# 発言が削除されている場合
+		print FOUT '<em class="kill">';
+
+	}elsif($no_link){  
+		# 自分自身へのリンクをしない場合
+		print FOUT "<em class='now' title='$title'>";
+
+	}elsif((($mode & $TITLE) != 0 and ($mode & $MESSAGE) == 0) or ($mode & $ATONE) != 0 ){
+        # 単発言表示をする場合
+		print FOUT "<a href='./$constants::READ_CGI?no=$no;at=$num' class='sub' title='$title'>";
+
+	}else{                                      
+		# この画面にアンカーがある場合
+		print FOUT "<a href='#s$num' class='sub' title='$title'>";
+	}
+	print $title;
+	if($no_link or $kill){
+		print FOUT '</em>';
+	}else{
+		print FOUT '</a>';
+	}
+
+	# 投稿者
+	print FOUT "／";
+	print FOUT $name;
+	print FOUT "<span class='trip'>$TRIP_SEPARETE$trip</span>" if(defined($trip));
+	print FOUT "　";
+
+	# 返信先
 	if ($res ne ''){
-		print FOUT '　[';
+		print FOUT '[';
 		if($mode & $ADMIN){
 			print FOUT "${res}番";
 		}elsif ($$param{'st'} > $res){
@@ -344,7 +394,22 @@ sub message_header{
 			print FOUT "<a href='#s$res'>${res}番</a>";
 		}
 		print FOUT 'へのコメント]';
+		print FOUT "　";
 	}
+
+	# 投稿時間
+	print FOUT (std::time_format($$log[$num]{'POST_TIME'}));
+	print FOUT "　";
+
+	# ID
+	if((!$kill or ($mode & $IGNORE_KILL) !=0) and $$log[$num]{'USER_ID'}){
+		print FOUT "<span class='id'>ID:$$log[$num]{'USER_ID'}</span>　";
+	}
+
+	# email、webページを表示する
+	link_email(*FOUT, $email, $name) if ($email and !$kill);
+	link_webpage(*FOUT, $web, $name) if ($web   and !$kill);
+
 
 }
 
@@ -467,6 +532,11 @@ sub list_header{
 	}
 	print FOUT '</td>';
 
+	# 時間出力
+	print FOUT ' <td class="posttime">';
+	print FOUT scalar std::time_format($$log[$target]{'POST_TIME'});
+	print FOUT '</td>';
+	
 	# ID出力
 	if ($$log[$target]{'USER_ID'}){
 		print FOUT ' <td class="id">';
@@ -515,7 +585,7 @@ sub tree{
 
 
 #
-# タイトル、名前、トリップ、ID（選択された場合のみ）を表示
+# タイトル、名前(トリップ)、IDを表示
 #
 sub title{
 	local(*FOUT) = shift;  # 出力先ファイルハンドル
@@ -593,10 +663,6 @@ sub title{
 	}else{
 		print FOUT '　';
 	}
-
-	# email、webページを表示する
-	link_email(*FOUT, $email, $name) if ($email and !$kill);
-	link_webpage(*FOUT, $web, $name) if ($web   and !$kill);
 
 }
 
@@ -919,55 +985,42 @@ sub form_read{
 <h3 id='change-mode'>表示形態切り替え</h3>
 
 <form method='get' action='./$constants::READ_CGI' class='read' id='read' name='read' onsubmit='return check_read_form(this, $last);'>
-<table class="change-mode">
 
-<tbody>
+<div class="change-mode">
 
 <!-- 番号等を指定して移動するフォーム部分 -->
-<tr><td rowspan='$span'>
-発言番号 <input type='hidden' name='no' value='$no'>
-         <input type='text' name='st' size='5' value='0'>から
-         <input type='text' name='en' size='5' value='$last'>まで
-<br>
+発言番号
+<input type='hidden' name='no' value='$no'>
+<input type='text' name='st' size='5' value='0'>から
+<input type='text' name='en' size='5' value='$last'>まで
+　
+順序
+<select name='tree' size='1'>
+<option value='1' selected='selected'>ツリー</option>
+<option value='0' >発言番号</option>
+</select>順
+　
+表示形態
+<label><input type='checkbox' name='sub' value='1'>題名一覧を表示</label>
+<label><input type='checkbox' name='mes' value='1' checked='checked'>発言を表示</label>
 
-表示順序 <select name='tree' size='1'>
-           <option value='1' selected='selected'>ツリー</option>
-           <option value='0' >発言番号</option>
-         </select>順
-<br>
-
-表示形態 <input type='checkbox' name='sub' value='1'>題名表示
-         <input type='checkbox' name='mes' value='1' checked='checked'>発言表示
-
-<br>
 <input type='submit' value='決定'>
-</td>
+<br>
 
 <!-- 簡易的リンク -->
 FORM
 
-	# 全発言表示へのリンク
-	print FOUT '<td class="or">or</td> <td>';
-	link_all(*FOUT, $no);
-	print FOUT "</td></tr>\n";
-
-	# 全題名表示へのリンク
-	print FOUT '<tr><td class="or">or</td> <td>';
-	link_title(*FOUT, $no);
-	print FOUT "</td></tr>\n";
-
-	# 最新100レス表示へのリンク
-	print FOUT '<tr><td class="or">or</td> <td>';
-	link_new100(*FOUT, $no);
-	print FOUT "</td></tr>\n";
+	# 全発言表示/全題名表示/最新100レス表示へのリンク
+	link_all(*FOUT, $no);    print "　";
+	link_title(*FOUT, $no);  print "　";
+	link_new100(*FOUT, $no); print "　";
 
 	# 単体発言表示へのリンク
 	if ($target){
-		print FOUT "<tr><td class='or'>or</td> <td>";
-		print FOUT "<a href='./$constants::READ_CGI?no=$no;at=$target'>${kind}発言の単体表示</a></td></tr>\n";
+		print FOUT "<a href='./$constants::READ_CGI?no=$no;at=$target'>${kind}発言の単体表示</a>\n";
 	}
 
-	print FOUT "\n</tbody>\n\n</table>\n\n</form>\n\n";
+	print FOUT "\n</div>\n\n</form>\n\n";
 
 }
 
@@ -1253,7 +1306,6 @@ sub create_bbshtml{
 	return 0 unless (file::filelock($bbs_html));
 
 	# bbs.htmlヘッダ作成
-	print "ok/n";
 	my $tempfile = file::temp_name($bbs_html);
 	unless(open(FOUT, ">$tempfile")){
 		warn "テンポラリファイル'${tempfile}'がオープンできなかった.";
@@ -1263,7 +1315,6 @@ sub create_bbshtml{
 	header(*FOUT, 'スレッド一覧表示');
 
 	# bbs.html冒頭説明文出力
-	print "ok/n";
 	my $info = '';
 	unless (open(FIN, $constants::THREADLIST_INFO)){
 		warn "テンプレートファイル'${constants::THREADLIST_INFO}'がオープンできなかった.";
@@ -1339,18 +1390,22 @@ sub create_bbshtml{
 sub create_adminpage{
 
 	# 情報整理
-	my $version      = sprintf("%1.2f", $constants::VERSION / 100);
-	my $bbs_top      = "./$constants::BBS_TOP";
 	my $stylesheet   = "./$constants::STYLESHEET";
+	my $bbs_name     = $CONF->{'general'}->{'bbsName'};
+	my $bbs_top      = "./$constants::BBS_TOP";
 	my $admin_mail   = $CONF->{'general'}->{'adminMail'};
+	my $admin_script = $constants::ADMIN_CGI;
 	my $programmer   = $constants::PROGRAMMER_WEBPAGE;
+	my $version      = sprintf("%1.2f", $constants::VERSION / 100);
 
-	# admin.infoの読み込み
+	# admin.infoの読み込みと変数の展開
 	return 0 unless(open(FIN, $constants::ADMIN_INFO));
 	binmode(FIN, ":utf8"); 
 	my $info = '';
 	until(eof(FIN)){
-		$info .= <FIN>;
+		my $line = <FIN>;
+		utf8::decode($line);
+		$info .= $line;
 	}
 	$info =~ s/(\$\w+)/$1/gee;
 

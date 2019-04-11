@@ -14,18 +14,19 @@ binmode(STDERR, ":utf8");
 
 BEGIN{
 	if ($ENV{'HTTP_HOST'}){
-		use POSIX qw(strftime);
 		use CGI::Carp qw(carpout);
+		use POSIX qw(strftime);
 	    my @tm = localtime;
 		open(LOG, strftime(">>error%Y%m%d%H%M%d.log", @tm));
 		binmode(LOG, ":utf8"); 
 		carpout(*LOG);
-	warn "admin.cgi log start.\n";
+		warn "admin.cgi log start.\n";
 	}
 }
 END{
 	warn "admin.cgi log end.\n";
 }
+
 unless($ENV{'HTTP_HOST'}){
 	print "このプログラムはCGI用です. コマンドラインからの実行はできません. \n";
 	exit;
