@@ -501,11 +501,10 @@ print "<p>書き込みが終了しました。</p>";
 
 # 次の発言読み込みフォームを表示
 if ($mode eq $constants::DELETE){
-	html::form_read(*STDOUT, $no, $#log);
+	html::form_read(*STDOUT, $no, $#log, 1, 0, 1);
 
 }else{
-	html::form_read(*STDOUT, $no, $#log, $target,
-	                $mode eq $constants::REVISE ? '修正' : '投稿');
+	html::form_read(*STDOUT, $no, $#log, 1, 0, 1, $target, $mode eq $constants::REVISE ? '修正' : '投稿');
 }
 
 # リンクバー

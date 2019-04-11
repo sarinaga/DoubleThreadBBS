@@ -125,10 +125,23 @@ error_illigal_call() if (defined($st) and $st!~m/^\d+$/);
 error_illigal_call() if (defined($en) and $en!~m/^\d+$/);
 error_illigal_call() if (defined($ls) and $ls!~m/^\d+$/);
 
-# 真偽値変換(tree, mes, sub)
+# 真偽値変換(tree)
 $param{'mode'} |= $html::TREE    if (std::trans_bool($cgi->param('tree'), 0));
-$param{'mode'} |= $html::MESSAGE if (std::trans_bool($cgi->param('mes'), 1));
-$param{'mode'} |= $html::TITLE   if (std::trans_bool($cgi->param('sub'), 0));
+
+# 真偽値変換(sub)
+my $sub = std::trans_bool($cgi->param('sub'), 0);
+$param{'mode'} |= $html::TITLE if ($sub);
+
+# 真偽値変換(mes)
+#   subがtrueの場合 - デフォルトをfalse(表示しない)にして表示モードを決定
+#   subがfalseの場合 - mesはtrue(表示する)
+my $mes = $cgi->param('mes');
+if ($sub){
+	$param{'mode'} |= $html::MESSAGE if (std::trans_bool($mes, 0));
+}else{
+	$param{'mode'} |= $html::MESSAGE;
+}
+
 
 # 発言とタイトルを両方表示しないということはない
 error_complex() if ( $param{'mode'} & $html::TREE & $html::MESSAGE == 0);
@@ -406,7 +419,11 @@ sub mes{
 	print "<h2 id='subtitle'>$$log[0]{'THREAD_TITLE'}</h2>\n\n";
 
 	# 発言読み込みフォーム表示
-	html::form_read(*STDOUT, $no, $#log);
+	html::form_read(*STDOUT, $no, $#log, 
+		$$param{'mode'} & $html::TREE,
+		$$param{'mode'} & $html::TITLE, 
+		$$param{'mode'} & $html::MESSAGE
+		);
 
 	# 発言容量警告表示
 	notice($$log[0]{'SIZE'}, $$log[0]{'POST'});

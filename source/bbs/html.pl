@@ -194,7 +194,6 @@ sub search_thread{
 
 			# 枝の探索が発言最後まで行われた場合は記憶した枝の分岐まで戻る
 			if ($j>$max){
-				warn @stack;
 				last if (@stack==0);
 				$now=$point+1;
 				$point=pop(@stack);
@@ -817,7 +816,7 @@ sub link_new{
 sub link_new100{
 	local(*FOUT) = shift; # 出力先ファイルハンドル
 	my $no       = shift; # スレッド番号
-	print FOUT "<a href='./$constants::READ_CGI?no=$no;ls=$CONF->{'general'}->{'displayLast'};sub=1;tree=1'>最新$CONF->{'general'}->{'displayLast'}レス表示</a>　";
+	print FOUT "<a href='./$constants::READ_CGI?no=$no;ls=$CONF->{'general'}->{'displayLast'};sub=1;mes=1;tree=1'>最新$CONF->{'general'}->{'displayLast'}レス表示</a>　";
 }
 
 
@@ -977,12 +976,39 @@ sub form_read{
 	local(*FOUT) = shift;
 	my $no     = shift;  # スレッド番号
 	my $last   = shift;  # 最後の発言番号
+	my $isTree = shift;  # 順序をツリー表示にするか
+	my $isSub  = shift;  # 題名一覧を表示にチェックをつけるか
+	my $isMes  = shift;  # 発言を表示にチェックをつけるか
 	my $target = shift;  # 単体表示番号
 	my $kind   = shift;  # 単体発言をする理由
 
-	my $span = $target ? 4 : 3;  # rowspanの数を調整する
+	# 順序のプルダウンの選択
+	my $isNotTree;
+	if ($isTree){
+		$isTree = "selected='selected'" ;
+		$isNotTree = "";
+	}else{
+		$isTree = "" ;
+		$isNotTree = "selected='selected'";
+	}
+
+	# 題名一覧を表示の選択
+	if ($isSub){
+		$isSub = "checked='checked'";
+	}else{
+		$isSub = '';
+	}
+	
+	# 発言を表示の選択
+	if ($isMes){
+		$isMes = "checked='checked'";
+	}else{
+		$isMes = '';
+	}
+
+
 	print FOUT << "FORM";
-<h3 id='change-mode'>表示形態切り替え</h3>
+<h3 id='change-mode'>表示内容切替</h3>
 
 <form method='get' action='./$constants::READ_CGI' class='read' id='read' name='read' onsubmit='return check_read_form(this, $last);'>
 
@@ -996,13 +1022,13 @@ sub form_read{
 　
 順序
 <select name='tree' size='1'>
-<option value='1' selected='selected'>ツリー</option>
-<option value='0' >発言番号</option>
+<option value='1' $isTree>ツリー</option>
+<option value='0' $isNotTree>発言番号</option>
 </select>順
 　
 表示形態
-<label><input type='checkbox' name='sub' value='1'>題名一覧を表示</label>
-<label><input type='checkbox' name='mes' value='1' checked='checked'>発言を表示</label>
+<label><input type='checkbox' name='sub' value='1' $isSub>題名一覧を表示</label>
+<label><input type='checkbox' name='mes' value='1' $isMes>発言を表示</label>
 
 <input type='submit' value='決定'>
 <br>
@@ -1011,9 +1037,9 @@ sub form_read{
 FORM
 
 	# 全発言表示/全題名表示/最新100レス表示へのリンク
-	link_all(*FOUT, $no);    print "　";
-	link_title(*FOUT, $no);  print "　";
-	link_new100(*FOUT, $no); print "　";
+	link_all(*FOUT, $no);   
+	link_title(*FOUT, $no);  
+	link_new100(*FOUT, $no); 
 
 	# 単体発言表示へのリンク
 	if ($target){
@@ -1315,19 +1341,17 @@ sub create_bbshtml{
 	header(*FOUT, 'スレッド一覧表示');
 
 	# bbs.html冒頭説明文出力
+	my $info = '';
 	unless (open(FIN, $constants::THREADLIST_INFO)){
 		warn "テンプレートファイル'${constants::THREADLIST_INFO}'がオープンできなかった.";
 		return 0; 
 	}
 	binmode(FIN, ":utf8"); 
-	my $info = '';
+	
 	until(eof(FIN)){
 		my $line = <FIN>;
-		utf8::decode($line);
-		$info .= $line
+		$info .= utf8::decode($line);
 	}
-	print $info;
-	close(FIN);
 
 	print FOUT "<div class='info'>\n\n";
 	print FOUT "$info\n";
@@ -1409,7 +1433,6 @@ sub create_adminpage{
 		utf8::decode($line);
 		$info .= $line;
 	}
-	close(FIN);
 	$info =~ s/(\$\w+)/$1/gee;
 
 	# admin.htmlの書き出し
