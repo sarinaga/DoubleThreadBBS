@@ -3,7 +3,7 @@ package constants;
 use strict;
 use utf8;
 binmode(STDOUT, ":utf8"); 
-
+binmode(STDERR, ":utf8"); 
 
 use vars qw($VERSION);
 $VERSION             = 80;       # バージョン番号(100倍した数字 : 100 -> ver1.00)

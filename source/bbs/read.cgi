@@ -11,6 +11,7 @@ use Data::Dumper;
 use Encode;
 use utf8;
 binmode(STDOUT, ":utf8"); 
+binmode(STDERR, ":utf8"); 
 
 BEGIN{
 	if ($ENV{'HTTP_HOST'}){
@@ -176,26 +177,17 @@ $param{'mode'} |= $html::COMPLETE  if ($log[0]{'POST'} >= $CONF->{'resource'}->{
 #
 html::http_response_header();
 
-print "<pre>";
-print Dumper %param;
-print sprintf("%016b", $param{'mode'}) . "\n";
-print "</pre>";
-
 
 if($cgi->param('at') ne ''){
-	print "at";
 	at(\@log, \%param);
 
 }elsif($cgi->param('res') ne ''){
-	print "res";
 	res(\@log, \%param);
 
 }elsif($cgi->param('rev') ne ''){
-	print "rev";
 	rev(\@log, \%param);
 
 }else{
-	print "mes";
 	mes(\@log, \%param);
 }
 
@@ -232,32 +224,38 @@ sub at{
 	notice($$log[0]{'SIZE'}, $log[0]{'POST'});
 	html::hr(*STDOUT);
 
+
 	# 発言部分
 	print "<div class='message'>";
 	print "<h3 id='message'>発言表示</h3>\n\n";
 	html::multi(*STDOUT, $log, $param);
 	print "</div>\n\n";
 
+
 	# リンクバー
 	html::link_3set_close(*STDOUT, $no);
 	html::hr(*STDOUT);
 
+	
 	# 関連ツリー
 	print "<div class='subject'>\n\n";
 	print "<h3 id='tree'>関連ツリー表示</h3>\n\n";
 
 	my $flag_have_response=0;  # 関連ツリーがあった場合はこの値は真
 	for(my $i=$at+1;$i<@$log;$i++){
-		$flag_have_response=1 if (defined($$log[$i]{'RES'}) and $$log[$i]{'RES'}==$at);
+		$flag_have_response=1 if ($$log[$i]{'RES'}==$at);
 	}
 	$flag_have_response=1 if (defined($$log[$at]{'RES'}));
 
 	if ($flag_have_response){
 		html::tree(*STDOUT, $log, $param);
+		
 	}else{
 		print "<p>この発言に関連する発言はありません。</p>\n\n";
 	}
 	print "</div>\n\n";
+
+
 
 }
 

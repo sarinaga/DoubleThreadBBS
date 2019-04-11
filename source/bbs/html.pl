@@ -10,6 +10,7 @@ use Cwd 'getcwd';
 use Data::Dumper;
 use utf8;
 binmode(STDOUT, ":utf8"); 
+binmode(STDERR, ":utf8"); 
 
 require './std.pl';
 require './file.pl';
@@ -168,8 +169,7 @@ sub search_thread{
 
 			my $j;
 			for($j=$now;$j<=$max;$j++){
-				next unless(defined($$log[$j]{'RES'}));
-				next unless($$log[$j]{'RES'}==$point);
+				next if(not defined($$log[$j]{'RES'}) or $$log[$j]{'RES'} != $point);
 
 				# 該当発言番号を記憶（枝）
 				my $deep=@stack+1;
@@ -193,6 +193,7 @@ sub search_thread{
 
 			# 枝の探索が発言最後まで行われた場合は記憶した枝の分岐まで戻る
 			if ($j>$max){
+				warn @stack;
 				last if (@stack==0);
 				$now=$point+1;
 				$point=pop(@stack);
@@ -428,7 +429,7 @@ sub list_header{
 	}elsif((($mode & $TITLE) != 0 and ($mode & $MESSAGE) == 0) or ($mode & $ATONE) != 0 ){
 	                                              # タイトルだけを表示される場合と
 	                                              # 上記、現在表示されている発言以外の場合
-		print FOUT "<a href='./$constants::READ_CGI?$$log[0]{'THREAD_NO'};at=$target' class='sub' title='$title'>";
+		print FOUT "<a href='./$constants::READ_CGI?no=$$log[0]{'THREAD_NO'};at=$target' class='sub' title='$title'>";
 
 	}else{                                        # その他の場合
 		print FOUT "<a href='#s$target' class='sub' title='$title'>";
@@ -490,7 +491,7 @@ sub tree{
 
 	# ツリーの根を探す(単体表示のとき)
 	if (($$param{'mode'} & $ATONE) != 0){
-		while(defined($$log[$st]{'RES'})){
+		while(defined ($$log[$st]{'RES'})){
 			$st = $en = $$log[$st]{'RES'};
 		}
 	}
@@ -822,6 +823,7 @@ sub pass_message{
 ###########################################################################
 sub header{
 	local(*FOUT) = shift;  # 出力先
+
 	my $title    = shift;  # ページタイトル
 	my $base     = shift;  # <base>要素を利用するか？ [事実上未使用]
 	my $cookie   = shift;  # cookie内容（ハッシュref）
@@ -1244,21 +1246,32 @@ DEL
 sub create_bbshtml{
 	my $thread      = shift;   # スレッド情報[参照]
 
-
 	# bbs.html をロックする
 	my $bbs_html = "./$constants::BBS_TOP";
 	return 0 unless (file::filelock($bbs_html));
 
 	# bbs.htmlヘッダ作成
+	print "ok/n";
 	my $tempfile = file::temp_name($bbs_html);
-	return 0 unless(open(FOUT, ">$tempfile"));
+	unless(open(FOUT, ">$tempfile")){
+		warn "テンポラリファイル'${tempfile}'がオープンできなかった.";
+		return 0;	
+	}
+	binmode(FOUT, ":utf8"); 
 	header(*FOUT, 'スレッド一覧表示');
 
 	# bbs.html冒頭説明文出力
+	print "ok/n";
 	my $info = '';
-	open(FIN, $constants::THREADLIST_INFO) || die "テンプレートファイル'${constants::THREADLIST_INFO}'がオープンできなかった.";
+	unless (open(FIN, $constants::THREADLIST_INFO)){
+		warn "テンプレートファイル'${constants::THREADLIST_INFO}'がオープンできなかった.";
+		return 0; 
+	}
+	binmode(FIN, ":utf8"); 
+	
 	until(eof(FIN)){
-		$info .= <FIN>;
+		my $line = <FIN>;
+		$info .= utf8::decode($line);
 	}
 
 	print FOUT "<div class='info'>\n\n";
@@ -1332,6 +1345,7 @@ sub create_adminpage{
 
 	# admin.infoの読み込み
 	return 0 unless(open(FIN, $constants::ADMIN_INFO));
+	binmode(FIN, ":utf8"); 
 	my $info = '';
 	until(eof(FIN)){
 		$info .= <FIN>;
@@ -1343,6 +1357,7 @@ sub create_adminpage{
 	return 0 unless (file::filelock($admin_html));
 	my $tempfile = file::temp_name($admin_html);
 	return 0 unless(open(FOUT, ">$tempfile"));
+	binmode(FOUT, ":utf8"); 
 	print FOUT $info;
 	close(FOUT);
 

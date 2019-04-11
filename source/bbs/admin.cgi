@@ -10,6 +10,7 @@ use CGI;
 use Digest::SHA 'sha512';
 use utf8;
 binmode(STDOUT, ":utf8"); 
+binmode(STDERR, ":utf8"); 
 
 BEGIN{
 	if ($ENV{'HTTP_HOST'}){

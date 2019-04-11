@@ -9,9 +9,7 @@ use strict;
 use Digest::SHA1 qw(sha1_base64);
 use utf8;
 binmode(STDOUT, ":utf8"); 
-
-
-
+binmode(STDERR, ":utf8"); 
 
 ########################################################################
 #                         リモートホストを入手                         #

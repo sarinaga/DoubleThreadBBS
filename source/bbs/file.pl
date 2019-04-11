@@ -16,6 +16,7 @@ use Crypt::PasswdMD5;
 use Digest::SHA 'sha1_hex';
 use utf8;
 binmode(STDOUT, ":utf8"); 
+binmode(STDERR, ":utf8"); 
 
 require './constants.pl';
 
@@ -522,7 +523,7 @@ sub write_log{
 		print TEMP "RES<>$$log[$i]{'RES'}\n" if (defined($$log[$i]{'RES'})); # レス先番号
 
 		# 発言が削除されていない場合
-		common_write(*TEMP, $$log[$i]) unless(defined($$log[$i]{'DELETE_TIME'}));
+		common_write(*TEMP, $$log[$i]) unless($$log[$i]{'DELETE_TIME'});
 		sub common_write{
 			local(*FOUT) = shift; # 出力先ファイルハンドル
 			my $log = shift;

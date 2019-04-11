@@ -11,6 +11,7 @@ use Crypt::PasswdMD5;
 use Digest::SHA 'sha1';
 use utf8;
 binmode(STDOUT, ":utf8"); 
+binmode(STDERR, ":utf8"); 
 
 # ログ出力のヘッダとフッタ
 BEGIN{
@@ -102,22 +103,22 @@ my $name       = $cgi->param('name');                        # 投稿者名
 my $body       = $cgi->param('body');                        # 本文
 
 # UTF-8変換
-utf8::decode($no);         
-utf8::decode($mode);       
-utf8::decode($target);     
-utf8::decode($res);        
-utf8::decode($web);        
-utf8::decode($trip);       
-utf8::decode($email);      
-utf8::decode($password);   
-utf8::decode($sage);       
-utf8::decode($set_cookie); 
-utf8::decode($build);      
-utf8::decode($tomato );    
-utf8::decode($thread);     
-utf8::decode($title);      
-utf8::decode($name);       
-utf8::decode($body);       
+utf8::decode($no)         if (defined($no));         
+utf8::decode($mode)       if (defined($mode));       
+utf8::decode($target)     if (defined($target));     
+utf8::decode($res)        if (defined($res));        
+utf8::decode($web)        if (defined($web));        
+utf8::decode($trip)       if (defined($trip));       
+utf8::decode($email)      if (defined($email));      
+utf8::decode($password)   if (defined($password));   
+utf8::decode($sage)       if (defined($sage));       
+utf8::decode($set_cookie) if (defined($set_cookie)); 
+utf8::decode($build)      if (defined($build));      
+utf8::decode($tomato)     if (defined($tomato));    
+utf8::decode($thread)     if (defined($thread));     
+utf8::decode($title)      if (defined($title));      
+utf8::decode($name)       if (defined($name));       
+utf8::decode($body)       if (defined($body));       
 
 # HTML特殊文字エスケープ
 $web        = std::html_escape($web);       # httpアドレス
@@ -149,11 +150,11 @@ over_thread() if (($mode eq $constants::CREATE) and check_builder());
 # 新規スレッド作成で、スレッド作成禁止の場合はエラー
 cant_create_thread() if (($mode eq $constants::CREATE) and $CONF->{'resource'}->{'threadMax'} == 0);
 
-# (やりたくないのだが)bodyにhttp://が含まれる場合、無理矢理rejectする
-if ($body=~m/https?:\/\//){
-	std::goto404("!");
-	exit;
-}
+# bodyにhttp://が含まれる場合、無理矢理rejectする（spam防止用, 機能停止中）
+#if ($body=~m/https?:\/\//){
+#	std::goto404("");
+#	exit;
+#}
 
 # 改行文字修正
 my $trans = join('<>', $thread, $title, $name, $body);

@@ -4,6 +4,7 @@ use lib '/home/sarinaga/perl/lib/perl5/site_perl/5.14/mach';
 use JSON qw(decode_json);
 use utf8;
 binmode(STDOUT, ":utf8"); 
+binmode(STDERR, ":utf8"); 
 
 require './constants.pl';
 
